@@ -27,11 +27,15 @@ lazy val root = (project in file("."))
       graphqlClient,
       log4cats,
       log4catsSlf4j,
+      mockitoScala % Test,
+      mockitoScalaTest % Test,
       pureConfig,
       pureConfigCatsEffect,
+      s3Mock,
       slf4j,
       scalaTest % Test
     )
   )
 
-// See https://www.scala-sbt.org/1.x/docs/Using-Sonatype.html for instructions on how to publish to Sonatype.
+fork in Test := true
+javaOptions in Test += s"-Dconfig.file=${sourceDirectory.value}/test/resources/application.conf"

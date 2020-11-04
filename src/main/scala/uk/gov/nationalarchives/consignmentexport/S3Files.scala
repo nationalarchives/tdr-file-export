@@ -1,4 +1,4 @@
-package uk.gov.nationalarchives.filexport
+package uk.gov.nationalarchives.consignmentexport
 
 import java.nio.file.{Path, Paths}
 import java.util.UUID
@@ -9,7 +9,7 @@ import graphql.codegen.GetFiles.getFiles.Data
 import io.chrisdavenport.log4cats.SelfAwareStructuredLogger
 import uk.gov.nationalarchives.aws.utils.S3Utils
 import Utils._
-import uk.gov.nationalarchives.filexport.GraphQlApi.FileIdWithPath
+import uk.gov.nationalarchives.consignmentexport.GraphQlApi.FileIdWithPath
 
 import scala.language.postfixOps
 import scala.sys.process._

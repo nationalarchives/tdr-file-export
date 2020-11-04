@@ -1,4 +1,4 @@
-package uk.gov.nationalarchives.filexport
+package uk.gov.nationalarchives.consignmentexport
 
 import cats.effect.{Blocker, ContextShift, IO}
 import pureconfig.generic.ProductHint

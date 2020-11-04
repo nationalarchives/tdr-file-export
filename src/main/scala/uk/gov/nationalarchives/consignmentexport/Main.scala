@@ -1,4 +1,4 @@
-package uk.gov.nationalarchives.filexport
+package uk.gov.nationalarchives.consignmentexport
 
 import java.io.File
 
@@ -9,12 +9,12 @@ import io.chrisdavenport.log4cats.SelfAwareStructuredLogger
 import io.chrisdavenport.log4cats.slf4j.Slf4jLogger
 import uk.gov.nationalarchives.aws.utils.Clients.s3Async
 import uk.gov.nationalarchives.aws.utils.S3Utils
-import uk.gov.nationalarchives.filexport.Arguments._
-import uk.gov.nationalarchives.filexport.Config.config
+import uk.gov.nationalarchives.consignmentexport.Arguments._
+import uk.gov.nationalarchives.consignmentexport.Config.config
 
 import scala.language.{implicitConversions, postfixOps}
 
-object Main extends CommandIOApp("tdr-file-export", "Exports tdr files in bagit format", version = "0.0.1") {
+object Main extends CommandIOApp("tdr-consignment-export", "Exports tdr files in bagit format", version = "0.0.1") {
   implicit def logger: SelfAwareStructuredLogger[IO] = Slf4jLogger.getLogger[IO]
 
   override def main: Opts[IO[ExitCode]] =

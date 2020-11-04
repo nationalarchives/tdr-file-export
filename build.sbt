@@ -7,7 +7,7 @@ ThisBuild / organizationName := "example"
 
 enablePlugins(JavaAppPackaging, UniversalPlugin)
 
-packageName in Universal := "tdr-file-export"
+packageName in Universal := "tdr-consignment-export"
 
 resolvers ++= Seq[Resolver](
   "TDR Releases" at "s3://tdr-releases-mgmt"
@@ -15,7 +15,7 @@ resolvers ++= Seq[Resolver](
 
 lazy val root = (project in file("."))
   .settings(
-    name := "tdr-file-export",
+    name := "tdr-consignment-export",
     libraryDependencies ++= Seq(
       authUtils,
       awsUtils,

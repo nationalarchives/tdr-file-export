@@ -1,4 +1,4 @@
-package uk.gov.nationalarchives.filexport
+package uk.gov.nationalarchives.consignmentexport
 
 import java.util.UUID
 
@@ -13,7 +13,7 @@ import graphql.codegen.types.UpdateExportLocationInput
 import sttp.client.{HttpURLConnectionBackend, Identity, NothingT, SttpBackend}
 import GraphQlApi._
 import io.chrisdavenport.log4cats.SelfAwareStructuredLogger
-import uk.gov.nationalarchives.filexport.Config.Configuration
+import uk.gov.nationalarchives.consignmentexport.Config.Configuration
 
 import scala.concurrent.{ExecutionContextExecutor, Future}
 

@@ -1,4 +1,4 @@
-package uk.gov.nationalarchives.filexport
+package uk.gov.nationalarchives.consignmentexport
 
 import cats.effect.IO
 import io.chrisdavenport.log4cats.SelfAwareStructuredLogger

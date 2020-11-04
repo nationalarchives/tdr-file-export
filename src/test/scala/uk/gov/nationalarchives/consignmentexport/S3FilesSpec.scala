@@ -1,4 +1,4 @@
-package uk.gov.nationalarchives.filexport
+package uk.gov.nationalarchives.consignmentexport
 
 import java.nio.file.Path
 import java.util.UUID
@@ -7,7 +7,7 @@ import cats.effect.IO
 import org.mockito.ArgumentCaptor
 import software.amazon.awssdk.services.s3.model.{GetObjectResponse, PutObjectResponse}
 import uk.gov.nationalarchives.aws.utils.S3Utils
-import uk.gov.nationalarchives.filexport.GraphQlApi.FileIdWithPath
+import uk.gov.nationalarchives.consignmentexport.GraphQlApi.FileIdWithPath
 
 class S3FilesSpec extends ExportSpec {
 

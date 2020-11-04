@@ -1,10 +1,10 @@
-package uk.gov.nationalarchives.filexport
+package uk.gov.nationalarchives.consignmentexport
 
 import java.io.File
 import java.util.UUID
 
 import com.github.tomakehurst.wiremock.stubbing.ServeEvent
-import uk.gov.nationalarchives.filexport.Utils.PathUtils
+import uk.gov.nationalarchives.consignmentexport.Utils.PathUtils
 
 import scala.io.Source
 import scala.sys.process._

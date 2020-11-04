@@ -1,4 +1,4 @@
-package uk.gov.nationalarchives.filexport
+package uk.gov.nationalarchives.consignmentexport
 
 import java.util.UUID
 
@@ -11,7 +11,7 @@ import graphql.codegen.UpdateExportLocation.{updateExportLocation => uel}
 import graphql.codegen.GetOriginalPath.{getOriginalPath => gop}
 import sangria.ast.Document
 import sttp.client.{HttpURLConnectionBackend, Identity, NothingT, SttpBackend}
-import uk.gov.nationalarchives.filexport.Config.{Api, Auth, Configuration, EFS, S3}
+import uk.gov.nationalarchives.consignmentexport.Config.{Api, Auth, Configuration, EFS, S3}
 import uk.gov.nationalarchives.tdr.keycloak.KeycloakUtils
 
 import scala.concurrent.{ExecutionContextExecutor, Future}

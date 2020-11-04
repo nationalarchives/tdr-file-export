@@ -1,4 +1,4 @@
-package uk.gov.nationalarchives.filexport
+package uk.gov.nationalarchives.consignmentexport
 
 import java.nio.file.Path
 import java.util
@@ -10,7 +10,7 @@ import gov.loc.repository.bagit.domain.Bag
 import gov.loc.repository.bagit.hash.{StandardSupportedAlgorithms, SupportedAlgorithm}
 import gov.loc.repository.bagit.verify.BagVerifier
 import io.chrisdavenport.log4cats.SelfAwareStructuredLogger
-import uk.gov.nationalarchives.filexport.Utils._
+import uk.gov.nationalarchives.consignmentexport.Utils._
 
 import scala.jdk.CollectionConverters._
 import scala.language.postfixOps

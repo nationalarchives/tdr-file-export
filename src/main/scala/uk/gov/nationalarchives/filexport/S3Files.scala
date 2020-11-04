@@ -9,15 +9,16 @@ import graphql.codegen.GetFiles.getFiles.Data
 import io.chrisdavenport.log4cats.SelfAwareStructuredLogger
 import uk.gov.nationalarchives.aws.utils.S3Utils
 import Utils._
+import uk.gov.nationalarchives.filexport.GraphQlApi.FileIdWithPath
 
 import scala.language.postfixOps
 import scala.sys.process._
 
 class S3Files(s3Utils: S3Utils)(implicit val logger: SelfAwareStructuredLogger[IO]) {
 
-  def downloadFiles(data: Data, bucket: String, consignmentId: UUID, rootLocation: String): IO[Unit] = for {
+  def downloadFiles(files: List[FileIdWithPath], bucket: String, consignmentId: UUID, rootLocation: String): IO[Unit] = for {
     _ <- IO.pure(s"mkdir -p $rootLocation/$consignmentId" !!)
-    _ <- data.getFiles.fileIds.map(fileId => s3Utils.downloadFiles(bucket, s"/$consignmentId/$fileId", s"$rootLocation/$consignmentId/$fileId".toPath.some)).sequence
+    _ <- files.map(file => s3Utils.downloadFiles(bucket, s"/$consignmentId/${file.fileId}", s"$rootLocation/$consignmentId/${file.originalPath}".toPath.some)).sequence
     _ <- logger.info("Files downloaded from S3")
   } yield ()
 

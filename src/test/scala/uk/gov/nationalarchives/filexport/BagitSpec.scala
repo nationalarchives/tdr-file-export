@@ -35,6 +35,4 @@ class BagitSpec extends ExportSpec {
     verfiyBag.getValue.getVersion should equal(Version.LATEST_BAGIT_VERSION())
     verifyIncludeHidden.getValue should equal(false)
   }
-
-
 }

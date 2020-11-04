@@ -1,10 +1,10 @@
 package uk.gov.nationalarchives.filexport
 
 import cats.effect.{Blocker, ContextShift, IO}
-import pureconfig.{CamelCase, ConfigFieldMapping, ConfigSource}
 import pureconfig.generic.ProductHint
-import pureconfig.module.catseffect.syntax._
 import pureconfig.generic.auto._
+import pureconfig.module.catseffect.syntax._
+import pureconfig.{CamelCase, ConfigFieldMapping, ConfigSource}
 
 object Config {
 
@@ -17,5 +17,4 @@ object Config {
   implicit def hint[A]: ProductHint[A] = ProductHint[A](ConfigFieldMapping(CamelCase, CamelCase))
 
   def config()(implicit contextShift: ContextShift[IO]): IO[Configuration] = Blocker[IO].use(ConfigSource.default.loadF[IO, Configuration])
-
 }

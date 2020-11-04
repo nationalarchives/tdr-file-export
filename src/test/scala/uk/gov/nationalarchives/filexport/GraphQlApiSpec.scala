@@ -8,6 +8,7 @@ import com.nimbusds.oauth2.sdk.token.BearerAccessToken
 import uk.gov.nationalarchives.tdr.{GraphQLClient, GraphQlResponse}
 import graphql.codegen.GetFiles.{getFiles => gf}
 import graphql.codegen.UpdateExportLocation.{updateExportLocation => uel}
+import graphql.codegen.GetOriginalPath.{getOriginalPath => gop}
 import sangria.ast.Document
 import sttp.client.{HttpURLConnectionBackend, Identity, NothingT, SttpBackend}
 import uk.gov.nationalarchives.filexport.Config.{Api, Auth, Configuration, EFS, S3}
@@ -24,8 +25,9 @@ class GraphQlApiSpec extends ExportSpec {
   "the getFiles method" should "returns the correct number of files" in {
     val filesClient = mock[GraphQLClient[gf.Data, gf.Variables]]
     val updateExportClient = mock[GraphQLClient[uel.Data, uel.Variables]]
+    val getOriginalPathClient = mock[GraphQLClient[gop.Data, gop.Variables]]
     val keycloak = mock[KeycloakUtils]
-    val api = GraphQlApi(keycloak, filesClient, updateExportClient)
+    val api = new GraphQlApi(keycloak, filesClient, updateExportClient, getOriginalPathClient)
     val config = Configuration(S3("", "", ""), Api(""), Auth("authUrl", "clientId", "clientSecret"), EFS(""))
     val consignmentId = UUID.randomUUID()
     val dataFiles = List(UUID.randomUUID(), UUID.randomUUID())
@@ -34,16 +36,18 @@ class GraphQlApiSpec extends ExportSpec {
     doAnswer(() => Future(new BearerAccessToken("token"))).when(keycloak).serviceAccountToken[Identity](any[String], any[String])(any[SttpBackend[Identity, Nothing, NothingT]], any[ClassTag[Identity[_]]])
     val data = new GraphQlResponse[gf.Data](gf.Data(gf.GetFiles(dataFiles)).some, List())
     doAnswer(() => Future(data)).when(filesClient).getResult[Identity](any[BearerAccessToken], any[Document], any[Option[gf.Variables]])(any[SttpBackend[Identity, Nothing, NothingT]], any[ClassTag[Identity[_]]])
+    doAnswer(() => Future(GraphQlResponse(gop.Data(gop.GetClientFileMetadata("originalPath".some)).some, List()))).when(getOriginalPathClient).getResult[Identity](any[BearerAccessToken], any[Document], any[Option[gop.Variables]])(any[SttpBackend[Identity, Nothing, NothingT]], any[ClassTag[Identity[_]]])
 
     val files = api.getFiles(config, consignmentId).unsafeRunSync()
-    files.getFiles.fileIds should equal(dataFiles)
+    files.map(_.fileId) should equal(dataFiles)
   }
 
   "the getFiles method" should "throw an exception if there are no files in the response" in {
     val filesClient = mock[GraphQLClient[gf.Data, gf.Variables]]
     val updateExportClient = mock[GraphQLClient[uel.Data, uel.Variables]]
+    val getOriginalPathClient = mock[GraphQLClient[gop.Data, gop.Variables]]
     val keycloak = mock[KeycloakUtils]
-    val api = GraphQlApi(keycloak, filesClient, updateExportClient)
+    val api = new GraphQlApi(keycloak, filesClient, updateExportClient, getOriginalPathClient)
     val config = Configuration(S3("", "", ""), Api(""), Auth("authUrl", "clientId", "clientSecret"), EFS(""))
     val consignmentId = UUID.randomUUID()
 
@@ -60,8 +64,9 @@ class GraphQlApiSpec extends ExportSpec {
   "the updateExportLocation method" should "return the correct value" in {
     val filesClient = mock[GraphQLClient[gf.Data, gf.Variables]]
     val updateExportClient = mock[GraphQLClient[uel.Data, uel.Variables]]
+    val getOriginalPathClient = mock[GraphQLClient[gop.Data, gop.Variables]]
     val keycloak = mock[KeycloakUtils]
-    val api = GraphQlApi(keycloak, filesClient, updateExportClient)
+    val api = new GraphQlApi(keycloak, filesClient, updateExportClient, getOriginalPathClient)
     val config = Configuration(S3("", "", ""), Api(""), Auth("authUrl", "clientId", "clientSecret"), EFS(""))
     val consignmentId = UUID.randomUUID()
 
@@ -77,8 +82,9 @@ class GraphQlApiSpec extends ExportSpec {
   "the updateExportLocation method" should "throw an exception if no data is returned" in {
     val filesClient = mock[GraphQLClient[gf.Data, gf.Variables]]
     val updateExportClient = mock[GraphQLClient[uel.Data, uel.Variables]]
+    val getOriginalPathClient = mock[GraphQLClient[gop.Data, gop.Variables]]
     val keycloak = mock[KeycloakUtils]
-    val api = GraphQlApi(keycloak, filesClient, updateExportClient)
+    val api = new GraphQlApi(keycloak, filesClient, updateExportClient, getOriginalPathClient)
     val config = Configuration(S3("", "", ""), Api(""), Auth("authUrl", "clientId", "clientSecret"), EFS(""))
     val consignmentId = UUID.randomUUID()
 

@@ -4,10 +4,10 @@ import java.nio.file.Path
 import java.util.UUID
 
 import cats.effect.IO
-import graphql.codegen.GetFiles.getFiles.{Data, GetFiles}
 import org.mockito.ArgumentCaptor
 import software.amazon.awssdk.services.s3.model.{GetObjectResponse, PutObjectResponse}
 import uk.gov.nationalarchives.aws.utils.S3Utils
+import uk.gov.nationalarchives.filexport.GraphQlApi.FileIdWithPath
 
 class S3FilesSpec extends ExportSpec {
 
@@ -21,14 +21,13 @@ class S3FilesSpec extends ExportSpec {
 
     val consignmentId = UUID.randomUUID()
     val fileId = UUID.randomUUID()
-    val getFiles = GetFiles(List(fileId))
-    val data: Data = Data(getFiles = getFiles)
-    S3Files(s3Utils).downloadFiles(data, "testbucket", consignmentId, "root").unsafeRunSync()
+
+    S3Files(s3Utils).downloadFiles(List(FileIdWithPath(fileId, "originalPath")), "testbucket", consignmentId, "root").unsafeRunSync()
 
     bucketCaptor.getValue should equal("testbucket")
     keyCaptor.getValue should equal(s"/$consignmentId/$fileId")
     pathCaptor.getValue.isDefined should equal(true)
-    pathCaptor.getValue.get.toString should equal(s"root/$consignmentId/$fileId")
+    pathCaptor.getValue.get.toString should equal(s"root/$consignmentId/originalPath")
   }
 
   "the uploadFiles method" should "call the library method with the correct arguments" in {

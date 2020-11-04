@@ -1,4 +1,5 @@
 FROM openjdk:16-alpine
+RUN whoami
 RUN apk add --no-cache py3-pip bash && pip3 install awscli
 COPY script.sh ./script.sh
 COPY target/universal/tdr-file-export.tgz ./tdr-file-export.tgz

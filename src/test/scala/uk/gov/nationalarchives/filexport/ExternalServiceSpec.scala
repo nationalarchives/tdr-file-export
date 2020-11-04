@@ -5,7 +5,7 @@ import java.net.URI
 import java.nio.file.Path
 
 import com.github.tomakehurst.wiremock.WireMockServer
-import com.github.tomakehurst.wiremock.client.WireMock.{okJson, post, urlEqualTo}
+import com.github.tomakehurst.wiremock.client.WireMock.{equalToJson, okJson, post, urlEqualTo}
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
 import io.findify.s3mock.S3Mock
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
@@ -21,6 +21,7 @@ import scala.concurrent.ExecutionContext
 import scala.io.Source.fromResource
 import scala.sys.process._
 import scala.jdk.CollectionConverters._
+import scala.util.Try
 
 class ExternalServiceSpec extends AnyFlatSpec with BeforeAndAfterEach with BeforeAndAfterAll with ScalaFutures with Matchers {
 
@@ -58,10 +59,16 @@ class ExternalServiceSpec extends AnyFlatSpec with BeforeAndAfterEach with Befor
   def graphQlUrl: String = wiremockGraphqlServer.url(graphQlPath)
 
   def graphqlGetFiles: StubMapping = wiremockGraphqlServer.stubFor(post(urlEqualTo(graphQlPath))
+    .withRequestBody(equalToJson("{\"query\":\"query getFiles($consignmentId:UUID!){getFiles(consignmentid:$consignmentId){fileIds}}\",\"variables\":{\"consignmentId\":\"50df01e6-2e5e-4269-97e7-531a755b417d\"}}"))
     .willReturn(okJson(fromResource(s"json/get_files.json").mkString)))
 
   def graphqlUpdateExportLocation: StubMapping = wiremockGraphqlServer.stubFor(post(urlEqualTo(graphQlPath))
     .willReturn(okJson(fromResource(s"json/get_files.json").mkString)))
+
+  def graphqlGetOriginalPath: StubMapping = wiremockGraphqlServer.stubFor(post(urlEqualTo(graphQlPath))
+    .withRequestBody(equalToJson("{\"query\":\"query getOriginalPath($fileId:UUID!){getClientFileMetadata(fileId:$fileId){originalPath}}\",\"variables\":{\"fileId\":\"7b19b272-d4d1-4d77-bf25-511dc6489d12\"}}"))
+    .willReturn(okJson(fromResource("json/get_original_path.json").mkString))
+  )
 
   def authOk: StubMapping = wiremockAuthServer.stubFor(post(urlEqualTo(authPath))
     .willReturn(okJson(fromResource(s"json/access_token.json").mkString)))
@@ -77,6 +84,9 @@ class ExternalServiceSpec extends AnyFlatSpec with BeforeAndAfterEach with Befor
   override def beforeEach(): Unit = {
     authOk
     wiremockGraphqlServer.resetAll()
+    graphqlGetFiles
+    graphqlUpdateExportLocation
+    graphqlGetOriginalPath
     createBucket("test-clean-bucket")
     createBucket("test-output-bucket")
   }
@@ -91,6 +101,6 @@ class ExternalServiceSpec extends AnyFlatSpec with BeforeAndAfterEach with Befor
     deleteBucket("test-output-bucket")
     wiremockAuthServer.resetAll()
     wiremockGraphqlServer.resetAll()
-    "rm -rf ./src/test/resources/testfiles/50df01e6-2e5e-4269-97e7-531a755b417d*".!
+    Seq("sh", "-c", "rm -r src/test/resources/testfiles/50df01e6-2e5e-4269-97e7-531a755b417d*").!
   }
 }

@@ -13,8 +13,6 @@ import scala.jdk.CollectionConverters._
 class MainSpec extends ExternalServiceSpec {
 
   "the export job" should "export the correct tar and checksum file" in {
-    graphqlGetFiles
-    graphqlUpdateExportLocation
     val consignmentId = UUID.fromString("50df01e6-2e5e-4269-97e7-531a755b417d")
     putFile(s"$consignmentId/7b19b272-d4d1-4d77-bf25-511dc6489d12")
     Main.run(List("export", "--consignmentId", consignmentId.toString)).unsafeRunSync()
@@ -23,11 +21,11 @@ class MainSpec extends ExternalServiceSpec {
     objects.size should equal(2)
     objects.head should equal(s"$consignmentId.tar.gz")
     objects.last should equal(s"$consignmentId.tar.gz.sha256")
+
+    wiremockGraphqlServer.getAllServeEvents.asScala.map(_.getRequest.getBodyAsString).foreach(println)
   }
 
   "the export job" should "export a valid tar and checksum file" in {
-    graphqlGetFiles
-    graphqlUpdateExportLocation
     val consignmentId = UUID.fromString("50df01e6-2e5e-4269-97e7-531a755b417d")
     putFile(s"$consignmentId/7b19b272-d4d1-4d77-bf25-511dc6489d12")
     Main.run(List("export", "--consignmentId", consignmentId.toString)).unsafeRunSync()
@@ -35,7 +33,7 @@ class MainSpec extends ExternalServiceSpec {
     getObject(s"$consignmentId.tar.gz", s"$path/result.tar.gz".toPath)
     getObject(s"$consignmentId.tar.gz.sha256", s"$path/result.tar.gz.sha256".toPath)
 
-    val exitCode = Seq("sh", "-c", s"tar -xzf $path/result.tar.gz > /dev/null").!
+    val exitCode = Seq("sh", "-c", s"tar -tf $path/result.tar.gz > /dev/null").!
     exitCode should equal(0)
 
     val source = Source.fromFile(new File(s"$path/result.tar.gz.sha256"))
@@ -47,8 +45,6 @@ class MainSpec extends ExternalServiceSpec {
   }
 
   "the export job" should "update the export location in the api" in {
-    graphqlGetFiles
-    graphqlUpdateExportLocation
     val consignmentId = UUID.fromString("50df01e6-2e5e-4269-97e7-531a755b417d")
     putFile(s"$consignmentId/7b19b272-d4d1-4d77-bf25-511dc6489d12")
     Main.run(List("export", "--consignmentId", consignmentId.toString)).unsafeRunSync()
@@ -58,8 +54,5 @@ class MainSpec extends ExternalServiceSpec {
 
     exportLocationEvent.isDefined should be(true)
     exportLocationEvent.get.getRequest.getBodyAsString.contains("\"consignmentId\":\"50df01e6-2e5e-4269-97e7-531a755b417d\"") should be(true)
-
-
   }
-
 }

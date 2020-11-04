@@ -1,6 +1,6 @@
 package uk.gov.nationalarchives.filexport
 
-import java.io.{File, IOException}
+import java.io.File
 
 import cats.effect.IO
 import org.mockito.ArgumentCaptor
@@ -10,6 +10,7 @@ class BashCommandsSpec extends ExportSpec {
     val exitCode = BashCommands().runCommand("echo 'hello'")
     exitCode.unsafeRunSync() should equal("hello\n")
   }
+
   "the runCommand method" should "throw an error for a failed command" in {
     val exception = intercept[RuntimeException] {
       BashCommands().runCommand("invalidcommand").attempt.unsafeRunSync()
@@ -25,7 +26,5 @@ class BashCommandsSpec extends ExportSpec {
     new BashCommands(fileWriterMock).runCommandToFile("echo 'hello'", new File("test")).unsafeRunSync()
     commandCaptor.getValue should equal("hello\n")
     fileCaptor.getValue.getName should equal("test")
-
   }
 }
-

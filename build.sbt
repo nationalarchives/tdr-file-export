@@ -1,5 +1,4 @@
 import Dependencies._
-import sbt.enablePlugins
 
 ThisBuild / scalaVersion     := "2.13.3"
 ThisBuild / version          := "0.1.0-SNAPSHOT"
@@ -16,10 +15,15 @@ lazy val commonSettings = Seq(
     graphqlClient,
     log4cats,
     log4catsSlf4j,
+    mockitoScala % Test,
+    mockitoScalaTest % Test,
     pureConfig,
     pureConfigCatsEffect,
+    scalaTest % Test,
     slf4j
-  )
+  ),
+  fork in Test := true,
+  javaOptions in Test += s"-Dconfig.file=${sourceDirectory.value}/test/resources/application.conf"
 )
 
 lazy val exporter = (project in file("exporter"))
@@ -32,13 +36,8 @@ lazy val exporter = (project in file("exporter"))
       bagit,
       decline,
       declineEffect,
-      mockitoScala % Test,
-      mockitoScalaTest % Test,
-      s3Mock,
-      scalaTest % Test
+      s3Mock
     ),
-    fork in Test := true,
-    javaOptions in Test += s"-Dconfig.file=${sourceDirectory.value}/test/resources/application.conf",
     packageName in Universal := "tdr-consignment-export"
   ).enablePlugins(JavaAppPackaging, UniversalPlugin)
 

@@ -18,9 +18,9 @@ import scala.language.postfixOps
 class Bagit(bagInPlace: (Path, util.Collection[SupportedAlgorithm], Boolean) => Bag,
            isComplete: (Bag, Boolean) => Unit)(implicit val logger: SelfAwareStructuredLogger[IO]) {
 
-  def createBag(consignmentId: UUID, rootLocation: String, includeHiddenFiles: Boolean): IO[Unit] = for {
+  def createBag(consignmentId: UUID, rootLocation: String): IO[Unit] = for {
     bag <- IO.pure(bagInPlace(s"$rootLocation/$consignmentId".toPath, List(StandardSupportedAlgorithms.SHA256: SupportedAlgorithm).asJavaCollection, includeHiddenFiles))
-    _ <- IO.pure(isComplete(bag, includeHiddenFiles))
+    _ <- IO.pure(isComplete(bag, true))
     _ <- logger.info("Bagit export complete")
   } yield ()
 }

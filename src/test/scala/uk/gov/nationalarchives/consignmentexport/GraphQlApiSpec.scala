@@ -58,7 +58,7 @@ class GraphQlApiSpec extends ExportSpec {
     val exception = intercept[RuntimeException] {
       api.getFiles(config, consignmentId).unsafeRunSync()
     }
-    exception.getMessage should equal(s"No files found for consignment $consignmentId")
+    exception.getMessage should equal(s"No files found for consignment $consignmentId ")
   }
 
   "the updateExportLocation method" should "return the correct value" in {
@@ -95,6 +95,6 @@ class GraphQlApiSpec extends ExportSpec {
     val exception = intercept[RuntimeException] {
       api.updateExportLocation(config, consignmentId, "tarPath").unsafeRunSync()
     }
-    exception.getMessage should equal(s"No data returned from the update export call for consignment $consignmentId")
+    exception.getMessage should equal(s"No data returned from the update export call for consignment $consignmentId ")
   }
 }

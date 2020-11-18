@@ -21,7 +21,7 @@ class Bagit(bagInPlace: (Path, util.Collection[SupportedAlgorithm], Boolean) => 
   def createBag(consignmentId: UUID, rootLocation: String): IO[Unit] = for {
     bag <- IO.pure(bagInPlace(s"$rootLocation/$consignmentId".toPath, List(StandardSupportedAlgorithms.SHA256: SupportedAlgorithm).asJavaCollection, includeHiddenFiles))
     _ <- IO.pure(validateBag(bag, true))
-    _ <- logger.info("Bagit export complete")
+    _ <- logger.info(s"Bagit export complete for consignment $consignmentId")
   } yield ()
 }
 

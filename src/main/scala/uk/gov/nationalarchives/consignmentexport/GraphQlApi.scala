@@ -33,7 +33,7 @@ class GraphQlApi(keycloak: KeycloakUtils,
     token <- keycloak.serviceAccountToken(config.auth.clientId, config.auth.clientSecret).toIO
     response <- updateExportLocationClient.getResult(token, uel.document, uel.Variables(UpdateExportLocationInput(consignmentId, tarPath)).some).toIO
     data <- IO.fromOption(response.data)(new RuntimeException(s"No data returned from the update export call for consignment $consignmentId"))
-    _ <- logger.info("Export location updated")
+    _ <- logger.info(s"Export location updated for consignment $consignmentId")
   } yield data.updateExportLocation
 
   def getOriginalPath(config: Configuration, fileId: UUID) = for {

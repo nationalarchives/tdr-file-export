@@ -25,7 +25,7 @@ class GraphQlApi(keycloak: KeycloakUtils,
   def getFiles(config: Configuration, consignmentId: UUID): IO[List[FileIdWithPath]] = for {
     token <- keycloak.serviceAccountToken(config.auth.clientId, config.auth.clientSecret).toIO
     filesResult <- filesClient.getResult(token, gf.document, gf.Variables(consignmentId).some).toIO
-    data <- IO.fromOption(filesResult.data)(new RuntimeException(s"No files found for consignmnt $consignmentId"))
+    data <- IO.fromOption(filesResult.data)(new RuntimeException(s"No files found for consignment $consignmentId"))
     originalPath <- data.getFiles.fileIds.map(fileId => getOriginalPath(config, fileId)).sequence
   } yield originalPath
 

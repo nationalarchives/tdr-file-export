@@ -25,7 +25,7 @@ class S3FilesSpec extends ExportSpec {
     S3Files(s3Utils).downloadFiles(List(FileIdWithPath(fileId, "originalPath")), "testbucket", consignmentId, "root").unsafeRunSync()
 
     bucketCaptor.getValue should equal("testbucket")
-    keyCaptor.getValue should equal(s"/$consignmentId/$fileId")
+    keyCaptor.getValue should equal(s"$consignmentId/$fileId")
     pathCaptor.getValue.isDefined should equal(true)
     pathCaptor.getValue.get.toString should equal(s"root/$consignmentId/originalPath")
   }

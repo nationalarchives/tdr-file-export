@@ -18,7 +18,11 @@ class S3Files(s3Utils: S3Utils)(implicit val logger: SelfAwareStructuredLogger[I
 
   def downloadFiles(files: List[FileIdWithPath], bucket: String, consignmentId: UUID, rootLocation: String): IO[Unit] = for {
     _ <- IO.pure(s"mkdir -p $rootLocation/$consignmentId" !!)
-    _ <- files.map(file => s3Utils.downloadFiles(bucket, s"/$consignmentId/${file.fileId}", s"$rootLocation/$consignmentId/${file.originalPath}".toPath.some)).sequence
+    _ <- files.map(file => {
+      val writeDirectory = file.originalPath.split("/").init.mkString("/")
+      s"mkdir -p $rootLocation/$consignmentId/$writeDirectory".!!
+      s3Utils.downloadFiles(bucket, s"$consignmentId/${file.fileId}", s"$rootLocation/$consignmentId/${file.originalPath}".toPath.some)
+    }).sequence
     _ <- logger.info(s"Files downloaded from S3 for consignment $consignmentId")
   } yield ()
 

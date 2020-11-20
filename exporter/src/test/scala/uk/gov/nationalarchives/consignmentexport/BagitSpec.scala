@@ -26,13 +26,13 @@ class BagitSpec extends ExportSpec {
     doAnswer(() => bag).when(createMock).apply(createPath.capture(), createAlgorithms.capture(), createIncludeHidden.capture())
     doAnswer(() => ()).when(verifyMock).apply(verfiyBag.capture(), verifyIncludeHidden.capture())
 
-    bagit.createBag(consignmentId, "root", includeHiddenFiles = false).unsafeRunSync()
+    bagit.createBag(consignmentId, "root").unsafeRunSync()
 
     createPath.getValue.toString should equal(s"root/$consignmentId")
     createAlgorithms.getValue.toArray()(0) should equal(StandardSupportedAlgorithms.SHA256)
-    createIncludeHidden.getValue should equal(false)
+    createIncludeHidden.getValue should equal(true)
 
     verfiyBag.getValue.getVersion should equal(Version.LATEST_BAGIT_VERSION())
-    verifyIncludeHidden.getValue should equal(false)
+    verifyIncludeHidden.getValue should equal(true)
   }
 }

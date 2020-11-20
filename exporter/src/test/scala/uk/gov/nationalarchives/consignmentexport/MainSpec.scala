@@ -39,8 +39,7 @@ class MainSpec extends ExternalServiceSpec {
     val source = Source.fromFile(new File(s"$path/result.tar.gz.sha256"))
     val checksum = source.getLines().toList.head.split(" ").head
 
-    //We can't check the file checksum because tar uses a timestamp to gzip so it's different every time
-    checksum.matches("[a-z0-9]{64}") should equal(true)
+    checksum should equal("1bda17956dec9e3356961de7d46760c22e20e2a9dc4dbc9d6d0960fbff25d52c")
     source.close()
   }
 

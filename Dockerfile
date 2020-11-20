@@ -1,5 +1,5 @@
 FROM openjdk:16-alpine
-RUN apk add --no-cache bash && \
+RUN apk add --no-cache bash tar && \
     adduser consignment-export -D
 WORKDIR /home/consignment-export
 COPY exporter/target/universal/tdr-consignment-export.tgz tdr-consignment-export.tgz

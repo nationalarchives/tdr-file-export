@@ -19,7 +19,7 @@ object Main extends CommandIOApp("tdr-consignment-export", "Exports tdr files in
 
   override def main: Opts[IO[ExitCode]] =
      exportOps.map {
-      case FileExport(consignmentId, includeHiddenFiles) => for {
+      case FileExport(consignmentId) => for {
         config <- config()
         tarPath = s"${config.efs.rootLocation}/$consignmentId.tar.gz"
         bashCommands = BashCommands()
@@ -28,9 +28,10 @@ object Main extends CommandIOApp("tdr-consignment-export", "Exports tdr files in
 
         data <- graphQlApi.getFiles(config, consignmentId)
         _ <- s3Files.downloadFiles(data, config.s3.cleanBucket, consignmentId, config.efs.rootLocation)
-        _ <- Bagit().createBag(consignmentId, config.efs.rootLocation, includeHiddenFiles)
-        _ <- bashCommands.runCommand(s"tar -czf $tarPath ${config.efs.rootLocation}/$consignmentId -C ${config.efs.rootLocation}/$consignmentId .")
-        _ <- bashCommands.runCommandToFile(s"sha256sum $tarPath", new File(s"$tarPath.sha256"))
+        _ <- Bagit().createBag(consignmentId, config.efs.rootLocation)
+        // The owner and group in the below command have no effect on the file permissions. It just makes tar idempotent
+        _ <- bashCommands.runCommand(s"tar --sort=name --owner=root:0 --group=root:0 --mtime ${java.time.LocalDate.now.toString} -C ${config.efs.rootLocation}/$consignmentId -c . | gzip -n > $tarPath")
+        _ <- bashCommands.runCommand(s"sha256sum $tarPath > $tarPath.sha256")
         _ <- s3Files.uploadFiles(config.s3.outputBucket, consignmentId, tarPath)
         _ <- graphQlApi.updateExportLocation(config, consignmentId, tarPath)
       } yield ExitCode.Success

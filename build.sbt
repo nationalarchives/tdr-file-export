@@ -44,7 +44,7 @@ lazy val exporter = (project in file("exporter"))
 lazy val authoriser = (project in file("authoriser"))
   .settings(
     commonSettings,
-    assemblyJarName in assembly := "consignment-export-authoriser.jar",
+    assemblyJarName in assembly := "consignment-export.jar",
     assemblyMergeStrategy in assembly := {
       case PathList("META-INF", xs@_*) => MergeStrategy.discard
       case _ => MergeStrategy.first

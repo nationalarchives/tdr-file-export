@@ -23,7 +23,11 @@ lazy val commonSettings = Seq(
     slf4j
   ),
   fork in Test := true,
-  javaOptions in Test += s"-Dconfig.file=${sourceDirectory.value}/test/resources/application.conf"
+  javaOptions in Test += s"-Dconfig.file=${sourceDirectory.value}/test/resources/application.conf",
+  assemblyMergeStrategy in assembly := {
+    case PathList("META-INF", xs@_*) => MergeStrategy.discard
+    case _ => MergeStrategy.first
+  }
 )
 
 lazy val exporter = (project in file("exporter"))
@@ -45,9 +49,5 @@ lazy val authoriser = (project in file("authoriser"))
   .settings(
     commonSettings,
     assemblyJarName in assembly := "consignment-export.jar",
-    assemblyMergeStrategy in assembly := {
-      case PathList("META-INF", xs@_*) => MergeStrategy.discard
-      case _ => MergeStrategy.first
-    },
     name := "tdr-consignment-export-authoriser",
   )

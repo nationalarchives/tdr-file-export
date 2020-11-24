@@ -1,9 +1,90 @@
 library("tdr-jenkinslib")
 
-lambdaTests(
-        // Hard-code stage, since it is arbitrary in the lambdaTests
-        // function, which publishes the code to the management account
-        stage: "intg",
-        libraryName: "consignment-export",
-        deployJobName: "TDR Consignment Export Authoriser Deploy"
-)
+  def versionTag = "v${env.BUILD_NUMBER}"
+  def libraryName = "consignment-export"
+  def repo = "tdr-${libraryName}"
+
+  pipeline {
+    agent {
+      label "master"
+    }
+    parameters {
+      choice(name: "STAGE", choices: ["intg", "staging", "prod"], description: "The stage you are running the lambda tests for")
+    }
+    stages {
+      stage("Run git secrets") {
+        agent {
+          label "master"
+        }
+        steps {
+          script {
+            tdr.runGitSecrets(repo)
+          }
+        }
+      }
+      stage("Build") {
+        agent {
+          ecs {
+            inheritFrom "transfer-frontend"
+          }
+        }
+        steps {
+          script {
+            tdr.reportStartOfBuildToGitHub(repo, env.GIT_COMMIT)
+            sh "sbt -no-colors assembly"
+            stash includes: "authoriser/target/${scalaVersion}/${libraryName}.jar", name: "${libraryName}-jar"
+          }
+        }
+      }
+      stage('Post-build') {
+        agent {
+          ecs {
+            inheritFrom "aws"
+            taskrole "arn:aws:iam::${env.MANAGEMENT_ACCOUNT}:role/TDRJenkinsNodeLambdaRole${params.STAGE.capitalize()}"
+          }
+        }
+
+        when {
+          expression { env.BRANCH_NAME == "master"}
+        }
+
+        stages {
+          stage('Deploy to integration') {
+            steps {
+              script {
+                unstash "${libraryName}-jar"
+                tdr.copyToS3CodeBucket(libraryName, versionTag)
+
+                tdr.configureJenkinsGitUser()
+
+                sh "git tag ${versionTag}"
+                sshagent(['github-jenkins']) {
+                  sh("git push origin ${versionTag}")
+                }
+
+                build(
+                  job: "TDR Consignment Export Authoriser Deploy",
+                  parameters: [
+                    string(name: "STAGE", value: "intg"),
+                    string(name: "TO_DEPLOY", value: versionTag)
+                  ],
+                  wait: false)
+              }
+            }
+          }
+        }
+      }
+    }
+    post {
+      failure {
+        script {
+          tdr.reportFailedBuildToGitHub(repo, env.GIT_COMMIT)
+        }
+    }
+    success {
+        script {
+          tdr.reportSuccessfulBuildToGitHub(repo, env.GIT_COMMIT)
+        }
+      }
+    }
+  }

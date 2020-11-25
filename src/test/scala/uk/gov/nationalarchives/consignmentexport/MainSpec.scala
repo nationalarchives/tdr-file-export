@@ -1,9 +1,13 @@
 package uk.gov.nationalarchives.consignmentexport
 
 import java.io.File
+import java.nio.file.Files
+import java.security.MessageDigest
 import java.util.UUID
 
 import com.github.tomakehurst.wiremock.stubbing.ServeEvent
+import org.apache.commons.codec.digest.DigestUtils
+import org.bouncycastle.util.encoders.Base64Encoder
 import uk.gov.nationalarchives.consignmentexport.Utils.PathUtils
 
 import scala.io.Source
@@ -39,7 +43,9 @@ class MainSpec extends ExternalServiceSpec {
     val source = Source.fromFile(new File(s"$path/result.tar.gz.sha256"))
     val checksum = source.getLines().toList.head.split(" ").head
 
-    checksum should equal("697de45785c1a1ab06e3a2542ce6250f48beb618288fc194a896cfdb89ca0ac2")
+    val expectedChecksum = DigestUtils.sha256Hex(Files.readAllBytes(s"$path/result.tar.gz".toPath))
+
+    checksum should equal(expectedChecksum)
     source.close()
   }
 

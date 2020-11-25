@@ -3,6 +3,7 @@ library("tdr-jenkinslib")
   def versionTag = "v${env.BUILD_NUMBER}"
   def libraryName = "consignment-export"
   def repo = "tdr-${libraryName}"
+  def scalaVersion = 2.13
 
   pipeline {
     agent {
@@ -32,7 +33,7 @@ library("tdr-jenkinslib")
           script {
             tdr.reportStartOfBuildToGitHub(repo, env.GIT_COMMIT)
             sh "sbt -no-colors assembly"
-            stash includes: "authoriser/target/${scalaVersion}/${libraryName}.jar", name: "${libraryName}-jar"
+            stash includes: "authoriser/target/scala-${scalaVersion}/${libraryName}.jar", name: "${libraryName}-jar"
           }
         }
       }

@@ -30,7 +30,7 @@ object Main extends CommandIOApp("tdr-consignment-export", "Exports tdr files in
         _ <- s3Files.downloadFiles(data, config.s3.cleanBucket, consignmentId, config.efs.rootLocation)
         _ <- Bagit().createBag(consignmentId, config.efs.rootLocation)
         // The owner and group in the below command have no effect on the file permissions. It just makes tar idempotent
-        _ <- bashCommands.runCommand(s"tar --sort=name --owner=root:0 --group=root:0 --mtime ${java.time.LocalDate.now.toString} -C ${config.efs.rootLocation}/$consignmentId -c . | gzip -n > $tarPath")
+        _ <- bashCommands.runCommand(s"tar --sort=name --owner=root:0 --group=root:0 --mtime ${java.time.LocalDate.now.toString} -C ${config.efs.rootLocation} -c ./$consignmentId | gzip -n > $tarPath")
         _ <- bashCommands.runCommand(s"sha256sum $tarPath > $tarPath.sha256")
         _ <- s3Files.uploadFiles(config.s3.outputBucket, consignmentId, tarPath)
         _ <- graphQlApi.updateExportLocation(config, consignmentId, tarPath)

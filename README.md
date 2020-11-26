@@ -22,4 +22,4 @@ You can run the Main object in Intellij as you can with any similar project. You
 You can also run `sbt universal:packageZipTarball` which creates a file `target/universal/tdr-consignment-export.tgz` which, when unzipped, gives you a `bin/tdr-consignment-export` executable which you can run with the same arguments as above. This is how the docker container runs the file so is the closest to running this in production.
 
 ### Deployment
-Because this is run as an on demand ECS task, deployment is just pushing a new version of the docker image to ECR. This will be done by Jenkins on merge to master so there should be no reason to do this locally.
+Because this is run as an on demand ECS task, deployment is just pushing a new version of the docker image to ECR with the appropriate stage tag. This will be done by Jenkins as part of the deploy job on merge to master so there should be no reason to do this locally.

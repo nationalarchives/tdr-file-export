@@ -1,5 +1,5 @@
 ## Consignment Export
-This is the project which contains the code for the consginment export. 
+This is the project which contains the code for the consignment export. 
 
 The infrastructure for the export, is defined in the [terraform]("https://github.com/nationalarchives/tdr-terraform-environments") repository.
 * The front end makes a request to the api gateway with the user's token

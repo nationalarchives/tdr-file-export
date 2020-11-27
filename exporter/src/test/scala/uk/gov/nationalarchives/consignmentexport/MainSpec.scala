@@ -25,8 +25,6 @@ class MainSpec extends ExternalServiceSpec {
     objects.size should equal(2)
     objects.head should equal(s"$consignmentId.tar.gz")
     objects.last should equal(s"$consignmentId.tar.gz.sha256")
-
-    wiremockGraphqlServer.getAllServeEvents.asScala.map(_.getRequest.getBodyAsString).foreach(println)
   }
 
   "the export job" should "export a valid tar and checksum file" in {

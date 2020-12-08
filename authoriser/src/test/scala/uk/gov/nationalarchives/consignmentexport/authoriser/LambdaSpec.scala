@@ -6,7 +6,7 @@ import java.io.ByteArrayOutputStream
 import io.circe.parser.decode
 import io.circe.generic.auto._
 import org.mockito.ArgumentCaptor
-import uk.gov.nationalarchives.consignmentexport.authoriser.Lambda.{Output, PolicyDocument}
+import uk.gov.nationalarchives.consignmentexport.authoriser.Lambda.Output
 
 class LambdaSpec extends LambdaSpecUtils {
   forAll(inputs) {

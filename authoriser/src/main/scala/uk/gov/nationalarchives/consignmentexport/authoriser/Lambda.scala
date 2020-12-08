@@ -43,7 +43,7 @@ class Lambda {
       case Some(_) => "Deny"
       case None => "Allow"
     }
-    Output(PolicyDocument(Statement = List(Statement(Effect = effect, Resource = input.methodArn)))).asJson.noSpaces
+    Output(PolicyDocument("2012-10-17", List(Statement(Effect = effect, Resource = input.methodArn)))).asJson.noSpaces
   }
 
   def process(inputStream: InputStream, outputStream: OutputStream): Unit = {
@@ -64,6 +64,6 @@ object Lambda {
   case class Configuration(api: Api)
   case class Input(`type`: String, methodArn: String, authorizationToken: String)
   case class Statement(Action: String = "execute-api:Invoke", Effect: String, Resource: String)
-  case class PolicyDocument(Version: String = "2012-10-17", Statement: List[Statement])
+  case class PolicyDocument(Version: String, Statement: List[Statement])
   case class Output(policyDocument: PolicyDocument)
 }

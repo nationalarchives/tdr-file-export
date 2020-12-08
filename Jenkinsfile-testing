@@ -50,7 +50,7 @@ pipeline {
             }
           }
           steps {
-            sh 'sbt -no-colors universal:packageZipTarball'
+            sh 'sbt -no-colors exporter/universal:packageZipTarball'
             stash includes: "Dockerfile", name: "Dockerfile"
             stash includes: "target/universal/tdr-consignment-export.tgz", name: "tdr-consignment-export"
           }
@@ -63,17 +63,6 @@ pipeline {
               tdr.buildAndPushImage("consignment-export", versionTag)
               tdr.postToDaTdrSlackChannel(colour: "good", message: "*Consignment Export* :whale: Pushed version ${versionTag} to AWS ECR")
             }
-          }
-        }
-        stage('Deploy to integration') {
-          steps {
-            build(
-                job: "TDR Consignment Export Deploy",
-                parameters: [
-                    string(name: "STAGE", value: "intg"),
-                    string(name: "TO_DEPLOY", value: versionTag)
-                ],
-                wait: false)
           }
         }
       }

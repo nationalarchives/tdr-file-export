@@ -7,7 +7,8 @@ The infrastructure for the export, is defined in the [terraform]("https://github
 * Api gateway triggers a step function
 * The step function triggers an ECS task which runs the code in this repository.
 
-The code does the following:
+There are two sub-modules here. 
+The code in the exporter module does the following:
 * Calls the API to get a list of files
 * Downloads the files from S3 to the EFS volume
 * Creates the Bagit bag
@@ -15,6 +16,10 @@ The code does the following:
 * Create a checksum file for the tar file
 * Upload to the export bucket.
 * Update the API with the export location
+
+The code in the authoriser module:
+* Gets the token from the request and the consignment ID from the path
+* Calls the API with the token. If the consignment is returned then the user is authorised and Allow is returned, otherwise Deny is returned.
 
 ### Running Locally
 You can run the Main object in Intellij as you can with any similar project. You will need to provide the program arguments: `export --consignmentId {a uuid}`

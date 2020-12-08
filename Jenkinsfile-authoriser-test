@@ -53,7 +53,7 @@ library("tdr-jenkinslib")
             steps {
               script {
                 unstash "${libraryName}-jar"
-                tdr.copyToS3CodeBucket(libraryName, versionTag)
+                sh "aws s3 cp authoriser/target/scala-${scalaVersion}/${libraryName}.jar s3://tdr-backend-code-mgmt/${versionTag}/${libraryName}.jar"
 
                 tdr.configureJenkinsGitUser()
 

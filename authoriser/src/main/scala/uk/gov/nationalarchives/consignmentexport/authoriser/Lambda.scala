@@ -59,7 +59,6 @@ object Lambda {
   implicit val contextShift: ContextShift[IO] = IO.contextShift(executionContext)
   implicit val backend: SttpBackend[Identity, Nothing, NothingT] = HttpURLConnectionBackend()
 
-
   case class Api(url: String)
   case class Configuration(api: Api)
   case class Input(`type`: String, methodArn: String, authorizationToken: String)

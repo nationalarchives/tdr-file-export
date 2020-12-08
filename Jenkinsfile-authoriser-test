@@ -10,7 +10,7 @@ library("tdr-jenkinslib")
       label "master"
     }
     parameters {
-      choice(name: "STAGE", choices: ["intg", "staging", "prod"], description: "The stage you are running the lambda tests for")
+      choice(name: "STAGE", choices: ["intg", "staging", "prod"], description: "The stage you are running the authoriser tests for")
     }
     stages {
       stage("Run git secrets") {
@@ -44,7 +44,6 @@ library("tdr-jenkinslib")
             taskrole "arn:aws:iam::${env.MANAGEMENT_ACCOUNT}:role/TDRJenkinsNodeLambdaRole${params.STAGE.capitalize()}"
           }
         }
-
         when {
           expression { env.BRANCH_NAME == "master"}
         }
@@ -81,8 +80,8 @@ library("tdr-jenkinslib")
         script {
           tdr.reportFailedBuildToGitHub(repo, env.GIT_COMMIT)
         }
-    }
-    success {
+      }
+      success {
         script {
           tdr.reportSuccessfulBuildToGitHub(repo, env.GIT_COMMIT)
         }

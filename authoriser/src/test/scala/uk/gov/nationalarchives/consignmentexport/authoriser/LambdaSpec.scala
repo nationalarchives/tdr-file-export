@@ -1,6 +1,5 @@
 package uk.gov.nationalarchives.consignmentexport.authoriser
 
-
 import java.io.ByteArrayOutputStream
 
 import io.circe.parser.decode

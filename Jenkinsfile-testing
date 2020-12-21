@@ -52,7 +52,7 @@ pipeline {
           steps {
             sh 'sbt -no-colors exporter/universal:packageZipTarball'
             stash includes: "Dockerfile", name: "Dockerfile"
-            stash includes: "target/universal/tdr-consignment-export.tgz", name: "tdr-consignment-export"
+            stash includes: "exporter/target/universal/tdr-consignment-export.tgz", name: "tdr-consignment-export"
           }
         }
         stage("Push Docker image") {

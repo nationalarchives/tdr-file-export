@@ -1,5 +1,7 @@
 FROM openjdk:16-alpine
 RUN apk add --no-cache bash tar && \
+    apk update && \
+    apk upgrade p11-kit && \
     adduser consignment-export -D
 WORKDIR /home/consignment-export
 USER consignment-export

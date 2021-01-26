@@ -62,6 +62,10 @@ class ExternalServiceSpec extends AnyFlatSpec with BeforeAndAfterEach with Befor
     .withRequestBody(equalToJson("{\"query\":\"query getFiles($consignmentId:UUID!){getFiles(consignmentid:$consignmentId){fileIds}}\",\"variables\":{\"consignmentId\":\"50df01e6-2e5e-4269-97e7-531a755b417d\"}}"))
     .willReturn(okJson(fromResource(s"json/get_files.json").mkString)))
 
+  def graphqlGetEmptyFiles: StubMapping = wiremockGraphqlServer.stubFor(post(urlEqualTo(graphQlPath))
+    .withRequestBody(equalToJson("{\"query\":\"query getFiles($consignmentId:UUID!){getFiles(consignmentid:$consignmentId){fileIds}}\",\"variables\":{\"consignmentId\":\"6794231c-39fe-41e0-a498-b6a077563282\"}}"))
+    .willReturn(okJson(fromResource(s"json/get_files_empty.json").mkString)))
+
   def graphqlUpdateExportLocation: StubMapping = wiremockGraphqlServer.stubFor(post(urlEqualTo(graphQlPath))
     .willReturn(okJson(fromResource(s"json/get_files.json").mkString)))
 
@@ -84,7 +88,6 @@ class ExternalServiceSpec extends AnyFlatSpec with BeforeAndAfterEach with Befor
   override def beforeEach(): Unit = {
     authOk
     wiremockGraphqlServer.resetAll()
-    graphqlGetFiles
     graphqlUpdateExportLocation
     graphqlGetOriginalPath
     createBucket("test-clean-bucket")

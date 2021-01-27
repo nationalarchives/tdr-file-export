@@ -40,6 +40,8 @@ lazy val exporter = (project in file("exporter"))
       bagit,
       decline,
       declineEffect,
+      keycloakCore,
+      keycloakAdminClient,
       s3Mock
     ),
     packageName in Universal := "tdr-consignment-export"

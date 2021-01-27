@@ -6,19 +6,21 @@ import cats.effect.{ContextShift, IO}
 import cats.implicits._
 import uk.gov.nationalarchives.tdr.{GraphQLClient, GraphQlResponse}
 import uk.gov.nationalarchives.tdr.keycloak.KeycloakUtils
+import graphql.codegen.GetConsignmentExport.{getConsignmentExport => gce}
 import graphql.codegen.GetFiles.{getFiles => gf}
 import graphql.codegen.UpdateExportLocation.{updateExportLocation => uel}
 import graphql.codegen.GetOriginalPath.{getOriginalPath => gop}
 import graphql.codegen.types.UpdateExportLocationInput
 import sttp.client.{HttpURLConnectionBackend, Identity, NothingT, SttpBackend}
 import GraphQlApi._
+import graphql.codegen.GetConsignmentExport
 import io.chrisdavenport.log4cats.SelfAwareStructuredLogger
 import uk.gov.nationalarchives.consignmentexport.Config.Configuration
-import uk.gov.nationalarchives.tdr.error.GraphQlError
 
 import scala.concurrent.{ExecutionContextExecutor, Future}
 
 class GraphQlApi(keycloak: KeycloakUtils,
+                 consignmentClient: GraphQLClient[gce.Data, gce.Variables],
                  filesClient: GraphQLClient[gf.Data, gf.Variables],
                  updateExportLocationClient: GraphQLClient[uel.Data, uel.Variables],
                  getOriginalPathClient: GraphQLClient[gop.Data, gop.Variables])(implicit val contextShift: ContextShift[IO], val logger: SelfAwareStructuredLogger[IO]) {
@@ -26,6 +28,14 @@ class GraphQlApi(keycloak: KeycloakUtils,
   implicit class ErrorUtils[D](response: GraphQlResponse[D]) {
     val errorString: String = response.errors.map(_.message).mkString("\n")
   }
+
+  def getConsignmentExport(config: Configuration, consignmentId: UUID) = for {
+    token <- keycloak.serviceAccountToken(config.auth.clientId, config.auth.clientSecret).toIO
+    exportResult <- consignmentClient.getResult(token, gce.document, gce.Variables(consignmentId).some).toIO
+    consignmentData <-
+      IO.fromOption(exportResult.data)(new RuntimeException(s"No consignment found for consignment id $consignmentId ${exportResult.errorString}"))
+    consignment = consignmentData.getConsignment
+  } yield consignment
 
   def getFiles(config: Configuration, consignmentId: UUID): IO[List[FileIdWithPath]] = for {
     token <- keycloak.serviceAccountToken(config.auth.clientId, config.auth.clientSecret).toIO
@@ -54,10 +64,11 @@ object GraphQlApi {
 
   def apply(apiUrl: String, authUrl: String)(implicit contextShift: ContextShift[IO], logger: SelfAwareStructuredLogger[IO]): GraphQlApi = {
     val keycloak = new KeycloakUtils(authUrl)
+    val getConsignmentClient = new GraphQLClient[gce.Data, gce.Variables](apiUrl)
     val getFilesClient = new GraphQLClient[gf.Data, gf.Variables](apiUrl)
     val updateExportLocationClient = new GraphQLClient[uel.Data, uel.Variables](apiUrl)
     val getOriginalPathClient = new GraphQLClient[gop.Data, gop.Variables](apiUrl)
-    new GraphQlApi(keycloak, getFilesClient, updateExportLocationClient, getOriginalPathClient)(contextShift, logger)
+    new GraphQlApi(keycloak, getConsignmentClient, getFilesClient, updateExportLocationClient, getOriginalPathClient)(contextShift, logger)
   }
 
   implicit class FutureUtils[T](f: Future[T])(implicit contextShift: ContextShift[IO]) {

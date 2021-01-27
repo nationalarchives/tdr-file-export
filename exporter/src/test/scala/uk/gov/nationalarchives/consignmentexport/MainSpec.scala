@@ -17,6 +17,7 @@ import scala.jdk.CollectionConverters._
 class MainSpec extends ExternalServiceSpec {
 
   "the export job" should "export the correct tar and checksum file" in {
+    graphqlGetFiles
     val consignmentId = UUID.fromString("50df01e6-2e5e-4269-97e7-531a755b417d")
     putFile(s"$consignmentId/7b19b272-d4d1-4d77-bf25-511dc6489d12")
     Main.run(List("export", "--consignmentId", consignmentId.toString)).unsafeRunSync()
@@ -28,6 +29,7 @@ class MainSpec extends ExternalServiceSpec {
   }
 
   "the export job" should "export a valid tar and checksum file" in {
+    graphqlGetFiles
     val consignmentId = UUID.fromString("50df01e6-2e5e-4269-97e7-531a755b417d")
     putFile(s"$consignmentId/7b19b272-d4d1-4d77-bf25-511dc6489d12")
     Main.run(List("export", "--consignmentId", consignmentId.toString)).unsafeRunSync()
@@ -48,6 +50,7 @@ class MainSpec extends ExternalServiceSpec {
   }
 
   "the export job" should "update the export location in the api" in {
+    graphqlGetFiles
     val consignmentId = UUID.fromString("50df01e6-2e5e-4269-97e7-531a755b417d")
     putFile(s"$consignmentId/7b19b272-d4d1-4d77-bf25-511dc6489d12")
     Main.run(List("export", "--consignmentId", consignmentId.toString)).unsafeRunSync()
@@ -57,5 +60,15 @@ class MainSpec extends ExternalServiceSpec {
 
     exportLocationEvent.isDefined should be(true)
     exportLocationEvent.get.getRequest.getBodyAsString.contains("\"consignmentId\":\"50df01e6-2e5e-4269-97e7-531a755b417d\"") should be(true)
+  }
+
+  "the export job" should "throw an error if the api returns no files for the consignment" in {
+    graphqlGetEmptyFiles
+    val consignmentId = "6794231c-39fe-41e0-a498-b6a077563282"
+
+    val ex = intercept[Exception] {
+      Main.run(List("export", "--consignmentId", consignmentId)).unsafeRunSync()
+    }
+    ex.getMessage should equal(s"Consignment API returned no files for consignment $consignmentId")
   }
 }

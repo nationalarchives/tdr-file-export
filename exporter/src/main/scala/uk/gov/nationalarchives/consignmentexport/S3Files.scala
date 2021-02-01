@@ -18,7 +18,6 @@ import scala.sys.process._
 class S3Files(s3Utils: S3Utils)(implicit val logger: SelfAwareStructuredLogger[IO]) {
 
   def downloadFiles(files: List[FileIdWithPath], bucket: String, consignmentId: UUID, rootLocation: String): IO[Unit] = for {
-    _ <- IO.pure(new File(s"$rootLocation/$consignmentId").mkdirs())
     _ <- files.map(file => {
       val writeDirectory = file.originalPath.split("/").init.mkString("/")
       new File(s"$rootLocation/$consignmentId/$writeDirectory").mkdirs()

@@ -1,5 +1,6 @@
 package uk.gov.nationalarchives.consignmentexport
 
+import java.io.File
 import java.nio.file.{Path, Paths}
 import java.util.UUID
 
@@ -17,10 +18,10 @@ import scala.sys.process._
 class S3Files(s3Utils: S3Utils)(implicit val logger: SelfAwareStructuredLogger[IO]) {
 
   def downloadFiles(files: List[FileIdWithPath], bucket: String, consignmentId: UUID, rootLocation: String): IO[Unit] = for {
-    _ <- IO.pure(s"mkdir -p $rootLocation/$consignmentId" !!)
+    _ <- IO.pure(new File(s"$rootLocation/$consignmentId").mkdirs())
     _ <- files.map(file => {
       val writeDirectory = file.originalPath.split("/").init.mkString("/")
-      s"mkdir -p $rootLocation/$consignmentId/$writeDirectory".!!
+      new File(s"$rootLocation/$consignmentId/$writeDirectory").mkdirs()
       s3Utils.downloadFiles(bucket, s"$consignmentId/${file.fileId}", s"$rootLocation/$consignmentId/${file.originalPath}".toPath.some)
     }).sequence
     _ <- logger.info(s"Files downloaded from S3 for consignment $consignmentId")

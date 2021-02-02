@@ -1,19 +1,16 @@
 package uk.gov.nationalarchives.consignmentexport
 
 import java.io.File
-import java.nio.file.{Path, Paths}
 import java.util.UUID
 
 import cats.effect.IO
 import cats.implicits._
-import graphql.codegen.GetFiles.getFiles.Data
 import io.chrisdavenport.log4cats.SelfAwareStructuredLogger
 import uk.gov.nationalarchives.aws.utils.S3Utils
-import Utils._
 import uk.gov.nationalarchives.consignmentexport.GraphQlApi.FileIdWithPath
+import uk.gov.nationalarchives.consignmentexport.Utils._
 
 import scala.language.postfixOps
-import scala.sys.process._
 
 class S3Files(s3Utils: S3Utils)(implicit val logger: SelfAwareStructuredLogger[IO]) {
 

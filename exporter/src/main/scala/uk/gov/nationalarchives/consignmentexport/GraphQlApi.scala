@@ -14,7 +14,6 @@ import sttp.client.{HttpURLConnectionBackend, Identity, NothingT, SttpBackend}
 import GraphQlApi._
 import io.chrisdavenport.log4cats.SelfAwareStructuredLogger
 import uk.gov.nationalarchives.consignmentexport.Config.Configuration
-import uk.gov.nationalarchives.tdr.error.GraphQlError
 
 import scala.concurrent.{ExecutionContextExecutor, Future}
 
@@ -41,7 +40,7 @@ class GraphQlApi(keycloak: KeycloakUtils,
     _ <- logger.info(s"Export location updated for consignment $consignmentId")
   } yield data.updateExportLocation
 
-  def getOriginalPath(config: Configuration, fileId: UUID) = for {
+  def getOriginalPath(config: Configuration, fileId: UUID): IO[FileIdWithPath] = for {
     token <- keycloak.serviceAccountToken(config.auth.clientId, config.auth.clientSecret).toIO
     response <- getOriginalPathClient.getResult(token, gop.document, gop.Variables(fileId).some).toIO
     data <- IO.fromOption(response.data)(new RuntimeException(s"No data returned from the original path call for file id $fileId ${response.errorString}"))

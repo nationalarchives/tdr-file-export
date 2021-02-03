@@ -4,57 +4,87 @@ import java.util.UUID
 
 import cats.effect.IO
 import gov.loc.repository.bagit.domain.Metadata
-import graphql.codegen.GetConsignmentExport
+import graphql.codegen.GetConsignmentExport.getConsignmentForExport.GetConsignment
 import io.chrisdavenport.log4cats.SelfAwareStructuredLogger
+import org.keycloak.representations.idm.UserRepresentation
 import uk.gov.nationalarchives.consignmentexport.BagMetadata._
-import uk.gov.nationalarchives.consignmentexport.Config.{Configuration, config}
+import uk.gov.nationalarchives.consignmentexport.Config.Configuration
 
 class BagMetadata(graphQlApi: GraphQlApi, keycloakClient: KeycloakClient)(implicit val logger: SelfAwareStructuredLogger[IO]) {
   def getBagMetadata(consignmentId: UUID, config: Configuration): IO[Metadata] = for {
-   consignment <- graphQlApi.getConsignmentExport(config, consignmentId)
-   metadata = new Metadata
-
-   //Question throw exception if fail to add consignment info?
-   consignmentInfoAdded = consignment match {
-     case Some(consignment) => addConsignmentMetadata(consignment, metadata)
-     case None => false
+   consignment <- graphQlApi.getConsignmentMetadata(config, consignmentId)
+   consignmentDetails = consignment match {
+     case Some(consignment) => getConsignmentDetails(consignment)
+     case None => throw new RuntimeException(s"No consignment metadata found for consignment $consignmentId")
    }
 
-  } yield metadata
+  } yield generateMetadata(consignmentDetails)
 
-  private def addConsignmentMetadata(consignment: GetConsignmentExport.getConsignmentExport.GetConsignment, metadata: Metadata): Boolean = {
-    //Question if a value is missing from the consignment info, should a default value be added, or ignore, or throw exeception?
-    for {
+  private def getConsignmentDetails(consignment: GetConsignment): Map[String, Option[String]] = {
+    val seriesCode = for {
       series <- consignment.series
       sc <- series.code
-    } yield metadata.add(ConsignmentSeriesKey, sc)
+    } yield sc
 
-    for {
+    val bodyCode = for {
       body <- consignment.transferringBody
       bc <- body.code
-    } yield metadata.add(SourceOrganisationKey, bc)
+    } yield bc
 
-    for {
-      startDate <- consignment.dateTime
-      sd = startDate.toString
-    } yield metadata.add(ConsignmentStartDateKey, sd)
+    val startDatetime = for {
+      createdDate <- consignment.createdDatetime
+      cd = createdDate.toString
+    } yield cd
 
-    for {
+    val completedDatetime = for {
       completedDate <- consignment.transferInitiatedDatetime
       cd = completedDate.toString
-    } yield metadata.add(ConsignmentCompletedDateKey, cd)
+    } yield cd
 
-    for {
+    val exportDatetime = for {
       exportDate <- consignment.exportDatetime
       ed = exportDate.toString
-    } yield metadata.add(ConsignmentExportDateKey, ed)
+    } yield ed
 
-    metadata.add(ContactNameKey, getContactName(consignment.userid))
+    val contactName = getContactName(consignment.userid)
+
+    Map(
+      ConsignmentSeriesKey -> seriesCode,
+      SourceOrganisationKey -> bodyCode,
+      ConsignmentStartDateKey -> startDatetime,
+      ConsignmentCompletedDateKey -> completedDatetime,
+      ConsignmentExportDateKey -> exportDatetime,
+      ContactNameKey -> Some(contactName)
+    )
+  }
+
+  private def generateMetadata(details: Map[String, Option[String]]): Metadata = {
+    val metadata = new Metadata
+
+    details.map(e => {
+      e._2 match {
+        case Some(_) => metadata.add(e._1, e._2.get)
+        case None => //For now do nothing is property is missing
+      }
+    })
+    metadata
   }
 
   private def getContactName(userId: UUID): String =  {
-      val userDetails = keycloakClient.getUserDetails(userId.toString)
+      val userDetails = getUserDetails(userId.toString)
       s"${userDetails.getFirstName} ${userDetails.getLastName}"
+  }
+
+  private def getUserDetails(userId: String): UserRepresentation = {
+    val userDetails = keycloakClient.getUserDetails(userId)
+    userDetailsComplete(userDetails) match {
+      case true => userDetails
+      case _ => throw new RuntimeException(s"Incomplete details for user $userId")
+    }
+  }
+
+  private def userDetailsComplete(userDetails: UserRepresentation): Boolean = {
+    userDetails.getFirstName != null && userDetails.getLastName != null
   }
 }
 

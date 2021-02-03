@@ -5,7 +5,7 @@ import java.net.URI
 import java.nio.file.Path
 
 import com.github.tomakehurst.wiremock.WireMockServer
-import com.github.tomakehurst.wiremock.client.WireMock.{equalToJson, okJson, post, urlEqualTo}
+import com.github.tomakehurst.wiremock.client.WireMock.{equalToJson, get, okJson, post, urlEqualTo}
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
 import io.findify.s3mock.S3Mock
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
@@ -55,8 +55,17 @@ class ExternalServiceSpec extends AnyFlatSpec with BeforeAndAfterEach with Befor
 
   val graphQlPath = "/graphql"
   val authPath = "/auth/realms/tdr/protocol/openid-connect/token"
+  val keycloakGetUserPath = "/auth/admin/realms/tdr/users"
 
   def graphQlUrl: String = wiremockGraphqlServer.url(graphQlPath)
+
+  def graphQlGetConsignmentMetadata: StubMapping = wiremockGraphqlServer.stubFor(post(urlEqualTo(graphQlPath))
+    .withRequestBody(equalToJson("{\"query\":\"query getConsignmentForExport($consignmentId:UUID!){getConsignment(consignmentid:$consignmentId){userid createdDatetime transferInitiatedDatetime exportDatetime series{code} transferringBody{code}}}\",\"variables\":{\"consignmentId\":\"50df01e6-2e5e-4269-97e7-531a755b417d\"}}"))
+    .willReturn(okJson(fromResource(s"json/get_consignment_for_export.json").mkString)))
+
+  def graphQlGetDifferentConsignmentMetadata: StubMapping = wiremockGraphqlServer.stubFor(post(urlEqualTo(graphQlPath))
+    .withRequestBody(equalToJson("{\"query\":\"query getConsignmentForExport($consignmentId:UUID!){getConsignment(consignmentid:$consignmentId){userid createdDatetime transferInitiatedDatetime exportDatetime series{code} transferringBody{code}}}\",\"variables\":{\"consignmentId\":\"6794231c-39fe-41e0-a498-b6a077563282\"}}"))
+    .willReturn(okJson(fromResource(s"json/get_consignment_for_export.json").mkString)))
 
   def graphqlGetFiles: StubMapping = wiremockGraphqlServer.stubFor(post(urlEqualTo(graphQlPath))
     .withRequestBody(equalToJson("{\"query\":\"query getFiles($consignmentId:UUID!){getFiles(consignmentid:$consignmentId){fileIds}}\",\"variables\":{\"consignmentId\":\"50df01e6-2e5e-4269-97e7-531a755b417d\"}}"))
@@ -76,6 +85,12 @@ class ExternalServiceSpec extends AnyFlatSpec with BeforeAndAfterEach with Befor
 
   def authOk: StubMapping = wiremockAuthServer.stubFor(post(urlEqualTo(authPath))
     .willReturn(okJson(fromResource(s"json/access_token.json").mkString)))
+
+  def keycloakGetUser: StubMapping = wiremockAuthServer.stubFor(get(urlEqualTo(keycloakGetUserPath + "/b2657adf-6e93-424f-b0f1-aadd26762a96" ))
+    .willReturn(okJson(fromResource(s"json/get_keycloak_user.json").mkString)))
+
+  def keycloakGetIncompleteUser: StubMapping = wiremockAuthServer.stubFor(get(urlEqualTo(keycloakGetUserPath + "/b2657adf-6e93-424f-b0f1-aadd26762a96" ))
+    .willReturn(okJson(fromResource(s"json/get_incomplete_keycloak_user.json").mkString)))
 
   val s3Api: S3Mock = S3Mock(port = 8003, dir = "/tmp/s3")
 

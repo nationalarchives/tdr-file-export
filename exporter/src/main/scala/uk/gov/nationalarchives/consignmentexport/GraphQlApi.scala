@@ -4,18 +4,17 @@ import java.util.UUID
 
 import cats.effect.{ContextShift, IO}
 import cats.implicits._
-import uk.gov.nationalarchives.tdr.{GraphQLClient, GraphQlResponse}
-import uk.gov.nationalarchives.tdr.keycloak.KeycloakUtils
-import graphql.codegen.GetConsignmentExport.{getConsignmentExport => gce}
+import graphql.codegen.GetConsignmentExport.{getConsignmentForExport => gce}
 import graphql.codegen.GetFiles.{getFiles => gf}
-import graphql.codegen.UpdateExportLocation.{updateExportLocation => uel}
 import graphql.codegen.GetOriginalPath.{getOriginalPath => gop}
+import graphql.codegen.UpdateExportLocation.{updateExportLocation => uel}
 import graphql.codegen.types.UpdateExportLocationInput
-import sttp.client.{HttpURLConnectionBackend, Identity, NothingT, SttpBackend}
-import GraphQlApi._
-import graphql.codegen.GetConsignmentExport
 import io.chrisdavenport.log4cats.SelfAwareStructuredLogger
+import sttp.client.{HttpURLConnectionBackend, Identity, NothingT, SttpBackend}
 import uk.gov.nationalarchives.consignmentexport.Config.Configuration
+import uk.gov.nationalarchives.consignmentexport.GraphQlApi._
+import uk.gov.nationalarchives.tdr.keycloak.KeycloakUtils
+import uk.gov.nationalarchives.tdr.{GraphQLClient, GraphQlResponse}
 
 import scala.concurrent.{ExecutionContextExecutor, Future}
 
@@ -29,7 +28,7 @@ class GraphQlApi(keycloak: KeycloakUtils,
     val errorString: String = response.errors.map(_.message).mkString("\n")
   }
 
-  def getConsignmentExport(config: Configuration, consignmentId: UUID) = for {
+  def getConsignmentMetadata(config: Configuration, consignmentId: UUID) = for {
     token <- keycloak.serviceAccountToken(config.auth.clientId, config.auth.clientSecret).toIO
     exportResult <- consignmentClient.getResult(token, gce.document, gce.Variables(consignmentId).some).toIO
     consignmentData <-

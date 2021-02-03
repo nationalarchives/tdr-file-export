@@ -1,7 +1,5 @@
 package uk.gov.nationalarchives.consignmentexport
 
-import java.io.File
-
 import cats.effect._
 import com.monovore.decline.Opts
 import com.monovore.decline.effect.CommandIOApp

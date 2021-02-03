@@ -15,7 +15,6 @@ import sttp.client.{HttpURLConnectionBackend, Identity, NothingT, SttpBackend}
 import GraphQlApi._
 import io.chrisdavenport.log4cats.SelfAwareStructuredLogger
 import uk.gov.nationalarchives.consignmentexport.Config.Configuration
-import uk.gov.nationalarchives.tdr.error.GraphQlError
 
 import scala.concurrent.{ExecutionContextExecutor, Future}
 
@@ -68,7 +67,7 @@ object GraphQlApi {
     val getFilesClient = new GraphQLClient[gf.Data, gf.Variables](apiUrl)
     val updateExportLocationClient = new GraphQLClient[uel.Data, uel.Variables](apiUrl)
     val getOriginalPathClient = new GraphQLClient[gop.Data, gop.Variables](apiUrl)
-    new GraphQlApi(keycloak, getFilesClient, getConsignmentClient, updateExportLocationClient, getOriginalPathClient)(contextShift, logger)
+    new GraphQlApi(keycloak, getConsignmentClient, getFilesClient, updateExportLocationClient, getOriginalPathClient)(contextShift, logger)
   }
 
   implicit class FutureUtils[T](f: Future[T])(implicit contextShift: ContextShift[IO]) {

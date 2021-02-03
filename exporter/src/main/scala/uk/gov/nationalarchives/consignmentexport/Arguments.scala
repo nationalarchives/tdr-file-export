@@ -2,7 +2,6 @@ package uk.gov.nationalarchives.consignmentexport
 
 import java.util.UUID
 
-import cats.implicits._
 import com.monovore.decline.Opts
 
 object Arguments {

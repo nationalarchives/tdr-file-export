@@ -4,17 +4,18 @@ import java.util.UUID
 
 import cats.effect.{ContextShift, IO}
 import cats.implicits._
-import graphql.codegen.GetConsignmentExport.{getConsignmentForExport => gce}
-import graphql.codegen.GetFiles.{getFiles => gf}
-import graphql.codegen.GetOriginalPath.{getOriginalPath => gop}
-import graphql.codegen.UpdateExportLocation.{updateExportLocation => uel}
-import graphql.codegen.types.UpdateExportLocationInput
-import io.chrisdavenport.log4cats.SelfAwareStructuredLogger
-import sttp.client.{HttpURLConnectionBackend, Identity, NothingT, SttpBackend}
-import uk.gov.nationalarchives.consignmentexport.Config.Configuration
-import uk.gov.nationalarchives.consignmentexport.GraphQlApi._
-import uk.gov.nationalarchives.tdr.keycloak.KeycloakUtils
 import uk.gov.nationalarchives.tdr.{GraphQLClient, GraphQlResponse}
+import graphql.codegen.GetConsignmentExport.{getConsignmentForExport => gce}
+import uk.gov.nationalarchives.tdr.keycloak.KeycloakUtils
+import graphql.codegen.GetFiles.{getFiles => gf}
+import graphql.codegen.UpdateExportLocation.{updateExportLocation => uel}
+import graphql.codegen.GetOriginalPath.{getOriginalPath => gop}
+import graphql.codegen.types.UpdateExportLocationInput
+import sttp.client.{HttpURLConnectionBackend, Identity, NothingT, SttpBackend}
+import GraphQlApi._
+import io.chrisdavenport.log4cats.SelfAwareStructuredLogger
+import uk.gov.nationalarchives.consignmentexport.Config.Configuration
+import uk.gov.nationalarchives.tdr.error.GraphQlError
 
 import scala.concurrent.{ExecutionContextExecutor, Future}
 
@@ -50,7 +51,7 @@ class GraphQlApi(keycloak: KeycloakUtils,
     _ <- logger.info(s"Export location updated for consignment $consignmentId")
   } yield data.updateExportLocation
 
-  def getOriginalPath(config: Configuration, fileId: UUID) = for {
+  def getOriginalPath(config: Configuration, fileId: UUID): IO[FileIdWithPath] = for {
     token <- keycloak.serviceAccountToken(config.auth.clientId, config.auth.clientSecret).toIO
     response <- getOriginalPathClient.getResult(token, gop.document, gop.Variables(fileId).some).toIO
     data <- IO.fromOption(response.data)(new RuntimeException(s"No data returned from the original path call for file id $fileId ${response.errorString}"))
@@ -67,7 +68,7 @@ object GraphQlApi {
     val getFilesClient = new GraphQLClient[gf.Data, gf.Variables](apiUrl)
     val updateExportLocationClient = new GraphQLClient[uel.Data, uel.Variables](apiUrl)
     val getOriginalPathClient = new GraphQLClient[gop.Data, gop.Variables](apiUrl)
-    new GraphQlApi(keycloak, getConsignmentClient, getFilesClient, updateExportLocationClient, getOriginalPathClient)(contextShift, logger)
+    new GraphQlApi(keycloak, getFilesClient, getConsignmentClient, updateExportLocationClient, getOriginalPathClient)(contextShift, logger)
   }
 
   implicit class FutureUtils[T](f: Future[T])(implicit contextShift: ContextShift[IO]) {

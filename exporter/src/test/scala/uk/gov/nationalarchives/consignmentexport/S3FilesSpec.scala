@@ -30,6 +30,21 @@ class S3FilesSpec extends ExportSpec {
     pathCaptor.getValue.get.toString should equal(s"root/$consignmentId/originalPath")
   }
 
+  "the downloadFiles method" should "call the library method with the correct arguments if there are quotes in the path" in {
+    val s3Utils = mock[S3Utils]
+    val pathCaptor: ArgumentCaptor[Option[Path]] = ArgumentCaptor.forClass(classOf[Option[Path]])
+    val mockResponse = IO.pure(GetObjectResponse.builder.build())
+    doAnswer(() => mockResponse).when(s3Utils).downloadFiles(any[String], any[String], pathCaptor.capture())
+
+    val consignmentId = UUID.randomUUID()
+    val fileId = UUID.randomUUID()
+
+    S3Files(s3Utils).downloadFiles(List(FileIdWithPath(fileId, """a/path'with/quotes"""")), "testbucket", consignmentId, "root").unsafeRunSync()
+
+    pathCaptor.getValue.isDefined should equal(true)
+    pathCaptor.getValue.get.toString should equal(s"""root/$consignmentId/a/path'with/quotes"""")
+  }
+
   "the uploadFiles method" should "call the library method with the correct arguments" in {
     val s3Utils = mock[S3Utils]
     val bucketCaptor: ArgumentCaptor[String] = ArgumentCaptor.forClass(classOf[String])

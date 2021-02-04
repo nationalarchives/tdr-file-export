@@ -1,0 +1,19 @@
+{
+  "data": {
+    "getConsignment": {
+      "fileMetadata": [
+        {
+          "fileId": "163203b2-b368-4f95-af52-09eaad1931b3",
+          "clientSideOriginalFilePath": "E2E_tests/original/path0",
+          "legalStatus": "Public Record",
+          "clientSideFileSize": 1024,
+          "clientSideLastModifiedDate": "2021-01-26T17:10:58.047",
+          "rightsCopyright": "Crown Copyright",
+          "heldBy": "TNA",
+          "foiExemptionCode": "open",
+          "language": "English"
+        }
+      ]
+    }
+  }
+}

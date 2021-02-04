@@ -22,6 +22,13 @@ The code in the authoriser module:
 * Calls the API with the token. If the consignment is returned then the user is authorised and Allow is returned, otherwise Deny is returned.
 
 ### Running Locally
+
+Set the `CLIENT_SECRET` environment variable to the client secret for the tdr-backend-checks Keycloak client in the integration environment, which you can find by logging into Keycloak or by running the AWS CLI with intg credentials:
+
+```
+aws ssm get-parameters  --names "/intg/keycloak/backend_checks_client/secret"  --with-decryption
+```
+
 You can run the Main object in Intellij as you can with any similar project. You will need to provide the program arguments: `export --consignmentId {a uuid}`
 
 You can also run `sbt universal:packageZipTarball` which creates a file `target/universal/tdr-consignment-export.tgz` which, when unzipped, gives you a `bin/tdr-consignment-export` executable which you can run with the same arguments as above. This is how the docker container runs the file so is the closest to running this in production.

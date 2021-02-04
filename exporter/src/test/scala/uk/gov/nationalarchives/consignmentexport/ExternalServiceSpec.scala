@@ -8,6 +8,8 @@ import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock.{equalToJson, get, okJson, post, urlEqualTo}
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
 import io.findify.s3mock.S3Mock
+import org.keycloak.OAuth2Constants
+import org.keycloak.admin.client.{Keycloak, KeycloakBuilder}
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.flatspec.AnyFlatSpec
@@ -32,6 +34,14 @@ class ExternalServiceSpec extends AnyFlatSpec with BeforeAndAfterEach with Befor
     .endpointOverride(URI.create("http://localhost:8003/"))
     .build()
 
+  val keycloakAdminClient = KeycloakBuilder.builder()
+    .serverUrl("http://localhost:9002/auth")
+    .realm("tdr")
+    .clientId("tdr-backend-checks")
+    .clientSecret("client-secret")
+    .grantType(OAuth2Constants.CLIENT_CREDENTIALS)
+    .build()
+
   def createBucket(bucket: String): CreateBucketResponse = s3Client.createBucket(CreateBucketRequest.builder.bucket(bucket).build)
 
   def deleteBucket(bucket: String): DeleteBucketResponse = s3Client.deleteBucket(DeleteBucketRequest.builder.bucket(bucket).build)
@@ -53,9 +63,12 @@ class ExternalServiceSpec extends AnyFlatSpec with BeforeAndAfterEach with Befor
 
   implicit val ec: ExecutionContext = ExecutionContext.global
 
+  val keycloakUserId = "b2657adf-6e93-424f-b0f1-aadd26762a96"
+
   val graphQlPath = "/graphql"
   val authPath = "/auth/realms/tdr/protocol/openid-connect/token"
-  val keycloakGetUserPath = "/auth/admin/realms/tdr/users"
+  val keycloakGetRealmPath = "/auth/admin/realms/tdr"
+  val keycloakGetUserPath = "/auth/admin/realms/tdr/users" + s"/$keycloakUserId"
 
   def graphQlUrl: String = wiremockGraphqlServer.url(graphQlPath)
 
@@ -86,21 +99,23 @@ class ExternalServiceSpec extends AnyFlatSpec with BeforeAndAfterEach with Befor
   def authOk: StubMapping = wiremockAuthServer.stubFor(post(urlEqualTo(authPath))
     .willReturn(okJson(fromResource(s"json/access_token.json").mkString)))
 
-  def keycloakGetUser: StubMapping = wiremockAuthServer.stubFor(get(urlEqualTo(keycloakGetUserPath + "/b2657adf-6e93-424f-b0f1-aadd26762a96" ))
+  def keycloakCreateAdminClient: Keycloak = keycloakAdminClient
+
+  def keycloakGetUser: StubMapping = wiremockAuthServer.stubFor(get(urlEqualTo(keycloakGetUserPath))
     .willReturn(okJson(fromResource(s"json/get_keycloak_user.json").mkString)))
 
-  def keycloakGetIncompleteUser: StubMapping = wiremockAuthServer.stubFor(get(urlEqualTo(keycloakGetUserPath + "/b2657adf-6e93-424f-b0f1-aadd26762a96" ))
+  def keycloakGetIncompleteUser: StubMapping = wiremockAuthServer.stubFor(get(urlEqualTo(keycloakGetUserPath))
     .willReturn(okJson(fromResource(s"json/get_incomplete_keycloak_user.json").mkString)))
 
   val s3Api: S3Mock = S3Mock(port = 8003, dir = "/tmp/s3")
 
   override def beforeAll(): Unit = {
-    s3Api.start
     wiremockGraphqlServer.start()
     wiremockAuthServer.start()
   }
 
   override def beforeEach(): Unit = {
+    s3Api.start
     authOk
     wiremockGraphqlServer.resetAll()
     graphqlUpdateExportLocation
@@ -115,6 +130,7 @@ class ExternalServiceSpec extends AnyFlatSpec with BeforeAndAfterEach with Befor
   }
 
   override def afterEach(): Unit = {
+    s3Api.stop
     deleteBucket("test-clean-bucket")
     deleteBucket("test-output-bucket")
     wiremockAuthServer.resetAll()

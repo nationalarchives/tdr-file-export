@@ -1,6 +1,7 @@
 package uk.gov.nationalarchives.consignmentexport
 
 import java.time.ZonedDateTime
+import java.time.temporal.ChronoUnit
 import java.util.UUID
 
 import cats.effect.IO
@@ -8,6 +9,7 @@ import graphql.codegen.GetConsignmentExport.getConsignmentForExport.GetConsignme
 import graphql.codegen.GetConsignmentExport.getConsignmentForExport.GetConsignment.{Series, TransferringBody}
 import org.keycloak.representations.idm.UserRepresentation
 import uk.gov.nationalarchives.consignmentexport.Config.{Api, Auth, Configuration, EFS, S3}
+import uk.gov.nationalarchives.consignmentexport.Utils._
 
 class BagMetadataSpec extends ExportSpec {
 
@@ -35,13 +37,13 @@ class BagMetadataSpec extends ExportSpec {
     val bagMetadata = BagMetadata(mockGraphQlApi, mockKeycloakClient).getBagMetadata(consignmentId, config).unsafeRunSync()
     bagMetadata.get("Consignment-Series").get(0) should be("series-code")
     bagMetadata.get("Source-Organization").get(0) should be("tb-code")
-    bagMetadata.get("Consignment-StartDate").get(0) should be(fixedDateTime.toString)
-    bagMetadata.get("Consignment-CompletedDate").get(0) should be(fixedDateTime.toString)
+    bagMetadata.get("Consignment-StartDate").get(0) should be(fixedDateTime.toFormattedPrecisionString)
+    bagMetadata.get("Consignment-CompletedDate").get(0) should be(fixedDateTime.toFormattedPrecisionString)
     bagMetadata.get("Contact-Name").get(0) should be("FirstName LastName")
-    bagMetadata.get("Consignment-ExportDate").get(0) should be(fixedDateTime.toString)
+    bagMetadata.get("Consignment-ExportDate").get(0) should be(fixedDateTime.toFormattedPrecisionString)
   }
 
-  "the getBagMetadata method" should "return the correct bag metadata if a consignment metadata property is missing" in {
+  "the getBagMetadata method" should "return the bag metadata containing other consignment metadata properties if a property is missing" in {
     val missingPropertyKey = "Consignment-StartDate"
     val incompleteConsignment = GetConsignment(
       userId, None, Some(fixedDateTime), Some(fixedDateTime), Some(series), Some(transferringBody)

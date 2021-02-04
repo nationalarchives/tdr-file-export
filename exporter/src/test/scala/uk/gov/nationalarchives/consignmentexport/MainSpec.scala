@@ -100,10 +100,10 @@ class MainSpec extends ExternalServiceSpec {
       Main.run(List("export", "--consignmentId", consignmentId.toString)).unsafeRunSync()
     }
 
-    ex.getMessage should equal("No valid user found b2657adf-6e93-424f-b0f1-aadd26762a96: HTTP 404 Not Found")
+    ex.getMessage should equal(s"No valid user found $keycloakUserId: HTTP 404 Not Found")
   }
 
-  "the export job" should "throw an error if an incomplete Keycloak user found" in {
+  "the export job" should "throw an error if an incomplete Keycloak user details found" in {
     graphqlGetFiles
     graphQlGetConsignmentMetadata
     keycloakGetIncompleteUser
@@ -114,7 +114,7 @@ class MainSpec extends ExternalServiceSpec {
       Main.run(List("export", "--consignmentId", consignmentId.toString)).unsafeRunSync()
     }
 
-    ex.getMessage should equal("Incomplete details for user b2657adf-6e93-424f-b0f1-aadd26762a96")
+    ex.getMessage should equal(s"Incomplete details for user $keycloakUserId")
   }
 
   private def setUpValidExternalServices() = {

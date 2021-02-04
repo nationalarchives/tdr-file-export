@@ -9,8 +9,18 @@ import io.chrisdavenport.log4cats.SelfAwareStructuredLogger
 import org.keycloak.representations.idm.UserRepresentation
 import uk.gov.nationalarchives.consignmentexport.BagMetadata._
 import uk.gov.nationalarchives.consignmentexport.Config.Configuration
+import uk.gov.nationalarchives.consignmentexport.Utils._
 
 class BagMetadata(graphQlApi: GraphQlApi, keycloakClient: KeycloakClient)(implicit val logger: SelfAwareStructuredLogger[IO]) {
+
+  implicit class UserRepresentationUtils(value: UserRepresentation) {
+    private def isStringNullOrEmpty(s: String): Boolean = s == null || s.trim.isEmpty
+
+    def isUserRepresentationComplete: Boolean = {
+      !isStringNullOrEmpty(value.getFirstName) && !isStringNullOrEmpty(value.getLastName)
+    }
+  }
+
   def getBagMetadata(consignmentId: UUID, config: Configuration): IO[Metadata] = for {
    consignment <- graphQlApi.getConsignmentMetadata(config, consignmentId)
    consignmentDetails = consignment match {
@@ -33,17 +43,17 @@ class BagMetadata(graphQlApi: GraphQlApi, keycloakClient: KeycloakClient)(implic
 
     val startDatetime = for {
       createdDate <- consignment.createdDatetime
-      cd = createdDate.toString
+      cd = createdDate.toFormattedPrecisionString
     } yield cd
 
     val completedDatetime = for {
       completedDate <- consignment.transferInitiatedDatetime
-      cd = completedDate.toString
+      cd = completedDate.toFormattedPrecisionString
     } yield cd
 
     val exportDatetime = for {
       exportDate <- consignment.exportDatetime
-      ed = exportDate.toString
+      ed = exportDate.toFormattedPrecisionString
     } yield ed
 
     val contactName = getContactName(consignment.userid)
@@ -77,14 +87,10 @@ class BagMetadata(graphQlApi: GraphQlApi, keycloakClient: KeycloakClient)(implic
 
   private def getUserDetails(userId: String): UserRepresentation = {
     val userDetails = keycloakClient.getUserDetails(userId)
-    userDetailsComplete(userDetails) match {
+    userDetails.isUserRepresentationComplete match {
       case true => userDetails
       case _ => throw new RuntimeException(s"Incomplete details for user $userId")
     }
-  }
-
-  private def userDetailsComplete(userDetails: UserRepresentation): Boolean = {
-    userDetails.getFirstName != null && userDetails.getLastName != null
   }
 }
 

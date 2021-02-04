@@ -29,6 +29,8 @@ Set the `CLIENT_SECRET` environment variable to the client secret for the tdr-ba
 aws ssm get-parameters  --names "/intg/keycloak/backend_checks_client/secret"  --with-decryption
 ```
 
+Set the `EXPORT_ROOT_PATH` environment variable to a path on your machine which the task can use to download files and prepare the Bagit package. For example, `/tmp/consignment-export`.
+
 You can run the Main object in Intellij as you can with any similar project. You will need to provide the program arguments: `export --consignmentId {a uuid}`
 
 You can also run `sbt universal:packageZipTarball` which creates a file `target/universal/tdr-consignment-export.tgz` which, when unzipped, gives you a `bin/tdr-consignment-export` executable which you can run with the same arguments as above. This is how the docker container runs the file so is the closest to running this in production.

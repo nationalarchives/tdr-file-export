@@ -31,9 +31,26 @@ aws ssm get-parameters  --names "/intg/keycloak/backend_checks_client/secret"  -
 
 Set the `EXPORT_ROOT_PATH` environment variable to a path on your machine which the task can use to download files and prepare the Bagit package. For example, `/tmp/consignment-export`.
 
-You can run the Main object in Intellij as you can with any similar project. You will need to provide the program arguments: `export --consignmentId {a uuid}`
+You can then run the Main object in Intellij as you can with any similar project. You will need to provide the program arguments: `export --consignmentId {a uuid}`
 
 You can also run `sbt universal:packageZipTarball` which creates a file `target/universal/tdr-consignment-export.tgz` which, when unzipped, gives you a `bin/tdr-consignment-export` executable which you can run with the same arguments as above. This is how the docker container runs the file so is the closest to running this in production.
 
 ### Deployment
 Because this is run as an on demand ECS task, deployment is just pushing a new version of the docker image to ECR with the appropriate stage tag. This will be done by Jenkins as part of the deploy job on merge to master so there should be no reason to do this locally.
+
+### Troubleshooting
+
+You might see this error if your `tar` installation is not GNU Tar, since some Unix OSes like MacOS use a different `tar` by default:
+
+```
+tar: Option --sort=name is not supported
+```
+
+You can fix this by installing GNU Tar and making sure it is on your path when you run the project.
+
+On a Mac with Homebrew:
+
+* Run `brew install tar`
+* Add `/usr/local/opt/gnu-tar/libexec/gnubin:`, to the **beginning** of your `PATH` environment variable so that Scala can run the GNU version of tar. If you're  doing this in IntelliJ, it looks like this:
+
+![](./docs/images/mac-tar-path.png)

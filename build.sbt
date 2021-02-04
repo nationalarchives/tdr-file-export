@@ -19,6 +19,7 @@ lazy val commonSettings = Seq(
     mockitoScalaTest % Test,
     pureConfig,
     pureConfigCatsEffect,
+    scalaCsv,
     scalaTest % Test,
     slf4j
   ),

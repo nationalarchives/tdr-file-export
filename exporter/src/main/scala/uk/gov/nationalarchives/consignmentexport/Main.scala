@@ -1,5 +1,7 @@
 package uk.gov.nationalarchives.consignmentexport
 
+import java.util.UUID
+
 import cats.effect._
 import com.monovore.decline.Opts
 import com.monovore.decline.effect.CommandIOApp
@@ -19,7 +21,9 @@ object Main extends CommandIOApp("tdr-consignment-export", "Exports tdr files in
      exportOps.map {
       case FileExport(consignmentId) => for {
         config <- config()
-        basePath = config.efs.rootLocation
+        rootLocation = config.efs.rootLocation
+        exportId = UUID.randomUUID
+        basePath = s"$rootLocation/$exportId"
         tarPath = s"${basePath}/$consignmentId.tar.gz"
         bashCommands = BashCommands()
         graphQlApi = GraphQlApi(config.api.url, config.auth.url)

@@ -21,7 +21,6 @@ import scala.concurrent.ExecutionContext
 import scala.io.Source.fromResource
 import scala.sys.process._
 import scala.jdk.CollectionConverters._
-import scala.util.Try
 
 class ExternalServiceSpec extends AnyFlatSpec with BeforeAndAfterEach with BeforeAndAfterAll with ScalaFutures with Matchers {
 
@@ -61,6 +60,10 @@ class ExternalServiceSpec extends AnyFlatSpec with BeforeAndAfterEach with Befor
   def graphqlGetFiles: StubMapping = wiremockGraphqlServer.stubFor(post(urlEqualTo(graphQlPath))
     .withRequestBody(equalToJson("{\"query\":\"query getFiles($consignmentId:UUID!){getFiles(consignmentid:$consignmentId){fileIds}}\",\"variables\":{\"consignmentId\":\"50df01e6-2e5e-4269-97e7-531a755b417d\"}}"))
     .willReturn(okJson(fromResource(s"json/get_files.json").mkString)))
+
+  def graphqlGetFileMetadata: StubMapping = wiremockGraphqlServer.stubFor(post(urlEqualTo(graphQlPath))
+    .withRequestBody(equalToJson("{\"query\":\"query getFileMetadataForConsignmentExport($consignmentId:UUID!){getConsignment(consignmentid:$consignmentId){fileMetadata{fileId clientSideFileSize clientSideLastModifiedDate clientSideOriginalFilePath foiExemptionCode heldBy language legalStatus rightsCopyright}}}\",\"variables\":{\"consignmentId\":\"50df01e6-2e5e-4269-97e7-531a755b417d\"}}"))
+    .willReturn(okJson(fromResource(s"json/get_file_metadata.json").mkString)))
 
   def graphqlGetEmptyFiles: StubMapping = wiremockGraphqlServer.stubFor(post(urlEqualTo(graphQlPath))
     .withRequestBody(equalToJson("{\"query\":\"query getFiles($consignmentId:UUID!){getFiles(consignmentid:$consignmentId){fileIds}}\",\"variables\":{\"consignmentId\":\"6794231c-39fe-41e0-a498-b6a077563282\"}}"))

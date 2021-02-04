@@ -9,6 +9,7 @@ import uk.gov.nationalarchives.tdr.keycloak.KeycloakUtils
 import graphql.codegen.GetFiles.{getFiles => gf}
 import graphql.codegen.UpdateExportLocation.{updateExportLocation => uel}
 import graphql.codegen.GetOriginalPath.{getOriginalPath => gop}
+import graphql.codegen.GetExportFileMetadata.{getFileMetadataForConsignmentExport => gfm}
 import graphql.codegen.types.UpdateExportLocationInput
 import sttp.client.{HttpURLConnectionBackend, Identity, NothingT, SttpBackend}
 import GraphQlApi._
@@ -20,11 +21,18 @@ import scala.concurrent.{ExecutionContextExecutor, Future}
 class GraphQlApi(keycloak: KeycloakUtils,
                  filesClient: GraphQLClient[gf.Data, gf.Variables],
                  updateExportLocationClient: GraphQLClient[uel.Data, uel.Variables],
-                 getOriginalPathClient: GraphQLClient[gop.Data, gop.Variables])(implicit val contextShift: ContextShift[IO], val logger: SelfAwareStructuredLogger[IO]) {
+                 getOriginalPathClient: GraphQLClient[gop.Data, gop.Variables],
+                 fileMetadataClient: GraphQLClient[gfm.Data, gfm.Variables])(implicit val contextShift: ContextShift[IO], val logger: SelfAwareStructuredLogger[IO]) {
 
   implicit class ErrorUtils[D](response: GraphQlResponse[D]) {
     val errorString: String = response.errors.map(_.message).mkString("\n")
   }
+
+  def getFileMetadata(config: Configuration, consignmentId: UUID): IO[List[gfm.GetConsignment.FileMetadata]] = for {
+    token <- keycloak.serviceAccountToken(config.auth.clientId, config.auth.clientSecret).toIO
+    result <- fileMetadataClient.getResult(token, gfm.document, gfm.Variables(consignmentId).some).toIO
+    data <- IO.fromOption(result.data.flatMap(_.getConsignment))(new RuntimeException(s"No metadata found for consignment $consignmentId ${result.errorString}"))
+  } yield data.fileMetadata
 
   def getFiles(config: Configuration, consignmentId: UUID): IO[List[FileIdWithPath]] = for {
     token <- keycloak.serviceAccountToken(config.auth.clientId, config.auth.clientSecret).toIO
@@ -56,7 +64,8 @@ object GraphQlApi {
     val getFilesClient = new GraphQLClient[gf.Data, gf.Variables](apiUrl)
     val updateExportLocationClient = new GraphQLClient[uel.Data, uel.Variables](apiUrl)
     val getOriginalPathClient = new GraphQLClient[gop.Data, gop.Variables](apiUrl)
-    new GraphQlApi(keycloak, getFilesClient, updateExportLocationClient, getOriginalPathClient)(contextShift, logger)
+    val getFileMetadataClient = new GraphQLClient[gfm.Data, gfm.Variables](apiUrl)
+    new GraphQlApi(keycloak, getFilesClient, updateExportLocationClient, getOriginalPathClient, getFileMetadataClient)(contextShift, logger)
   }
 
   implicit class FutureUtils[T](f: Future[T])(implicit contextShift: ContextShift[IO]) {

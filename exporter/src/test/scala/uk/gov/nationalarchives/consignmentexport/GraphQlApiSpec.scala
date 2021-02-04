@@ -5,10 +5,12 @@ import java.util.UUID
 import cats.effect.{ContextShift, IO}
 import cats.implicits._
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken
+import graphql.codegen.GetExportFileMetadata.getFileMetadataForConsignmentExport.GetConsignment
 import uk.gov.nationalarchives.tdr.{GraphQLClient, GraphQlResponse}
 import graphql.codegen.GetFiles.{getFiles => gf}
 import graphql.codegen.UpdateExportLocation.{updateExportLocation => uel}
 import graphql.codegen.GetOriginalPath.{getOriginalPath => gop}
+import graphql.codegen.GetExportFileMetadata.{getFileMetadataForConsignmentExport => gfm}
 import sangria.ast.Document
 import sttp.client.{HttpURLConnectionBackend, Identity, NothingT, SttpBackend}
 import uk.gov.nationalarchives.consignmentexport.Config.{Api, Auth, Configuration, EFS, S3}
@@ -27,7 +29,7 @@ class GraphQlApiSpec extends ExportSpec {
     val updateExportClient = mock[GraphQLClient[uel.Data, uel.Variables]]
     val getOriginalPathClient = mock[GraphQLClient[gop.Data, gop.Variables]]
     val keycloak = mock[KeycloakUtils]
-    val api = new GraphQlApi(keycloak, filesClient, updateExportClient, getOriginalPathClient)
+    val api = new GraphQlApi(keycloak, filesClient, updateExportClient, getOriginalPathClient, mock[GraphQLClient[gfm.Data, gfm.Variables]])
     val config = Configuration(S3("", "", ""), Api(""), Auth("authUrl", "clientId", "clientSecret"), EFS(""))
     val consignmentId = UUID.randomUUID()
     val dataFiles = List(UUID.randomUUID(), UUID.randomUUID())
@@ -47,7 +49,7 @@ class GraphQlApiSpec extends ExportSpec {
     val updateExportClient = mock[GraphQLClient[uel.Data, uel.Variables]]
     val getOriginalPathClient = mock[GraphQLClient[gop.Data, gop.Variables]]
     val keycloak = mock[KeycloakUtils]
-    val api = new GraphQlApi(keycloak, filesClient, updateExportClient, getOriginalPathClient)
+    val api = new GraphQlApi(keycloak, filesClient, updateExportClient, getOriginalPathClient, mock[GraphQLClient[gfm.Data, gfm.Variables]])
     val config = Configuration(S3("", "", ""), Api(""), Auth("authUrl", "clientId", "clientSecret"), EFS(""))
     val consignmentId = UUID.randomUUID()
 
@@ -66,7 +68,7 @@ class GraphQlApiSpec extends ExportSpec {
     val updateExportClient = mock[GraphQLClient[uel.Data, uel.Variables]]
     val getOriginalPathClient = mock[GraphQLClient[gop.Data, gop.Variables]]
     val keycloak = mock[KeycloakUtils]
-    val api = new GraphQlApi(keycloak, filesClient, updateExportClient, getOriginalPathClient)
+    val api = new GraphQlApi(keycloak, filesClient, updateExportClient, getOriginalPathClient, mock[GraphQLClient[gfm.Data, gfm.Variables]])
     val config = Configuration(S3("", "", ""), Api(""), Auth("authUrl", "clientId", "clientSecret"), EFS(""))
     val consignmentId = UUID.randomUUID()
 
@@ -84,7 +86,7 @@ class GraphQlApiSpec extends ExportSpec {
     val updateExportClient = mock[GraphQLClient[uel.Data, uel.Variables]]
     val getOriginalPathClient = mock[GraphQLClient[gop.Data, gop.Variables]]
     val keycloak = mock[KeycloakUtils]
-    val api = new GraphQlApi(keycloak, filesClient, updateExportClient, getOriginalPathClient)
+    val api = new GraphQlApi(keycloak, filesClient, updateExportClient, getOriginalPathClient, mock[GraphQLClient[gfm.Data, gfm.Variables]])
     val config = Configuration(S3("", "", ""), Api(""), Auth("authUrl", "clientId", "clientSecret"), EFS(""))
     val consignmentId = UUID.randomUUID()
 
@@ -96,5 +98,37 @@ class GraphQlApiSpec extends ExportSpec {
       api.updateExportLocation(config, consignmentId, s"s3://testbucket/$consignmentId.tar.gz").unsafeRunSync()
     }
     exception.getMessage should equal(s"No data returned from the update export call for consignment $consignmentId ")
+  }
+
+  "the getFileMetadata method" should "throw an error if the data is not not provided" in {
+    val getFileMetadataClient = mock[GraphQLClient[gfm.Data, gfm.Variables]]
+    val keycloak = mock[KeycloakUtils]
+    val api = new GraphQlApi(keycloak, mock[GraphQLClient[gf.Data, gf.Variables]], mock[GraphQLClient[uel.Data, uel.Variables]], mock[GraphQLClient[gop.Data, gop.Variables]], getFileMetadataClient)
+    val config = Configuration(S3("", "", ""), Api(""), Auth("authUrl", "clientId", "clientSecret"), EFS(""))
+    val consignmentId = UUID.fromString("fda625d6-e42c-4d99-83bd-65b3f65f82c9")
+
+    doAnswer(() => Future(new BearerAccessToken("token"))).when(keycloak).serviceAccountToken[Identity](any[String], any[String])(any[SttpBackend[Identity, Nothing, NothingT]], any[ClassTag[Identity[_]]])
+    val data = new GraphQlResponse[gfm.Data](none[gfm.Data], List())
+    doAnswer(() => Future(data)).when(getFileMetadataClient).getResult[Identity](any[BearerAccessToken], any[Document], any[Option[gfm.Variables]])(any[SttpBackend[Identity, Nothing, NothingT]], any[ClassTag[Identity[_]]])
+    val exception = intercept[RuntimeException] {
+      api.getFileMetadata(config, consignmentId).unsafeRunSync()
+    }
+    exception.getMessage should equal("No metadata found for consignment fda625d6-e42c-4d99-83bd-65b3f65f82c9 ")
+  }
+
+  "the getFileMetadata method" should "throw an error if the data is provided but the consignment export data is empty" in {
+    val getFileMetadataClient = mock[GraphQLClient[gfm.Data, gfm.Variables]]
+    val keycloak = mock[KeycloakUtils]
+    val api = new GraphQlApi(keycloak, mock[GraphQLClient[gf.Data, gf.Variables]], mock[GraphQLClient[uel.Data, uel.Variables]], mock[GraphQLClient[gop.Data, gop.Variables]], getFileMetadataClient)
+    val config = Configuration(S3("", "", ""), Api(""), Auth("authUrl", "clientId", "clientSecret"), EFS(""))
+    val consignmentId = UUID.fromString("fda625d6-e42c-4d99-83bd-65b3f65f82c9")
+
+    doAnswer(() => Future(new BearerAccessToken("token"))).when(keycloak).serviceAccountToken[Identity](any[String], any[String])(any[SttpBackend[Identity, Nothing, NothingT]], any[ClassTag[Identity[_]]])
+    val data = new GraphQlResponse[gfm.Data](gfm.Data(none[GetConsignment]).some, List())
+    doAnswer(() => Future(data)).when(getFileMetadataClient).getResult[Identity](any[BearerAccessToken], any[Document], any[Option[gfm.Variables]])(any[SttpBackend[Identity, Nothing, NothingT]], any[ClassTag[Identity[_]]])
+    val exception = intercept[RuntimeException] {
+      api.getFileMetadata(config, consignmentId).unsafeRunSync()
+    }
+    exception.getMessage should equal("No metadata found for consignment fda625d6-e42c-4d99-83bd-65b3f65f82c9 ")
   }
 }

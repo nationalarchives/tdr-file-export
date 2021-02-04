@@ -19,7 +19,8 @@ object Main extends CommandIOApp("tdr-consignment-export", "Exports tdr files in
      exportOps.map {
       case FileExport(consignmentId) => for {
         config <- config()
-        tarPath = s"${config.efs.rootLocation}/$consignmentId.tar.gz"
+        basePath = config.efs.rootLocation
+        tarPath = s"${basePath}/$consignmentId.tar.gz"
         bashCommands = BashCommands()
         graphQlApi = GraphQlApi(config.api.url, config.auth.url)
         keycloakClient = KeycloakClient(config)
@@ -27,10 +28,10 @@ object Main extends CommandIOApp("tdr-consignment-export", "Exports tdr files in
         bagMetadata <- BagMetadata(graphQlApi, keycloakClient).getBagMetadata(consignmentId, config)
         data <- graphQlApi.getFiles(config, consignmentId)
         _ <- IO.fromOption(data.headOption)(new Exception(s"Consignment API returned no files for consignment $consignmentId"))
-        _ <- s3Files.downloadFiles(data, config.s3.cleanBucket, consignmentId, config.efs.rootLocation)
-        _ <- Bagit().createBag(consignmentId, config.efs.rootLocation, bagMetadata)
+        _ <- s3Files.downloadFiles(data, config.s3.cleanBucket, consignmentId, basePath)
+        _ <- Bagit().createBag(consignmentId, basePath, bagMetadata)
         // The owner and group in the below command have no effect on the file permissions. It just makes tar idempotent
-        _ <- bashCommands.runCommand(s"tar --sort=name --owner=root:0 --group=root:0 --mtime ${java.time.LocalDate.now.toString} -C ${config.efs.rootLocation} -c ./$consignmentId | gzip -n > $tarPath")
+        _ <- bashCommands.runCommand(s"tar --sort=name --owner=root:0 --group=root:0 --mtime ${java.time.LocalDate.now.toString} -C $basePath -c ./$consignmentId | gzip -n > $tarPath")
         _ <- bashCommands.runCommand(s"sha256sum $tarPath > $tarPath.sha256")
         _ <- s3Files.uploadFiles(config.s3.outputBucket, consignmentId, tarPath)
         _ <- graphQlApi.updateExportLocation(config, consignmentId, s"s3://${config.s3.outputBucket}/$consignmentId.tar.gz")

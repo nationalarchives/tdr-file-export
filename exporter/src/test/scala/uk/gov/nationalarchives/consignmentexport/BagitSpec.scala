@@ -52,7 +52,7 @@ class BagitSpec extends ExportSpec {
     val charset: ArgumentCaptor[Charset] = ArgumentCaptor.forClass(classOf[Charset])
     val manifests: ArgumentCaptor[util.Set[Manifest]] = ArgumentCaptor.forClass(classOf[util.Set[Manifest]])
 
-    val bagit = new Bagit(mock[(Path, util.Collection[SupportedAlgorithm], Boolean) => Bag], mock[(Bag, Boolean) => Unit], writeTagManifests)
+    val bagit = new Bagit(mock[(Path, util.Collection[SupportedAlgorithm], Boolean, Metadata) => Bag], mock[(Bag, Boolean) => Unit], writeTagManifests)
 
     val bag = new Bag()
     bag.setFileEncoding(Charset.defaultCharset())

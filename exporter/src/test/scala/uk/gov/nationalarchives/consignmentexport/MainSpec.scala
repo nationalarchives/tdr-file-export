@@ -77,18 +77,6 @@ class MainSpec extends ExternalServiceSpec {
     ex.getMessage should equal(s"Consignment API returned no files for consignment $consignmentId")
   }
 
-
-  "the export job" should "throw an error if the file metadata is missing" in {
-    graphqlGetFiles
-    val consignmentId = "50df01e6-2e5e-4269-97e7-531a755b417d"
-    putFile(s"$consignmentId/7b19b272-d4d1-4d77-bf25-511dc6489d12")
-
-    val ex = intercept[Exception] {
-      Main.run(List("export", "--consignmentId", consignmentId)).unsafeRunSync()
-    }
-    ex.getMessage should equal(s"No metadata found for consignment $consignmentId ")
-  }
-
   "the export job" should "throw an error if no consignment metadata found" in {
     graphqlGetFiles
     keycloakGetUser
@@ -132,7 +120,7 @@ class MainSpec extends ExternalServiceSpec {
   private def setUpValidExternalServices() = {
     graphQlGetConsignmentMetadata
     keycloakGetUser
-    graphqlGetFiles,
+    graphqlGetFiles
     graphqlGetFileMetadata
   }
 }

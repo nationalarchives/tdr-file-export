@@ -28,7 +28,7 @@ class BagMetadata(graphQlApi: GraphQlApi, keycloakClient: KeycloakClient)(implic
      case None => throw new RuntimeException(s"No consignment metadata found for consignment $consignmentId")
    }
 
-  } yield generateMetadata(consignmentDetails)
+  } yield generateMetadata(consignmentId, consignmentDetails)
 
   private def getConsignmentDetails(consignment: GetConsignment): Map[String, Option[String]] = {
     val seriesCode = for {
@@ -68,13 +68,13 @@ class BagMetadata(graphQlApi: GraphQlApi, keycloakClient: KeycloakClient)(implic
     )
   }
 
-  private def generateMetadata(details: Map[String, Option[String]]): Metadata = {
+  private def generateMetadata(consignmentId: UUID, details: Map[String, Option[String]]): Metadata = {
     val metadata = new Metadata
 
     details.map(e => {
       e._2 match {
         case Some(_) => metadata.add(e._1, e._2.get)
-        case None => //For now do nothing is property is missing
+        case None => throw new RuntimeException(s"Missing consignment metadata property ${e._1} for consignment $consignmentId")
       }
     })
     metadata

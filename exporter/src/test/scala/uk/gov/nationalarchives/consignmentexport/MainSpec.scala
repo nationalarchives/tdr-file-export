@@ -34,18 +34,21 @@ class MainSpec extends ExternalServiceSpec {
 
     val consignmentId = UUID.fromString("50df01e6-2e5e-4269-97e7-531a755b417d")
     putFile(s"$consignmentId/7b19b272-d4d1-4d77-bf25-511dc6489d12")
-    Main.run(List("export", "--consignmentId", consignmentId.toString)).unsafeRunSync()
-    val path = s"src/test/resources/testfiles/$consignmentId"
-    getObject(s"$consignmentId.tar.gz", s"$path/result.tar.gz".toPath)
-    getObject(s"$consignmentId.tar.gz.sha256", s"$path/result.tar.gz.sha256".toPath)
 
-    val exitCode = Seq("sh", "-c", s"tar -tf $path/result.tar.gz > /dev/null").!
+    Main.run(List("export", "--consignmentId", consignmentId.toString)).unsafeRunSync()
+
+    val downloadDirectory = s"$scratchDirectory/download"
+    new File(s"$downloadDirectory").mkdirs()
+    getObject(s"$consignmentId.tar.gz", s"$downloadDirectory/result.tar.gz".toPath)
+    getObject(s"$consignmentId.tar.gz.sha256", s"$downloadDirectory/result.tar.gz.sha256".toPath)
+
+    val exitCode = Seq("sh", "-c", s"tar -tf $downloadDirectory/result.tar.gz > /dev/null").!
     exitCode should equal(0)
 
-    val source = Source.fromFile(new File(s"$path/result.tar.gz.sha256"))
+    val source = Source.fromFile(new File(s"$downloadDirectory/result.tar.gz.sha256"))
     val checksum = source.getLines().toList.head.split(" ").head
 
-    val expectedChecksum = DigestUtils.sha256Hex(Files.readAllBytes(s"$path/result.tar.gz".toPath))
+    val expectedChecksum = DigestUtils.sha256Hex(Files.readAllBytes(s"$downloadDirectory/result.tar.gz".toPath))
 
     checksum should equal(expectedChecksum)
     source.close()

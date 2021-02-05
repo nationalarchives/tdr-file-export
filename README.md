@@ -38,6 +38,12 @@ You can also run `sbt universal:packageZipTarball` which creates a file `target/
 ### Deployment
 Because this is run as an on demand ECS task, deployment is just pushing a new version of the docker image to ECR with the appropriate stage tag. This will be done by Jenkins as part of the deploy job on merge to master so there should be no reason to do this locally.
 
+### Tests
+
+Run `sbt tests` to run the tests in both projects.
+
+The exporter tests write temporary files to the directory defined in `efs.rootLocation` in the test application.conf. By default, it uses the `/tmp` directory. To use a different directory, set the `SCRATCH_DIRECTORY` environment variable when running the tests.
+
 ### Troubleshooting
 
 You might see this error if your `tar` installation is not GNU Tar, since some Unix OSes like MacOS use a different `tar` by default:

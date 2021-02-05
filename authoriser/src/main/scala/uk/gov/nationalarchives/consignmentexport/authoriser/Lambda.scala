@@ -37,7 +37,7 @@ class Lambda {
     config <- Blocker[IO].use(ConfigSource.default.loadF[IO, Configuration])
     graphQLClient = new GraphQLClient[Data, Variables](config.api.url)
     consignmentId = UUID.fromString(input.methodArn.split("/").last)
-    result <- IO.fromFuture(IO.pure(graphQLClient.getResult(new BearerAccessToken(input.authorizationToken), document, Variables(consignmentId).some)))
+    result <- IO.fromFuture(IO(graphQLClient.getResult(new BearerAccessToken(input.authorizationToken), document, Variables(consignmentId).some)))
   } yield {
     val effect = result.errors.headOption match {
       case Some(_) => "Deny"

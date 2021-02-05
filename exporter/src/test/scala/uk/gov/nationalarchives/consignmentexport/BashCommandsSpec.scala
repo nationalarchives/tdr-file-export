@@ -13,7 +13,7 @@ class BashCommandsSpec extends ExportSpec {
 
   "the runCommand method" should "throw an error for a failed command" in {
     val exception = intercept[RuntimeException] {
-      BashCommands().runCommand("invalidcommand").attempt.unsafeRunSync()
+      BashCommands().runCommand("invalidcommand").unsafeRunSync()
     }
     exception.getMessage should equal("Nonzero exit value: 127")
   }

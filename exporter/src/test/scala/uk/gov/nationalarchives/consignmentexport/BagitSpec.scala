@@ -6,7 +6,7 @@ import java.nio.file.Path
 import java.util
 import java.util.UUID
 
-import gov.loc.repository.bagit.domain.{Bag, Manifest, Version}
+import gov.loc.repository.bagit.domain.{Bag, Manifest, Version, Metadata}
 import gov.loc.repository.bagit.hash.{StandardSupportedAlgorithms, SupportedAlgorithm}
 import org.mockito.ArgumentCaptor
 import uk.gov.nationalarchives.consignmentexport.ChecksumCalculator.ChecksumFile
@@ -15,12 +15,14 @@ import scala.jdk.CollectionConverters._
 
 class BagitSpec extends ExportSpec {
   "the createBag method" should "call the bagit methods with the correct values" in {
-    val createMock = mock[(Path, util.Collection[SupportedAlgorithm], Boolean) => Bag]
+    val createMock = mock[(Path, util.Collection[SupportedAlgorithm], Boolean, Metadata) => Bag]
     val verifyMock = mock[(Bag, Boolean) => Unit]
+    val metadataMock = mock[Metadata]
 
     val createPath: ArgumentCaptor[Path] = ArgumentCaptor.forClass(classOf[Path])
     val createAlgorithms: ArgumentCaptor[util.Collection[SupportedAlgorithm]] = ArgumentCaptor.forClass(classOf[util.Collection[SupportedAlgorithm]])
     val createIncludeHidden: ArgumentCaptor[Boolean] = ArgumentCaptor.forClass(classOf[Boolean])
+    val createMetadata: ArgumentCaptor[Metadata] = ArgumentCaptor.forClass(classOf[Metadata])
     val verfiyBag: ArgumentCaptor[Bag] = ArgumentCaptor.forClass(classOf[Bag])
     val verifyIncludeHidden: ArgumentCaptor[Boolean] = ArgumentCaptor.forClass(classOf[Boolean])
 
@@ -28,14 +30,15 @@ class BagitSpec extends ExportSpec {
     val bagit = new Bagit(createMock, verifyMock, mock[(util.Set[Manifest], Path, Path, Charset) => Unit])
     val consignmentId = UUID.randomUUID()
 
-    doAnswer(() => bag).when(createMock).apply(createPath.capture(), createAlgorithms.capture(), createIncludeHidden.capture())
+    doAnswer(() => bag).when(createMock).apply(createPath.capture(), createAlgorithms.capture(), createIncludeHidden.capture(), createMetadata.capture())
     doAnswer(() => ()).when(verifyMock).apply(verfiyBag.capture(), verifyIncludeHidden.capture())
 
-    bagit.createBag(consignmentId, "root").unsafeRunSync()
+    bagit.createBag(consignmentId, "root", metadataMock).unsafeRunSync()
 
     createPath.getValue.toString should equal(s"root/$consignmentId")
     createAlgorithms.getValue.toArray()(0) should equal(StandardSupportedAlgorithms.SHA256)
     createIncludeHidden.getValue should equal(true)
+    createMetadata.getValue should equal(metadataMock)
 
     verfiyBag.getValue.getVersion should equal(Version.LATEST_BAGIT_VERSION())
     verifyIncludeHidden.getValue should equal(true)

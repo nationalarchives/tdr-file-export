@@ -22,7 +22,7 @@ class BashCommandsSpec extends ExportSpec {
     val fileWriterMock: (String, File) => IO[Unit] = mock[(String, File) => IO[Unit]]
     val commandCaptor: ArgumentCaptor[String] = ArgumentCaptor.forClass(classOf[String])
     val fileCaptor: ArgumentCaptor[File] = ArgumentCaptor.forClass(classOf[File])
-    doAnswer(() => IO.pure(())).when(fileWriterMock).apply(commandCaptor.capture(), fileCaptor.capture())
+    doAnswer(() => IO.unit).when(fileWriterMock).apply(commandCaptor.capture(), fileCaptor.capture())
     new BashCommands(fileWriterMock).runCommandToFile("echo 'hello'", new File("test")).unsafeRunSync()
     commandCaptor.getValue should equal("hello\n")
     fileCaptor.getValue.getName should equal("test")

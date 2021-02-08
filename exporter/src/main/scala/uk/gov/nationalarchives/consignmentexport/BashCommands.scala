@@ -12,7 +12,7 @@ import scala.sys.process._
 class BashCommands(outputToFile: (String, File) => IO[Unit])(implicit val logger: SelfAwareStructuredLogger[IO]) {
 
   def runCommand(command: String): IO[String] = for {
-    output <- IO.pure(Seq("sh", "-c", command) !!)
+    output <- IO(Seq("sh", "-c", command) !!)
     _ <- logger.info(s"$command has been run")
   } yield output
 
@@ -30,7 +30,7 @@ object BashCommands {
     } { outStream =>
       IO(outStream.close()).handleErrorWith(_ => IO.unit)
     }.use(fos =>
-      IO.pure(fos.write(output.getBytes(Charset.forName("UTF-8")))))
+      IO(fos.write(output.getBytes(Charset.forName("UTF-8")))))
 
   def apply()(implicit logger: SelfAwareStructuredLogger[IO]): BashCommands = new BashCommands(outputToFile)(logger)
 }

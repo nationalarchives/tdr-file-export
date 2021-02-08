@@ -8,6 +8,7 @@ import graphql.codegen.GetConsignmentExport.getConsignmentForExport.GetConsignme
 import io.chrisdavenport.log4cats.SelfAwareStructuredLogger
 import org.keycloak.representations.idm.UserRepresentation
 import uk.gov.nationalarchives.consignmentexport.BagMetadata._
+import uk.gov.nationalarchives.consignmentexport.Config.Configuration
 import uk.gov.nationalarchives.consignmentexport.Utils._
 
 class BagMetadata(keycloakClient: KeycloakClient)(implicit val logger: SelfAwareStructuredLogger[IO]) {
@@ -58,14 +59,14 @@ class BagMetadata(keycloakClient: KeycloakClient)(implicit val logger: SelfAware
     )
   }
 
-  def generateMetadata(consignment: GetConsignment): IO[Metadata] = {
+  def generateMetadata(consignmentId: UUID, consignment: GetConsignment): IO[Metadata] = {
     val details: Map[String, Option[String]] = getConsignmentDetails(consignment)
     val metadata = new Metadata
 
     details.map(e => {
       e._2 match {
         case Some(_) => metadata.add(e._1, e._2.get)
-        case None => //For now do nothing is property is missing
+        case None => throw new RuntimeException(s"Missing consignment metadata property ${e._1} for consignment $consignmentId")
       }
     })
     IO(metadata)

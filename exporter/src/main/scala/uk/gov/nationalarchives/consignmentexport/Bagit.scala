@@ -19,12 +19,12 @@ class Bagit(bagInPlace: (Path, util.Collection[SupportedAlgorithm], Boolean, Met
             validateBag: (Bag, Boolean) => Unit)(implicit val logger: SelfAwareStructuredLogger[IO]) {
 
   def createBag(consignmentId: UUID, rootLocation: String, metadata: Metadata): IO[Unit] = for {
-    bag <- IO.pure(bagInPlace(
+    bag <- IO(bagInPlace(
       s"$rootLocation/$consignmentId".toPath,
       List(StandardSupportedAlgorithms.SHA256: SupportedAlgorithm).asJavaCollection,
       true,
       metadata))
-    _ <- IO.pure(validateBag(bag, true))
+    _ <- IO(validateBag(bag, true))
     _ <- logger.info(s"Bagit export complete for consignment $consignmentId")
   } yield ()
 }

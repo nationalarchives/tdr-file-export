@@ -13,7 +13,7 @@ class BashCommandsSpec extends ExportSpec {
 
   "the runCommand method" should "throw an error for a failed command" in {
     val exception = intercept[RuntimeException] {
-      BashCommands().runCommand("invalidcommand").attempt.unsafeRunSync()
+      BashCommands().runCommand("invalidcommand").unsafeRunSync()
     }
     exception.getMessage should equal("Nonzero exit value: 127")
   }
@@ -22,7 +22,7 @@ class BashCommandsSpec extends ExportSpec {
     val fileWriterMock: (String, File) => IO[Unit] = mock[(String, File) => IO[Unit]]
     val commandCaptor: ArgumentCaptor[String] = ArgumentCaptor.forClass(classOf[String])
     val fileCaptor: ArgumentCaptor[File] = ArgumentCaptor.forClass(classOf[File])
-    doAnswer(() => IO.pure(())).when(fileWriterMock).apply(commandCaptor.capture(), fileCaptor.capture())
+    doAnswer(() => IO.unit).when(fileWriterMock).apply(commandCaptor.capture(), fileCaptor.capture())
     new BashCommands(fileWriterMock).runCommandToFile("echo 'hello'", new File("test")).unsafeRunSync()
     commandCaptor.getValue should equal("hello\n")
     fileCaptor.getValue.getName should equal("test")

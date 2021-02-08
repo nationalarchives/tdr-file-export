@@ -6,7 +6,7 @@ import java.util.UUID
 
 import cats.effect.IO
 import gov.loc.repository.bagit.creator.BagCreator
-import gov.loc.repository.bagit.domain.Bag
+import gov.loc.repository.bagit.domain.{Bag, Metadata}
 import gov.loc.repository.bagit.hash.{StandardSupportedAlgorithms, SupportedAlgorithm}
 import gov.loc.repository.bagit.verify.BagVerifier
 import io.chrisdavenport.log4cats.SelfAwareStructuredLogger
@@ -15,11 +15,15 @@ import uk.gov.nationalarchives.consignmentexport.Utils._
 import scala.jdk.CollectionConverters._
 import scala.language.postfixOps
 
-class Bagit(bagInPlace: (Path, util.Collection[SupportedAlgorithm], Boolean) => Bag,
+class Bagit(bagInPlace: (Path, util.Collection[SupportedAlgorithm], Boolean, Metadata) => Bag,
             validateBag: (Bag, Boolean) => Unit)(implicit val logger: SelfAwareStructuredLogger[IO]) {
 
-  def createBag(consignmentId: UUID, rootLocation: String): IO[Unit] = for {
-    bag <- IO(bagInPlace(s"$rootLocation/$consignmentId".toPath, List(StandardSupportedAlgorithms.SHA256: SupportedAlgorithm).asJavaCollection, true))
+  def createBag(consignmentId: UUID, rootLocation: String, metadata: Metadata): IO[Unit] = for {
+    bag <- IO(bagInPlace(
+      s"$rootLocation/$consignmentId".toPath,
+      List(StandardSupportedAlgorithms.SHA256: SupportedAlgorithm).asJavaCollection,
+      true,
+      metadata))
     _ <- IO(validateBag(bag, true))
     _ <- logger.info(s"Bagit export complete for consignment $consignmentId")
   } yield ()

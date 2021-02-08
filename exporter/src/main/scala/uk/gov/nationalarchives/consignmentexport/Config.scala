@@ -10,7 +10,7 @@ object Config {
 
   case class S3(endpoint: String, cleanBucket: String, outputBucket: String)
   case class Api(url: String)
-  case class Auth(url: String, clientId: String, clientSecret: String)
+  case class Auth(url: String, clientId: String, clientSecret: String, realm: String)
   case class EFS(rootLocation: String)
   case class Configuration(s3: S3, api: Api, auth: Auth, efs: EFS)
 

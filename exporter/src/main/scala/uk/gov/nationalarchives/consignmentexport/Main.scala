@@ -22,12 +22,13 @@ object Main extends CommandIOApp("tdr-consignment-export", "Exports tdr files in
         tarPath = s"${config.efs.rootLocation}/$consignmentId.tar.gz"
         bashCommands = BashCommands()
         graphQlApi = GraphQlApi(config.api.url, config.auth.url)
+        keycloakClient = KeycloakClient(config)
         s3Files = S3Files(S3Utils(s3Async))
-
+        bagMetadata <- BagMetadata(graphQlApi, keycloakClient).getBagMetadata(consignmentId, config)
         data <- graphQlApi.getFiles(config, consignmentId)
         _ <- IO.fromOption(data.headOption)(new Exception(s"Consignment API returned no files for consignment $consignmentId"))
         _ <- s3Files.downloadFiles(data, config.s3.cleanBucket, consignmentId, config.efs.rootLocation)
-        _ <- Bagit().createBag(consignmentId, config.efs.rootLocation)
+        _ <- Bagit().createBag(consignmentId, config.efs.rootLocation, bagMetadata)
         // The owner and group in the below command have no effect on the file permissions. It just makes tar idempotent
         _ <- bashCommands.runCommand(s"tar --sort=name --owner=root:0 --group=root:0 --mtime ${java.time.LocalDate.now.toString} -C ${config.efs.rootLocation} -c ./$consignmentId | gzip -n > $tarPath")
         _ <- bashCommands.runCommand(s"sha256sum $tarPath > $tarPath.sha256")

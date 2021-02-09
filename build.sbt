@@ -57,6 +57,7 @@ lazy val authoriser = (project in file("authoriser"))
   )
 
 releaseProcess := Seq[ReleaseStep](
+  inquireVersions,                        // : ReleaseStep
   runClean,                               // : ReleaseStep
   runTest,                                // : ReleaseStep
   setReleaseVersion,                      // : ReleaseStep

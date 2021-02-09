@@ -26,6 +26,8 @@ class GraphQlApiSpec extends ExportSpec {
   implicit val contextShift: ContextShift[IO] = IO.contextShift(executionContext)
   implicit val backend: SttpBackend[Identity, Nothing, NothingT] = HttpURLConnectionBackend()
 
+  private val fixedDateTime = ZonedDateTime.now()
+
   "the getFiles method" should "returns the correct number of files" in {
     val consignmentClient = mock[GraphQLClient[gce.Data, gce.Variables]]
     val filesClient = mock[GraphQLClient[gf.Data, gf.Variables]]
@@ -80,7 +82,7 @@ class GraphQlApiSpec extends ExportSpec {
     val data = new GraphQlResponse[uel.Data](uel.Data(1.some).some, List())
     doAnswer(() => Future(data)).when(updateExportClient).getResult[Identity](any[BearerAccessToken], any[Document], any[Option[uel.Variables]])(any[SttpBackend[Identity, Nothing, NothingT]], any[ClassTag[Identity[_]]])
 
-    val response = api.updateExportLocation(config, consignmentId, s"s3://testbucket/$consignmentId.tar.gz").unsafeRunSync()
+    val response = api.updateExportLocation(config, consignmentId, s"s3://testbucket/$consignmentId.tar.gz", fixedDateTime).unsafeRunSync()
     response.isDefined should be(true)
     response.get should equal(1)
   }
@@ -100,7 +102,7 @@ class GraphQlApiSpec extends ExportSpec {
     doAnswer(() => Future(data)).when(updateExportClient).getResult[Identity](any[BearerAccessToken], any[Document], any[Option[uel.Variables]])(any[SttpBackend[Identity, Nothing, NothingT]], any[ClassTag[Identity[_]]])
 
     val exception = intercept[RuntimeException] {
-      api.updateExportLocation(config, consignmentId, s"s3://testbucket/$consignmentId.tar.gz").unsafeRunSync()
+      api.updateExportLocation(config, consignmentId, s"s3://testbucket/$consignmentId.tar.gz", fixedDateTime).unsafeRunSync()
     }
     exception.getMessage should equal(s"No data returned from the update export call for consignment $consignmentId ")
   }

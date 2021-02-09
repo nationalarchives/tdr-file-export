@@ -1,5 +1,6 @@
 package uk.gov.nationalarchives.consignmentexport
 
+import java.time.ZonedDateTime
 import java.util.UUID
 
 import cats.effect.{ContextShift, IO}
@@ -43,9 +44,9 @@ class GraphQlApi(keycloak: KeycloakUtils,
     originalPath <- data.getFiles.fileIds.map(fileId => getOriginalPath(config, fileId)).sequence
   } yield originalPath
 
-  def updateExportLocation(config: Configuration, consignmentId: UUID, tarPath: String): IO[Option[Int]] = for {
+  def updateExportLocation(config: Configuration, consignmentId: UUID, tarPath: String, exportDatetime: ZonedDateTime): IO[Option[Int]] = for {
     token <- keycloak.serviceAccountToken(config.auth.clientId, config.auth.clientSecret).toIO
-    response <- updateExportLocationClient.getResult(token, uel.document, uel.Variables(UpdateExportLocationInput(consignmentId, tarPath)).some).toIO
+    response <- updateExportLocationClient.getResult(token, uel.document, uel.Variables(UpdateExportLocationInput(consignmentId, tarPath, exportDatetime)).some).toIO
     data <- IO.fromOption(response.data)(new RuntimeException(s"No data returned from the update export call for consignment $consignmentId ${response.errorString}"))
     _ <- logger.info(s"Export location updated for consignment $consignmentId")
   } yield data.updateExportLocation

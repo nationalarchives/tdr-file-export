@@ -34,7 +34,7 @@ class BagMetadataSpec extends ExportSpec {
     doAnswer(() => IO.pure(Some(consignment))).when(mockGraphQlApi).getConsignmentMetadata(config, consignmentId)
     doAnswer(() => userRepresentation).when(mockKeycloakClient).getUserDetails(any[String])
 
-    val bagMetadata = BagMetadata(mockGraphQlApi, mockKeycloakClient).getBagMetadata(consignmentId, config).unsafeRunSync()
+    val bagMetadata = BagMetadata(mockGraphQlApi, mockKeycloakClient).getBagMetadata(consignmentId, config, fixedDateTime).unsafeRunSync()
     bagMetadata.get("Consignment-Series").get(0) should be("series-code")
     bagMetadata.get("Source-Organization").get(0) should be("tb-code")
     bagMetadata.get("Consignment-StartDate").get(0) should be(fixedDateTime.toFormattedPrecisionString)
@@ -55,7 +55,7 @@ class BagMetadataSpec extends ExportSpec {
     doAnswer(() => userRepresentation).when(mockKeycloakClient).getUserDetails(any[String])
 
     val exception = intercept[RuntimeException] {
-      BagMetadata(mockGraphQlApi, mockKeycloakClient).getBagMetadata(consignmentId, config).unsafeRunSync()
+      BagMetadata(mockGraphQlApi, mockKeycloakClient).getBagMetadata(consignmentId, config, fixedDateTime).unsafeRunSync()
     }
     exception.getMessage should equal(s"Missing consignment metadata property $missingPropertyKey for consignment $consignmentId")
   }
@@ -69,7 +69,7 @@ class BagMetadataSpec extends ExportSpec {
     doAnswer(() => IO.pure(None)).when(mockGraphQlApi).getConsignmentMetadata(config, consignmentId)
 
     val exception = intercept[RuntimeException] {
-      BagMetadata(mockGraphQlApi, mockKeycloakClient).getBagMetadata(consignmentId, config).unsafeRunSync()
+      BagMetadata(mockGraphQlApi, mockKeycloakClient).getBagMetadata(consignmentId, config, fixedDateTime).unsafeRunSync()
     }
     exception.getMessage should equal(s"No consignment metadata found for consignment $consignmentId")
   }
@@ -84,7 +84,7 @@ class BagMetadataSpec extends ExportSpec {
     doAnswer(() => incompleteUserRepresentation).when(mockKeycloakClient).getUserDetails(userId.toString)
 
     val exception = intercept[RuntimeException] {
-      BagMetadata(mockGraphQlApi, mockKeycloakClient).getBagMetadata(consignmentId, config).unsafeRunSync()
+      BagMetadata(mockGraphQlApi, mockKeycloakClient).getBagMetadata(consignmentId, config, fixedDateTime).unsafeRunSync()
     }
     exception.getMessage should equal(s"Incomplete details for user $userId")
   }

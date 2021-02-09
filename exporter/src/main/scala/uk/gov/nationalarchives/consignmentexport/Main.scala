@@ -29,7 +29,7 @@ object Main extends CommandIOApp("tdr-consignment-export", "Exports tdr files in
         consignmentResult <- graphQlApi.getConsignmentMetadata(config, consignmentId)
         consignmentData <- validator.validateConsignmentResult(consignmentResult)
         _ <- validator.validateConsignmentHasFiles(consignmentData)
-        bagMetadata <- BagMetadata(keycloakClient).generateMetadata(consignmentId, consignmentData)
+        bagMetadata <- BagMetadata(keycloakClient, config).generateMetadata(consignmentId, consignmentData)
         validatedFileMetadata <- validator.validateFileMetadataNotEmpty(consignmentData.files)
         _ <- s3Files.downloadFiles(validatedFileMetadata, config.s3.cleanBucket, consignmentId, config.efs.rootLocation)
         bag <- bagit.createBag(consignmentId, config.efs.rootLocation, bagMetadata)

@@ -11,7 +11,7 @@ import uk.gov.nationalarchives.consignmentexport.BagMetadata._
 import uk.gov.nationalarchives.consignmentexport.Config.Configuration
 import uk.gov.nationalarchives.consignmentexport.Utils._
 
-class BagMetadata(keycloakClient: KeycloakClient)(implicit val logger: SelfAwareStructuredLogger[IO]) {
+class BagMetadata(keycloakClient: KeycloakClient, config: Configuration)(implicit val logger: SelfAwareStructuredLogger[IO]) {
 
   implicit class UserRepresentationUtils(value: UserRepresentation) {
     private def isStringNullOrEmpty(s: String): Boolean = s == null || s.trim.isEmpty
@@ -26,6 +26,7 @@ class BagMetadata(keycloakClient: KeycloakClient)(implicit val logger: SelfAware
       series <- consignment.series
       sc <- series.code
     } yield sc
+
 
     val bodyCode = for {
       body <- consignment.transferringBody
@@ -55,7 +56,8 @@ class BagMetadata(keycloakClient: KeycloakClient)(implicit val logger: SelfAware
       ConsignmentStartDateKey -> startDatetime,
       ConsignmentCompletedDateKey -> completedDatetime,
       ConsignmentExportDateKey -> exportDatetime,
-      ContactNameKey -> Some(contactName)
+      ContactNameKey -> Some(contactName),
+      BagCreator -> Some(config.version)
     )
   }
 
@@ -93,6 +95,7 @@ object BagMetadata {
   private val ConsignmentCompletedDateKey = "Consignment-CompletedDate"
   private val ContactNameKey = "Contact-Name"
   private val ConsignmentExportDateKey = "Consignment-ExportDate"
+  private val BagCreator = "Bag-Creator"
 
-  def apply(keycloakClient: KeycloakClient)(implicit logger: SelfAwareStructuredLogger[IO]): BagMetadata = new BagMetadata(keycloakClient)(logger)
+  def apply(keycloakClient: KeycloakClient, config: Configuration)(implicit logger: SelfAwareStructuredLogger[IO]): BagMetadata = new BagMetadata(keycloakClient, config)(logger)
 }

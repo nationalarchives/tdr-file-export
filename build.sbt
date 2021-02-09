@@ -45,8 +45,11 @@ lazy val exporter = (project in file("exporter"))
       keycloakAdminClient,
       s3Mock
     ),
-    packageName in Universal := "tdr-consignment-export"
+//    val file = file((target in Universal).value + "tdr-consignment-export.tar.gz",
+    packageName in Universal := "tdr-consignment-export",
+
   ).enablePlugins(JavaAppPackaging, UniversalPlugin)
+
 
 lazy val authoriser = (project in file("authoriser"))
   .settings(

@@ -60,7 +60,10 @@ pipeline {
             unstash "tdr-consignment-export"
             unstash "Dockerfile"
             script {
-              tdr.buildAndPushImage("consignment-export", versionTag)
+              def imageTag = "${env.MANAGEMENT_ACCOUNT}.dkr.ecr.eu-west-2.amazonaws.com/consignment-export:${versionTag}"
+              sh "aws ecr get-login --region eu-west-2 --no-include-email | bash"
+              sh "docker build --build-arg EXPORT_VERSION=${versionTag} --pull --no-cache -t ${imageTag} ."
+              sh "docker push ${imageTag}"
               tdr.postToDaTdrSlackChannel(colour: "good", message: "*Consignment Export* :whale: Pushed version ${versionTag} to AWS ECR")
             }
           }

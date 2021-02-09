@@ -1,5 +1,6 @@
 package uk.gov.nationalarchives.consignmentexport
 
+import java.time.ZonedDateTime
 import java.util.UUID
 
 import cats.effect.IO
@@ -21,16 +22,16 @@ class BagMetadata(graphQlApi: GraphQlApi, keycloakClient: KeycloakClient)(implic
     }
   }
 
-  def getBagMetadata(consignmentId: UUID, config: Configuration): IO[Metadata] = for {
+  def getBagMetadata(consignmentId: UUID, config: Configuration, exportDatetime: ZonedDateTime): IO[Metadata] = for {
    consignment <- graphQlApi.getConsignmentMetadata(config, consignmentId)
    consignmentDetails = consignment match {
-     case Some(consignment) => getConsignmentDetails(consignment)
+     case Some(consignment) => getConsignmentDetails(consignment, exportDatetime)
      case None => throw new RuntimeException(s"No consignment metadata found for consignment $consignmentId")
    }
 
   } yield generateMetadata(consignmentId, consignmentDetails)
 
-  private def getConsignmentDetails(consignment: GetConsignment): Map[String, Option[String]] = {
+  private def getConsignmentDetails(consignment: GetConsignment, exportDatetime: ZonedDateTime): Map[String, Option[String]] = {
     val seriesCode = for {
       series <- consignment.series
       sc <- series.code
@@ -51,11 +52,6 @@ class BagMetadata(graphQlApi: GraphQlApi, keycloakClient: KeycloakClient)(implic
       cd = completedDate.toFormattedPrecisionString
     } yield cd
 
-    val exportDatetime = for {
-      exportDate <- consignment.exportDatetime
-      ed = exportDate.toFormattedPrecisionString
-    } yield ed
-
     val contactName = getContactName(consignment.userid)
 
     Map(
@@ -63,7 +59,7 @@ class BagMetadata(graphQlApi: GraphQlApi, keycloakClient: KeycloakClient)(implic
       SourceOrganisationKey -> bodyCode,
       ConsignmentStartDateKey -> startDatetime,
       ConsignmentCompletedDateKey -> completedDatetime,
-      ConsignmentExportDateKey -> exportDatetime,
+      ConsignmentExportDateKey -> Some(exportDatetime.toFormattedPrecisionString),
       ContactNameKey -> Some(contactName)
     )
   }

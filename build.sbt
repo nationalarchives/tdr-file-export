@@ -37,7 +37,7 @@ lazy val root = (project in file("."))
     fork in Test := true,
     javaOptions in Test += s"-Dconfig.file=${sourceDirectory.value}/test/resources/application.conf",
     ghreleaseRepoOrg := "nationalarchives",
-    ghreleaseAssets := Seq(file((target in Universal).value + (packageName in Universal).value + ".tar.gz")),
+    ghreleaseAssets := Seq(file(s"${(target in Universal).value}/${(packageName in Universal).value}.tar.gz")),
     releaseProcess := Seq[ReleaseStep](
       inquireVersions,
       setReleaseVersion,

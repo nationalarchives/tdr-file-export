@@ -1,9 +1,18 @@
 import Dependencies._
 import ReleaseTransformations._
+import scala.sys.process._
+import java.io.File
 
 ThisBuild / scalaVersion := "2.13.3"
 ThisBuild / organization := "com.example"
 ThisBuild / organizationName := "example"
+
+lazy val generateChangelogFile = taskKey[Unit]("Generates a changelog file from the last version")
+
+generateChangelogFile := {
+  (s"git log v${version.value}..HEAD --oneline" #> new File(s"${baseDirectory.value}/notes/${version.value}.markdown")).!
+
+}
 
 lazy val root = (project in file("."))
   .settings(

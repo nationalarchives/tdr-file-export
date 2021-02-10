@@ -42,9 +42,9 @@ pipeline {
           }
           steps {
             sshagent(['github-jenkins']) {
-              sh("git push origin ${versionTag}")
+              sh "sbt -no-colors release 'with-defaults'"
             }
-            sh 'sbt -no-colors universal:packageZipTarball'
+
             stash includes: "Dockerfile", name: "Dockerfile"
             stash includes: "target/universal/tdr-consignment-export.tgz", name: "tdr-consignment-export"
           }

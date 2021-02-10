@@ -1,7 +1,8 @@
 import Dependencies._
+import ReleaseTransformations._
 
-ThisBuild / scalaVersion     := "2.13.3"
-ThisBuild / organization     := "com.example"
+ThisBuild / scalaVersion := "2.13.3"
+ThisBuild / organization := "com.example"
 ThisBuild / organizationName := "example"
 
 lazy val root = (project in file("."))
@@ -34,5 +35,16 @@ lazy val root = (project in file("."))
     ),
     packageName in Universal := "tdr-consignment-export",
     fork in Test := true,
-    javaOptions in Test += s"-Dconfig.file=${sourceDirectory.value}/test/resources/application.conf"
+    javaOptions in Test += s"-Dconfig.file=${sourceDirectory.value}/test/resources/application.conf",
+    ghreleaseRepoOrg := "nationalarchives",
+    ghreleaseAssets := Seq(file((target in Universal).value + (packageName in Universal).value + ".tar.gz")),
+    releaseProcess := Seq[ReleaseStep](
+      setReleaseVersion,
+      commitReleaseVersion,
+      tagRelease,
+      releaseStepInputTask(githubRelease),
+      setNextVersion,
+      commitNextVersion,
+      pushChanges
+    )
   ).enablePlugins(JavaAppPackaging, UniversalPlugin)

@@ -44,7 +44,8 @@ lazy val root = (project in file("."))
       commitReleaseVersion,
       tagRelease,
       pushChanges,
-      releaseStepInputTask(githubRelease),
+
+      releaseStepCommand("githubRelease"),
 //      setNextVersion,
 //      commitNextVersion,
 //      pushChanges

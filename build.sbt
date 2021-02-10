@@ -1,4 +1,5 @@
 import Dependencies._
+import ReleaseTransformations._
 
 ThisBuild / scalaVersion     := "2.13.3"
 ThisBuild / version          := "0.1.0-SNAPSHOT"
@@ -48,6 +49,16 @@ lazy val exporter = (project in file("exporter"))
     packageName in Universal := "tdr-consignment-export",
     ghreleaseRepoOrg := "nationalarchives",
     ghreleaseAssets := Seq(file((target in Universal).value + (packageName in Universal).value + ".tar.gz")),
+    releaseProcess := Seq[ReleaseStep](
+      inquireVersions,                        // : ReleaseStep
+      setReleaseVersion,                      // : ReleaseStep
+      commitReleaseVersion,                   // : ReleaseStep, performs the initial git checks
+      tagRelease,                             // : ReleaseStep
+      releaseStepInputTask(githubRelease),
+      setNextVersion,                         // : ReleaseStep
+      commitNextVersion,                      // : ReleaseStep
+      pushChanges                             // : ReleaseStep, also checks that an upstream branch is properly configured
+    ),
 
   ).enablePlugins(JavaAppPackaging, UniversalPlugin)
 

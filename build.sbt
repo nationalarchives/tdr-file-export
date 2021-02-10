@@ -50,10 +50,10 @@ lazy val root = (project in file("."))
     releaseProcess := Seq[ReleaseStep](
       inquireVersions,
       setReleaseVersion,
+      releaseStepTask(generateChangelogFile),
       commitReleaseVersion,
       tagRelease,
       pushChanges,
-      releaseStepTask(generateChangelogFile),
       releaseStepTask(packageZipTarball in Universal),
       releaseStepInputTask(githubRelease),
       setNextVersion,

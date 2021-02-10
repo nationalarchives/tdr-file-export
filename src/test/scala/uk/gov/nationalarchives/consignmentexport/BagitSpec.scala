@@ -2,11 +2,11 @@ package uk.gov.nationalarchives.consignmentexport
 
 import java.io.File
 import java.nio.charset.Charset
-import java.nio.file.Path
+import java.nio.file.{Path, Paths}
 import java.util
 import java.util.UUID
 
-import gov.loc.repository.bagit.domain.{Bag, Manifest, Version, Metadata}
+import gov.loc.repository.bagit.domain.{Bag, Manifest, Metadata, Version}
 import gov.loc.repository.bagit.hash.{StandardSupportedAlgorithms, SupportedAlgorithm}
 import org.mockito.ArgumentCaptor
 import uk.gov.nationalarchives.consignmentexport.ChecksumCalculator.ChecksumFile
@@ -56,7 +56,7 @@ class BagitSpec extends ExportSpec {
 
     val bag = new Bag()
     bag.setFileEncoding(Charset.defaultCharset())
-    bag.setRootDir(Path.of("rootPath"))
+    bag.setRootDir(Paths.get("rootPath"))
     bag.setTagManifests(Set(new Manifest(StandardSupportedAlgorithms.SHA256)).asJava)
 
     when(writeTagManifests.apply(manifests.capture(), outputPath.capture(), bagitRootPath.capture(), charset.capture())).thenReturn(())
@@ -65,7 +65,7 @@ class BagitSpec extends ExportSpec {
 
     val fileToChecksumMap = manifests.getValue.asScala.head.getFileToChecksumMap
 
-    fileToChecksumMap.get(Path.of("path")) should equal("checksum")
+    fileToChecksumMap.get(Paths.get("path")) should equal("checksum")
     outputPath.getValue.toString should equal("rootPath")
     bagitRootPath.getValue.toString should equal("rootPath")
     charset.getValue should equal(Charset.defaultCharset())

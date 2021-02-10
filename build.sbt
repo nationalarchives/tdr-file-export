@@ -11,7 +11,6 @@ lazy val generateChangelogFile = taskKey[Unit]("Generates a changelog file from 
 
 generateChangelogFile := {
   (s"git log ${"git describe --tags --abbrev=0".!!.replace("\n","")}..HEAD --oneline" #> new File(s"${baseDirectory.value}/notes/${version.value}.markdown")).!!
-
 }
 
 lazy val root = (project in file("."))

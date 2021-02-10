@@ -7,8 +7,7 @@ The infrastructure for the export, is defined in the [terraform]("https://github
 * Api gateway triggers a step function
 * The step function triggers an ECS task which runs the code in this repository.
 
-There are two sub-modules here. 
-The code in the exporter module does the following:
+The code in this repository does the following:
 * Calls the API to get a list of files
 * Downloads the files from S3 to the EFS volume
 * Creates the Bagit bag
@@ -17,9 +16,8 @@ The code in the exporter module does the following:
 * Upload to the export bucket.
 * Update the API with the export location
 
-The code in the authoriser module:
-* Gets the token from the request and the consignment ID from the path
-* Calls the API with the token. If the consignment is returned then the user is authorised and Allow is returned, otherwise Deny is returned.
+The code for the authoriser is in the [tdr-consignment-export-authoriser](https://github.com/nationalarchives/tdr-consignment-export-authoriser) project
+
 
 ### Running Locally
 

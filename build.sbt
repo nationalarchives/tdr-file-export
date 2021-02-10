@@ -45,9 +45,9 @@ lazy val exporter = (project in file("exporter"))
       keycloakAdminClient,
       s3Mock
     ),
-    ghreleaseRepoOrg := "nationalarchives",
-//    val file = file((target in Universal).value + "tdr-consignment-export.tar.gz",
     packageName in Universal := "tdr-consignment-export",
+    ghreleaseRepoOrg := "nationalarchives",
+    ghreleaseAssets := Seq(file((target in Universal).value + (packageName in Universal).value + ".tar.gz")),
 
   ).enablePlugins(JavaAppPackaging, UniversalPlugin)
 

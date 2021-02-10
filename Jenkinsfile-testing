@@ -66,10 +66,10 @@ pipeline {
         }
         stage("Push Docker image") {
           steps {
-           def versionTag = sh(script: "git describe --tags --abbrev=0", returnStdout: true)
             unstash "tdr-consignment-export"
             unstash "Dockerfile"
             script {
+              def versionTag = sh(script: "git describe --tags --abbrev=0", returnStdout: true)
               tdr.buildAndPushImage("consignment-export", versionTag)
               tdr.postToDaTdrSlackChannel(colour: "good", message: "*Consignment Export* :whale: Pushed version ${versionTag} to AWS ECR and released to Github")
               tdr.createGitHubPullRequest(

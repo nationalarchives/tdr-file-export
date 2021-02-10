@@ -21,7 +21,7 @@ class MainSpec extends ExternalServiceSpec {
 
     val consignmentId = UUID.fromString("50df01e6-2e5e-4269-97e7-531a755b417d")
     putFile(s"$consignmentId/7b19b272-d4d1-4d77-bf25-511dc6489d12")
-    Main.run(List("export", "--consignmentId", consignmentId.toString)).unsafeRunSync()
+    Main.run(List("export", "--consignmentId", consignmentId.toString, "--taskToken", "taskToken")).unsafeRunSync()
     val objects = outputBucketObjects().map(_.key())
 
     objects.size should equal(2)
@@ -35,7 +35,7 @@ class MainSpec extends ExternalServiceSpec {
     val consignmentId = UUID.fromString("50df01e6-2e5e-4269-97e7-531a755b417d")
     putFile(s"$consignmentId/7b19b272-d4d1-4d77-bf25-511dc6489d12")
 
-    Main.run(List("export", "--consignmentId", consignmentId.toString)).unsafeRunSync()
+    Main.run(List("export", "--consignmentId", consignmentId.toString, "--taskToken", "taskToken")).unsafeRunSync()
 
     val downloadDirectory = s"$scratchDirectory/download"
     new File(s"$downloadDirectory").mkdirs()
@@ -59,7 +59,7 @@ class MainSpec extends ExternalServiceSpec {
 
     val consignmentId = UUID.fromString("50df01e6-2e5e-4269-97e7-531a755b417d")
     putFile(s"$consignmentId/7b19b272-d4d1-4d77-bf25-511dc6489d12")
-    Main.run(List("export", "--consignmentId", consignmentId.toString)).unsafeRunSync()
+    Main.run(List("export", "--consignmentId", consignmentId.toString, "--taskToken", "taskToken")).unsafeRunSync()
 
     val exportLocationEvent: Option[ServeEvent] = wiremockGraphqlServer.getAllServeEvents.asScala
       .find(p => p.getRequest.getBodyAsString.contains("mutation updateExportLocation"))
@@ -75,7 +75,7 @@ class MainSpec extends ExternalServiceSpec {
     val consignmentId = "6794231c-39fe-41e0-a498-b6a077563282"
 
     val ex = intercept[Exception] {
-      Main.run(List("export", "--consignmentId", consignmentId)).unsafeRunSync()
+      Main.run(List("export", "--consignmentId", consignmentId, "--taskToken", "taskToken")).unsafeRunSync()
     }
     ex.getMessage should equal(s"Consignment API returned no files for consignment $consignmentId")
   }
@@ -87,7 +87,7 @@ class MainSpec extends ExternalServiceSpec {
     putFile(s"$consignmentId/7b19b272-d4d1-4d77-bf25-511dc6489d12")
 
     val ex = intercept[Exception] {
-      Main.run(List("export", "--consignmentId", consignmentId.toString)).unsafeRunSync()
+      Main.run(List("export", "--consignmentId", consignmentId.toString, "--taskToken", "taskToken")).unsafeRunSync()
     }
 
     ex.getMessage should equal(s"No consignment metadata found for consignment $consignmentId")
@@ -100,7 +100,7 @@ class MainSpec extends ExternalServiceSpec {
     putFile(s"$consignmentId/7b19b272-d4d1-4d77-bf25-511dc6489d12")
 
     val ex = intercept[Exception] {
-      Main.run(List("export", "--consignmentId", consignmentId.toString)).unsafeRunSync()
+      Main.run(List("export", "--consignmentId", consignmentId.toString, "--taskToken", "taskToken")).unsafeRunSync()
     }
 
     ex.getMessage should equal(s"No valid user found $keycloakUserId: HTTP 404 Not Found")
@@ -114,7 +114,7 @@ class MainSpec extends ExternalServiceSpec {
     putFile(s"$consignmentId/7b19b272-d4d1-4d77-bf25-511dc6489d12")
 
     val ex = intercept[Exception] {
-      Main.run(List("export", "--consignmentId", consignmentId.toString)).unsafeRunSync()
+      Main.run(List("export", "--consignmentId", consignmentId.toString, "--taskToken", "taskToken")).unsafeRunSync()
     }
 
     ex.getMessage should equal(s"Incomplete details for user $keycloakUserId")

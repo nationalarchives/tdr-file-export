@@ -20,7 +20,7 @@ object Main extends CommandIOApp("tdr-consignment-export", "Exports tdr files in
 
   override def main: Opts[IO[ExitCode]] =
      exportOps.map {
-      case FileExport(consignmentId) => for {
+      case FileExport(consignmentId, taskToken) => for {
         config <- config()
         rootLocation = config.efs.rootLocation
         exportId = UUID.randomUUID

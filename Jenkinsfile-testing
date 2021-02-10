@@ -1,5 +1,6 @@
 library("tdr-jenkinslib")
 
+def versionBumpBranch = "version-bump-${env.BUILD_NUMBER}"
 def repo = "tdr-consignment-export"
 
 pipeline {
@@ -34,6 +35,20 @@ pipeline {
         expression { env.BRANCH_NAME == "master"}
       }
       stages {
+        stage("Create and push version bump GitHub branch") {
+          steps {
+            script {
+              tdr.configureJenkinsGitUser()
+            }
+
+            sh "git checkout -b ${versionBumpBranch}"
+
+            //sbt release requires branch to be on origin first
+            script {
+              tdr.pushGitHubBranch(versionBumpBranch)
+            }
+          }
+        }
         stage("Build Docker image") {
           agent {
             ecs {
@@ -51,12 +66,27 @@ pipeline {
         }
         stage("Push Docker image") {
           steps {
+           def versionTag = sh(script: "git describe --tags --abbrev=0", returnStdout: true)
             unstash "tdr-consignment-export"
             unstash "Dockerfile"
             script {
               tdr.buildAndPushImage("consignment-export", versionTag)
-              tdr.postToDaTdrSlackChannel(colour: "good", message: "*Consignment Export* :whale: Pushed version ${versionTag} to AWS ECR")
+              tdr.postToDaTdrSlackChannel(colour: "good", message: "*Consignment Export* :whale: Pushed version ${versionTag} to AWS ECR and released to Github")
+              tdr.createGitHubPullRequest(
+                            pullRequestTitle: "Version Bump from build number ${config.buildNumber}",
+                            buildUrl: env.BUILD_URL,
+                            repo: "repo",
+                            branchToMergeTo: "master",
+                            branchToMerge: versionBumpBranch
+                          )
             }
+            build(
+                  job: "Consignment Export Deploy",
+                  parameters: [
+                    string(name: "STAGE", value: "intg"),
+                    string(name: "TO_DEPLOY", value: versionTag)
+                  ],
+                  wait: false)
           }
         }
       }

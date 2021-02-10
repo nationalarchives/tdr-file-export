@@ -42,7 +42,11 @@ lazy val root = (project in file("."))
       inquireVersions,
       setReleaseVersion,
       commitReleaseVersion,
+      tagRelease,
+//      pushChanges,
+      releaseStepInputTask(githubRelease),
       setNextVersion,
-      commitNextVersion
+      commitNextVersion,
+      pushChanges
     )
   ).enablePlugins(JavaAppPackaging, UniversalPlugin)

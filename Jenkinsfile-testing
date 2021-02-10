@@ -9,45 +9,11 @@ pipeline {
   }
 
   stages {
-    stage("Run git secrets") {
-      steps {
-        script {
-          tdr.runGitSecrets(repo)
-        }
-      }
-    }
-    stage('Test') {
-      agent {
-        ecs {
-          inheritFrom 'transfer-frontend'
-        }
-      }
-      steps {
-        script {
-          tdr.reportStartOfBuildToGitHub(repo, env.GIT_COMMIT)
-        }
-        checkout scm
-        sh 'sbt -no-colors test'
-      }
-    }
     stage('Post-build') {
       when {
-        expression { env.BRANCH_NAME == "master"}
+        expression { env.BRANCH_NAME == "add-export-version"}
       }
       stages {
-        stage("Create and push version bump GitHub branch") {
-          steps {
-            script {
-              tdr.configureJenkinsGitUser()
-            }
-            //sbt release requires branch to be on origin first
-            script {
-              sh "git pull"
-              sh "git checkout -b ${versionBumpBranch}"
-              tdr.pushGitHubBranch(versionBumpBranch)
-            }
-          }
-        }
         stage("Build Docker image") {
           agent {
             ecs {
@@ -55,8 +21,16 @@ pipeline {
             }
           }
           steps {
-            sshagent(['github-jenkins']) {
-              sh "sbt -no-colors release 'with-defaults'"
+            script {
+              sshagent(['github-jenkins']) {
+                tdr.configureJenkinsGitUser()
+                sh "git checkout -b ${versionBumpBranch}"
+                sh "git push -u origin ${versionBumpBranch}"
+                sh "git remote -v"
+                withCredentials([string(credentialsId: 'github-jenkins-api-key', variable: 'GITHUB_TOKEN')]) {
+                  sh "sbt -no-colors release 'with-defaults'"
+                }
+              }
             }
 
             stash includes: "Dockerfile", name: "Dockerfile"

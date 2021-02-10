@@ -39,7 +39,7 @@ lazy val root = (project in file("."))
     ghreleaseRepoOrg := "nationalarchives",
     ghreleaseAssets := Seq(file(s"${(target in Universal).value}/${(packageName in Universal).value}.tgz")),
     releaseProcess := Seq[ReleaseStep](
-      releaseStepTask(packageZipTarball),
+      releaseStepTask(packageZipTarball in Universal),
       inquireVersions,
       setReleaseVersion,
       commitReleaseVersion,

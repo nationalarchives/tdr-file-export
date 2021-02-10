@@ -42,7 +42,6 @@ lazy val root = (project in file("."))
       inquireVersions,
       setReleaseVersion,
       commitReleaseVersion,
-      tagRelease,
       pushChanges,
       setNextVersion,
       commitNextVersion

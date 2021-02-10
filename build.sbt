@@ -49,19 +49,18 @@ lazy val exporter = (project in file("exporter"))
     packageName in Universal := "tdr-consignment-export",
     ghreleaseRepoOrg := "nationalarchives",
     ghreleaseAssets := Seq(file((target in Universal).value + (packageName in Universal).value + ".tar.gz")),
-    releaseProcess := Seq[ReleaseStep](
-      setReleaseVersion,                      // : ReleaseStep
-      commitReleaseVersion,                   // : ReleaseStep, performs the initial git checks
-      tagRelease,                             // : ReleaseStep
-      releaseStepInputTask(githubRelease),
-      setNextVersion,                         // : ReleaseStep
-      commitNextVersion,                      // : ReleaseStep
-      pushChanges                             // : ReleaseStep, also checks that an upstream branch is properly configured
-    ),
 
   ).enablePlugins(JavaAppPackaging, UniversalPlugin)
 
-
+releaseProcess := Seq[ReleaseStep](
+  setReleaseVersion,                      // : ReleaseStep
+  commitReleaseVersion,                   // : ReleaseStep, performs the initial git checks
+  tagRelease,                             // : ReleaseStep
+  releaseStepInputTask(githubRelease),
+  setNextVersion,                         // : ReleaseStep
+  commitNextVersion,                      // : ReleaseStep
+  pushChanges                             // : ReleaseStep, also checks that an upstream branch is properly configured
+)
 
 lazy val authoriser = (project in file("authoriser"))
   .settings(

@@ -2,8 +2,8 @@ import Dependencies._
 
 ThisBuild / scalaVersion     := "2.13.3"
 ThisBuild / version          := "0.1.0-SNAPSHOT"
-ThisBuild / organization     := "com.example"
-ThisBuild / organizationName := "example"
+ThisBuild / organization     := "uk.gov.nationalarchives"
+ThisBuild / organizationName := "nationalarchives"
 
 lazy val commonSettings = Seq(
   resolvers ++= Seq[Resolver](
@@ -45,10 +45,12 @@ lazy val exporter = (project in file("exporter"))
       keycloakAdminClient,
       s3Mock
     ),
+    ghreleaseRepoOrg := "nationalarchives",
 //    val file = file((target in Universal).value + "tdr-consignment-export.tar.gz",
     packageName in Universal := "tdr-consignment-export",
 
   ).enablePlugins(JavaAppPackaging, UniversalPlugin)
+
 
 
 lazy val authoriser = (project in file("authoriser"))

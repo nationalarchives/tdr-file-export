@@ -50,7 +50,6 @@ lazy val exporter = (project in file("exporter"))
     ghreleaseRepoOrg := "nationalarchives",
     ghreleaseAssets := Seq(file((target in Universal).value + (packageName in Universal).value + ".tar.gz")),
     releaseProcess := Seq[ReleaseStep](
-      inquireVersions,                        // : ReleaseStep
       setReleaseVersion,                      // : ReleaseStep
       commitReleaseVersion,                   // : ReleaseStep, performs the initial git checks
       tagRelease,                             // : ReleaseStep

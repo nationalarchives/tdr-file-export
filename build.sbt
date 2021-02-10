@@ -10,7 +10,7 @@ ThisBuild / organizationName := "example"
 lazy val generateChangelogFile = taskKey[Unit]("Generates a changelog file from the last version")
 
 generateChangelogFile := {
-  (s"git log v${("git describe --tags --abbrev=0").!!}..HEAD --oneline" #> new File(s"${baseDirectory.value}/notes/${version.value}.markdown")).!
+  (s"git log v${("git describe --tags --abbrev=0").!!}..HEAD --oneline" #> new File(s"${baseDirectory.value}/notes/${version.value}.markdown")).!!
 
 }
 

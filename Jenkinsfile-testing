@@ -1,6 +1,5 @@
 library("tdr-jenkinslib")
 
-def versionTag = "v${env.BUILD_NUMBER}"
 def repo = "tdr-consignment-export"
 
 pipeline {
@@ -35,14 +34,6 @@ pipeline {
         expression { env.BRANCH_NAME == "master"}
       }
       stages {
-        stage('Tag Release') {
-          steps {
-            sh "git tag ${versionTag}"
-            sshagent(['github-jenkins']) {
-              sh("git push origin ${versionTag}")
-            }
-          }
-        }
         stage("Build Docker image") {
           agent {
             ecs {
@@ -50,6 +41,9 @@ pipeline {
             }
           }
           steps {
+            sshagent(['github-jenkins']) {
+              sh("git push origin ${versionTag}")
+            }
             sh 'sbt -no-colors universal:packageZipTarball'
             stash includes: "Dockerfile", name: "Dockerfile"
             stash includes: "target/universal/tdr-consignment-export.tgz", name: "tdr-consignment-export"

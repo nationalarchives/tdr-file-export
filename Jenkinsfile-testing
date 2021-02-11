@@ -65,6 +65,24 @@ pipeline {
             }
           }
         }
+        stage("Release to github") {
+          build(
+                job: "ConsignmentExportRelease",
+                parameters: [
+                  string(name: "STAGE", value: "intg")
+                ],
+                wait: false)
+        }
+        stage("Release to github") {
+          build(
+                job: "Consignment Export Deploy",
+                parameters: [
+                  string(name: "STAGE", value: "intg"),
+                  string(name: "TO_DEPLOY", value: versionTag)
+                ],
+                wait: false)
+        }
+
       }
     }
   }

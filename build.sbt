@@ -11,6 +11,8 @@ ThisBuild / organizationName := "example"
 lazy val generateChangelogFile = taskKey[Unit]("Generates a changelog file from the last version")
 
 generateChangelogFile := {
+  "ls -la".!!
+  "pwd".!!
   val gitLog = s"git log ${"git describe --tags --abbrev=0".!!.replace("\n","")}..HEAD --oneline".!!
   val fileName = s"${baseDirectory.value}/notes/${version.value}.markdown"
   Files.write(Paths.get(fileName), gitLog.getBytes(StandardCharsets.UTF_8))

@@ -74,5 +74,7 @@ lazy val root = (project in file("."))
       setNextVersion,
       commitNextVersion,
       pushChanges
-    )
-  ).enablePlugins(JavaAppPackaging, UniversalPlugin)
+    ),
+    buildInfoKeys := Seq[BuildInfoKey](version),
+    buildInfoPackage := "uk.gov.nationalarchives.consignmentexport"
+  ).enablePlugins(JavaAppPackaging, UniversalPlugin, BuildInfoPlugin)

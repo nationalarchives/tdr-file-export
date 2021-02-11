@@ -26,7 +26,8 @@ class BagMetadataSpec extends ExportSpec {
     val mockKeycloakClient = mock[KeycloakClient]
 
     doAnswer(() => userRepresentation).when(mockKeycloakClient).getUserDetails(any[String])
-    val bagMetadata = BagMetadata(mockKeycloakClient).generateMetadata(consignmentId, consignment).unsafeRunSync()
+    val bagMetadata = BagMetadata(mockKeycloakClient).generateMetadata(consignmentId, consignment, fixedDateTime).unsafeRunSync()
+
     bagMetadata.get("Consignment-Series").get(0) should be("series-code")
     bagMetadata.get("Source-Organization").get(0) should be("tb-code")
     bagMetadata.get("Consignment-StartDate").get(0) should be(fixedDateTime.toFormattedPrecisionString)
@@ -46,10 +47,11 @@ class BagMetadataSpec extends ExportSpec {
     doAnswer(() => userRepresentation).when(mockKeycloakClient).getUserDetails(any[String])
 
     val exception = intercept[RuntimeException] {
-      BagMetadata(mockKeycloakClient).generateMetadata(consignmentId, incompleteConsignment).unsafeRunSync()
+      BagMetadata(mockKeycloakClient).generateMetadata(consignmentId, incompleteConsignment, fixedDateTime).unsafeRunSync()
     }
     exception.getMessage should equal(s"Missing consignment metadata property $missingPropertyKey for consignment $consignmentId")
   }
+
 
   "the getBagMetadata method" should "throw an exception if incomplete user details are found" in {
     val mockKeycloakClient = mock[KeycloakClient]
@@ -60,7 +62,7 @@ class BagMetadataSpec extends ExportSpec {
     doAnswer(() => incompleteUserRepresentation).when(mockKeycloakClient).getUserDetails(userId.toString)
 
     val exception = intercept[RuntimeException] {
-      BagMetadata(mockKeycloakClient).generateMetadata(consignmentId, consignment).unsafeRunSync()
+      BagMetadata(mockKeycloakClient).generateMetadata(consignmentId, consignment, fixedDateTime).unsafeRunSync()
     }
     exception.getMessage should equal(s"Incomplete details for user $userId")
   }

@@ -1,5 +1,6 @@
 package uk.gov.nationalarchives.consignmentexport
 
+import java.time.ZonedDateTime
 import java.util.UUID
 
 import cats.effect.IO
@@ -8,7 +9,6 @@ import graphql.codegen.GetConsignmentExport.getConsignmentForExport.GetConsignme
 import io.chrisdavenport.log4cats.SelfAwareStructuredLogger
 import org.keycloak.representations.idm.UserRepresentation
 import uk.gov.nationalarchives.consignmentexport.BagMetadata._
-import uk.gov.nationalarchives.consignmentexport.Config.Configuration
 import uk.gov.nationalarchives.consignmentexport.Utils._
 
 class BagMetadata(keycloakClient: KeycloakClient)(implicit val logger: SelfAwareStructuredLogger[IO]) {
@@ -21,7 +21,8 @@ class BagMetadata(keycloakClient: KeycloakClient)(implicit val logger: SelfAware
     }
   }
 
-  private def getConsignmentDetails(consignment: GetConsignment): Map[String, Option[String]] = {
+
+  private def getConsignmentDetails(consignment: GetConsignment, exportDatetime: ZonedDateTime): Map[String, Option[String]] = {
     val seriesCode = for {
       series <- consignment.series
       sc <- series.code
@@ -42,11 +43,6 @@ class BagMetadata(keycloakClient: KeycloakClient)(implicit val logger: SelfAware
       cd = completedDate.toFormattedPrecisionString
     } yield cd
 
-    val exportDatetime = for {
-      exportDate <- consignment.exportDatetime
-      ed = exportDate.toFormattedPrecisionString
-    } yield ed
-
     val contactName = getContactName(consignment.userid)
 
     Map(
@@ -54,13 +50,13 @@ class BagMetadata(keycloakClient: KeycloakClient)(implicit val logger: SelfAware
       SourceOrganisationKey -> bodyCode,
       ConsignmentStartDateKey -> startDatetime,
       ConsignmentCompletedDateKey -> completedDatetime,
-      ConsignmentExportDateKey -> exportDatetime,
+      ConsignmentExportDateKey -> Some(exportDatetime.toFormattedPrecisionString),
       ContactNameKey -> Some(contactName)
     )
   }
 
-  def generateMetadata(consignmentId: UUID, consignment: GetConsignment): IO[Metadata] = {
-    val details: Map[String, Option[String]] = getConsignmentDetails(consignment)
+  def generateMetadata(consignmentId: UUID, consignment: GetConsignment, exportDatetime: ZonedDateTime): IO[Metadata] = {
+    val details: Map[String, Option[String]] = getConsignmentDetails(consignment, exportDatetime)
     val metadata = new Metadata
 
     details.map(e => {

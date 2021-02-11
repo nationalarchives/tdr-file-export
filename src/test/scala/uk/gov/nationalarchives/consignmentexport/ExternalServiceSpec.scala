@@ -5,28 +5,32 @@ import java.net.URI
 import java.nio.file.Path
 
 import com.github.tomakehurst.wiremock.WireMockServer
-import com.github.tomakehurst.wiremock.client.WireMock.{equalToJson, get, okJson, post, urlEqualTo}
+import com.github.tomakehurst.wiremock.client.WireMock._
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
+import com.typesafe.config.{Config, ConfigFactory}
 import io.findify.s3mock.S3Mock
 import org.keycloak.OAuth2Constants
 import org.keycloak.admin.client.{Keycloak, KeycloakBuilder}
-import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.time.{Millis, Seconds, Span}
+import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.s3.S3Client
-import software.amazon.awssdk.services.s3.model.{CreateBucketRequest, CreateBucketResponse, DeleteBucketRequest, DeleteBucketResponse, GetObjectRequest, GetObjectResponse, ListObjectsRequest, PutObjectRequest, PutObjectResponse, S3Object}
+import software.amazon.awssdk.services.s3.model._
 
 import scala.concurrent.ExecutionContext
 import scala.io.Source.fromResource
-import scala.sys.process._
 import scala.jdk.CollectionConverters._
+import scala.sys.process._
 
 class ExternalServiceSpec extends AnyFlatSpec with BeforeAndAfterEach with BeforeAndAfterAll with ScalaFutures with Matchers {
 
   override implicit def patienceConfig: PatienceConfig = PatienceConfig(timeout = scaled(Span(5, Seconds)), interval = scaled(Span(100, Millis)))
+
+  private val appConfig: Config = ConfigFactory.load()
+  val scratchDirectory: String = appConfig.getString("efs.rootLocation")
 
   val s3Client: S3Client = S3Client.builder
     .region(Region.EU_WEST_2)
@@ -107,6 +111,7 @@ class ExternalServiceSpec extends AnyFlatSpec with BeforeAndAfterEach with Befor
   override def beforeAll(): Unit = {
     wiremockGraphqlServer.start()
     wiremockAuthServer.start()
+    new File(scratchDirectory).mkdirs()
   }
 
   override def beforeEach(): Unit = {
@@ -129,6 +134,6 @@ class ExternalServiceSpec extends AnyFlatSpec with BeforeAndAfterEach with Befor
     deleteBucket("test-output-bucket")
     wiremockAuthServer.resetAll()
     wiremockGraphqlServer.resetAll()
-    Seq("sh", "-c", "rm -r src/test/resources/testfiles/50df01e6-2e5e-4269-97e7-531a755b417d*").!
+    Seq("sh", "-c", s"rm -r $scratchDirectory/*").!
   }
 }

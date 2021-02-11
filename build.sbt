@@ -22,19 +22,7 @@ generateChangelogFile := {
   val fullPath = s"$folderName/$fileName"
   new File(folderName).mkdirs()
   val file = new File(fullPath)
-  def isFileEmpty(file: File): Boolean = {
-    val source = Source.fromFile(file)
-    val isEmpty = source.isEmpty
-    source.close()
-    println(s"file is $isEmpty")
-    isEmpty
-  }
-  println(s"ls -l $folderName".!!)
-  println(s"cat $fullPath".!!)
-  println(s"FILE EXISTS ${file.exists()}")
-  println(s"FILE EMPTY ${isFileEmpty(file)}")
-  if(!file.exists() || (file.exists() && isFileEmpty(file)) ) {
-    println("Creating new file")
+  if(!file.exists()) {
     new File(fullPath).createNewFile
     Files.write(Paths.get(fullPath), gitLog.getBytes(StandardCharsets.UTF_8))
   }

@@ -1,5 +1,6 @@
 package uk.gov.nationalarchives.consignmentexport
 
+import java.time.ZonedDateTime
 import java.util.UUID
 
 import cats.effect.IO
@@ -21,7 +22,8 @@ class BagMetadata(keycloakClient: KeycloakClient)(implicit val logger: SelfAware
     }
   }
 
-  private def getConsignmentDetails(consignment: GetConsignment): Map[String, Option[String]] = {
+
+  private def getConsignmentDetails(consignment: GetConsignment, exportDatetime: ZonedDateTime): Map[String, Option[String]] = {
     val seriesCode = for {
       series <- consignment.series
       sc <- series.code
@@ -42,11 +44,6 @@ class BagMetadata(keycloakClient: KeycloakClient)(implicit val logger: SelfAware
       cd = completedDate.toFormattedPrecisionString
     } yield cd
 
-    val exportDatetime = for {
-      exportDate <- consignment.exportDatetime
-      ed = exportDate.toFormattedPrecisionString
-    } yield ed
-
     val contactName = getContactName(consignment.userid)
 
     Map(
@@ -54,14 +51,14 @@ class BagMetadata(keycloakClient: KeycloakClient)(implicit val logger: SelfAware
       SourceOrganisationKey -> bodyCode,
       ConsignmentStartDateKey -> startDatetime,
       ConsignmentCompletedDateKey -> completedDatetime,
-      ConsignmentExportDateKey -> exportDatetime,
+      ConsignmentExportDateKey -> Some(exportDatetime.toFormattedPrecisionString),
       ContactNameKey -> Some(contactName),
       BagCreator -> Some(version)
     )
   }
 
-  def generateMetadata(consignmentId: UUID, consignment: GetConsignment): IO[Metadata] = {
-    val details: Map[String, Option[String]] = getConsignmentDetails(consignment)
+  def generateMetadata(consignmentId: UUID, consignment: GetConsignment, exportDatetime: ZonedDateTime): IO[Metadata] = {
+    val details: Map[String, Option[String]] = getConsignmentDetails(consignment, exportDatetime)
     val metadata = new Metadata
 
     details.map(e => {

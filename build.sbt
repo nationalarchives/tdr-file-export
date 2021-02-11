@@ -6,7 +6,6 @@ import java.nio.file.{Files, Paths}
 import java.io.File
 import java.nio.charset.StandardCharsets
 
-import scala.io.Source
 
 ThisBuild / scalaVersion := "2.13.3"
 ThisBuild / organization := "com.example"
@@ -76,5 +75,6 @@ lazy val root = (project in file("."))
       pushChanges
     ),
     buildInfoKeys := Seq[BuildInfoKey](version),
-    buildInfoPackage := "uk.gov.nationalarchives.consignmentexport"
+    buildInfoPackage := "uk.gov.nationalarchives.consignmentexport",
+    javaOptions in Test += s"-Dconfig.file=${sourceDirectory.value}/test/resources/application.conf"
   ).enablePlugins(JavaAppPackaging, UniversalPlugin, BuildInfoPlugin)

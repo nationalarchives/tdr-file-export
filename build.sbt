@@ -30,7 +30,9 @@ generateChangelogFile := {
     isEmpty
   }
   println(s"ls -l $folderName".!!)
-  println(s"pwd".!!)
+  println(s"cat $fullPath".!!)
+  println(s"FILE EXISTS ${file.exists()}")
+  println(s"FILE EMPTY ${isFileEmpty(file)}")
   if(!file.exists() || (file.exists() && isFileEmpty(file)) ) {
     println("Creating new file")
     new File(fullPath).createNewFile

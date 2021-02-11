@@ -36,12 +36,14 @@ pipeline {
       }
       stages {
         stage("Release to github") {
-          build(
-                job: "ConsignmentExportRelease",
-                parameters: [
-                  string(name: "STAGE", value: "intg")
-                ],
-                wait: true)
+          steps {
+            build(
+                  job: "ConsignmentExportRelease",
+                  parameters: [
+                    string(name: "STAGE", value: "intg")
+                  ],
+                  wait: true)
+          }
         }
         stage("Push Docker image") {
           steps {
@@ -51,14 +53,16 @@ pipeline {
             }
           }
         }
-        stage("Release to github") {
-          build(
-                job: "Consignment Export Deploy",
-                parameters: [
-                  string(name: "STAGE", value: "intg"),
-                  string(name: "TO_DEPLOY", value: versionTag)
-                ],
-                wait: false)
+        stage("Deploy to ECR") {
+          steps {
+            build(
+                  job: "Consignment Export Deploy",
+                  parameters: [
+                    string(name: "STAGE", value: "intg"),
+                    string(name: "TO_DEPLOY", value: versionTag)
+                  ],
+                  wait: false)
+          }
         }
       }
     }

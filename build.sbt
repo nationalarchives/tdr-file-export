@@ -26,9 +26,11 @@ generateChangelogFile := {
     val source = Source.fromFile(file)
     val isEmpty = source.isEmpty
     source.close()
+    println(s"file is $isEmpty")
     isEmpty
   }
   if(!file.exists() || (file.exists() && isFileEmpty(file)) ) {
+    println("Creating new file")
     new File(fullPath).createNewFile
     Files.write(Paths.get(fullPath), gitLog.getBytes(StandardCharsets.UTF_8))
   }

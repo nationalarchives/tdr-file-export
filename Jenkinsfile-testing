@@ -32,46 +32,24 @@ pipeline {
     }
     stage('Post-build') {
       when {
-        expression { env.BRANCH_NAME == "master"}
+        expression { env.BRANCH_NAME == "add-export-version"}
       }
       stages {
-        stage('Tag Release') {
-          steps {
-            sh "git tag ${versionTag}"
-            sshagent(['github-jenkins']) {
-              sh("git push origin ${versionTag}")
-            }
-          }
-        }
-        stage("Build Docker image") {
-          agent {
-            ecs {
-              inheritFrom "transfer-frontend"
-            }
-          }
-          steps {
-            sh 'sbt -no-colors universal:packageZipTarball'
-            stash includes: "Dockerfile", name: "Dockerfile"
-            stash includes: "target/universal/tdr-consignment-export.tgz", name: "tdr-consignment-export"
-          }
-        }
-        stage("Push Docker image") {
-          steps {
-            unstash "tdr-consignment-export"
-            unstash "Dockerfile"
-            script {
-              tdr.buildAndPushImage("consignment-export", versionTag)
-              tdr.postToDaTdrSlackChannel(colour: "good", message: "*Consignment Export* :whale: Pushed version ${versionTag} to AWS ECR")
-            }
-          }
-        }
         stage("Release to github") {
           build(
                 job: "ConsignmentExportRelease",
                 parameters: [
                   string(name: "STAGE", value: "intg")
                 ],
-                wait: false)
+                wait: true)
+        }
+        stage("Push Docker image") {
+          steps {
+            script {
+              tdr.buildAndPushImage("consignment-export", versionTag)
+              tdr.postToDaTdrSlackChannel(colour: "good", message: "*Consignment Export* :whale: Pushed version ${versionTag} to AWS ECR")
+            }
+          }
         }
         stage("Release to github") {
           build(
@@ -82,7 +60,6 @@ pipeline {
                 ],
                 wait: false)
         }
-
       }
     }
   }

@@ -1,6 +1,6 @@
 library("tdr-jenkinslib")
 
-def versionBumpBranch = "version-bump-${env.BUILD_NUMBER}"
+def versionTag = "v${env.BUILD_NUMBER}"
 def repo = "tdr-consignment-export"
 
 pipeline {
@@ -9,11 +9,40 @@ pipeline {
   }
 
   stages {
+    stage("Run git secrets") {
+      steps {
+        script {
+          tdr.runGitSecrets(repo)
+        }
+      }
+    }
+    stage('Test') {
+      agent {
+        ecs {
+          inheritFrom 'transfer-frontend'
+        }
+      }
+      steps {
+        script {
+          tdr.reportStartOfBuildToGitHub(repo, env.GIT_COMMIT)
+        }
+        checkout scm
+        sh 'sbt -no-colors test'
+      }
+    }
     stage('Post-build') {
       when {
-        expression { env.BRANCH_NAME == "add-export-version"}
+        expression { env.BRANCH_NAME == "master"}
       }
       stages {
+        stage('Tag Release') {
+          steps {
+            sh "git tag ${versionTag}"
+            sshagent(['github-jenkins']) {
+              sh("git push origin ${versionTag}")
+            }
+          }
+        }
         stage("Build Docker image") {
           agent {
             ecs {
@@ -21,21 +50,7 @@ pipeline {
             }
           }
           steps {
-            script {
-              sshagent(['github-jenkins']) {
-                sh "git config --global user.email tna-digital-archiving-jenkins@nationalarchives.gov.uk"
-                sh "git config --global user.name tna-digital-archiving-jenkins"
-                sh "git checkout -b ${versionBumpBranch}"
-                sh "git push -u origin ${versionBumpBranch}"
-                sh "git remote -v"
-                withCredentials([string(credentialsId: 'github-jenkins-api-key', variable: 'GITHUB_TOKEN')]) {
-                  sh "git config --global user.email tna-digital-archiving-jenkins@nationalarchives.gov.uk"
-                  sh "git config --global user.name tna-digital-archiving-jenkins"
-                  sh "sbt -no-colors release 'with-defaults'"
-                }
-              }
-            }
-
+            sh 'sbt -no-colors universal:packageZipTarball'
             stash includes: "Dockerfile", name: "Dockerfile"
             stash includes: "target/universal/tdr-consignment-export.tgz", name: "tdr-consignment-export"
           }
@@ -45,24 +60,9 @@ pipeline {
             unstash "tdr-consignment-export"
             unstash "Dockerfile"
             script {
-              def versionTag = sh(script: "git describe --tags --abbrev=0", returnStdout: true)
               tdr.buildAndPushImage("consignment-export", versionTag)
-              tdr.postToDaTdrSlackChannel(colour: "good", message: "*Consignment Export* :whale: Pushed version ${versionTag} to AWS ECR and released to Github")
-              tdr.createGitHubPullRequest(
-                            pullRequestTitle: "Version Bump from build number ${config.buildNumber}",
-                            buildUrl: env.BUILD_URL,
-                            repo: "repo",
-                            branchToMergeTo: "master",
-                            branchToMerge: versionBumpBranch
-                          )
+              tdr.postToDaTdrSlackChannel(colour: "good", message: "*Consignment Export* :whale: Pushed version ${versionTag} to AWS ECR")
             }
-            build(
-                  job: "Consignment Export Deploy",
-                  parameters: [
-                    string(name: "STAGE", value: "intg"),
-                    string(name: "TO_DEPLOY", value: versionTag)
-                  ],
-                  wait: false)
           }
         }
       }

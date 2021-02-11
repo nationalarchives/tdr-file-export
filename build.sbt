@@ -12,7 +12,7 @@ ThisBuild / organizationName := "example"
 lazy val generateChangelogFile = taskKey[Unit]("Generates a changelog file from the last version")
 
 generateChangelogFile := {
-  val lastTag = "git describe --tags --abbrev=0".!!.replace("\n","").!!
+  val lastTag = "git describe --tags --abbrev=0".!!.replace("\n","")
   val gitLog = s"git log $lastTag..HEAD --oneline".!!
   println(lastTag)
   println(gitLog)

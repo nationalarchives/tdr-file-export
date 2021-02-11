@@ -1,0 +1,8 @@
+@Library("tdr-jenkinslib@add-token-to-release-job") _
+
+sbtReleaseDeployJob(
+        stage: params.STAGE,
+        buildNumber: BUILD_NUMBER,
+        libraryName: "Consignment export",
+        repo: "tdr-consignment-export"
+)

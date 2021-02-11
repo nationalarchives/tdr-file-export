@@ -15,9 +15,10 @@ generateChangelogFile := {
   "ls -la".!!
   "pwd".!!
   val gitLog = s"git log ${"git describe --tags --abbrev=0".!!.replace("\n","")}..HEAD --oneline".!!
-  val fileName = s"${baseDirectory.value}/notes/${version.value}.markdown"
-  new File(s"${baseDirectory.value}/notes/").mkdirs()
-  new File(fileName).createNewFile
+  val folderName = s"${baseDirectory.value}/notes"
+  val fileName = s"${version.value}.markdown"
+  new File(folderName).mkdirs()
+  new File(s"$folderName/$fileName").createNewFile
   Files.write(Paths.get(fileName), gitLog.getBytes(StandardCharsets.UTF_8))
 }
 

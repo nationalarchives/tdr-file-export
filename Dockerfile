@@ -1,5 +1,5 @@
 FROM openjdk:15-alpine
-RUN apk add --no-cache bash tar curl wget jq && \
+RUN apk add --no-cache bash tar curl wget && \
     apk update && \
     apk upgrade p11-kit && \
     adduser consignment-export -D && \

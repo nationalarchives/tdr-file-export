@@ -8,7 +8,7 @@ import graphql.codegen.GetConsignmentExport.getConsignmentForExport.GetConsignme
 import io.chrisdavenport.log4cats.SelfAwareStructuredLogger
 import org.keycloak.representations.idm.UserRepresentation
 import uk.gov.nationalarchives.consignmentexport.BagMetadata._
-import uk.gov.nationalarchives.consignmentexport.Config.Configuration
+import uk.gov.nationalarchives.consignmentexport.BuildInfo.version
 import uk.gov.nationalarchives.consignmentexport.Utils._
 
 class BagMetadata(keycloakClient: KeycloakClient)(implicit val logger: SelfAwareStructuredLogger[IO]) {
@@ -55,7 +55,8 @@ class BagMetadata(keycloakClient: KeycloakClient)(implicit val logger: SelfAware
       ConsignmentStartDateKey -> startDatetime,
       ConsignmentCompletedDateKey -> completedDatetime,
       ConsignmentExportDateKey -> exportDatetime,
-      ContactNameKey -> Some(contactName)
+      ContactNameKey -> Some(contactName),
+      BagCreator -> Some(version)
     )
   }
 
@@ -93,6 +94,7 @@ object BagMetadata {
   private val ConsignmentCompletedDateKey = "Consignment-CompletedDate"
   private val ContactNameKey = "Contact-Name"
   private val ConsignmentExportDateKey = "Consignment-ExportDate"
+  private val BagCreator = "Bag-Creator"
 
   def apply(keycloakClient: KeycloakClient)(implicit logger: SelfAwareStructuredLogger[IO]): BagMetadata = new BagMetadata(keycloakClient)(logger)
 }

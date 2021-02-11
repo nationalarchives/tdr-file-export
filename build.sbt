@@ -1,7 +1,8 @@
 import Dependencies._
 import ReleaseTransformations._
 import scala.sys.process._
-import java.io.File
+import java.nio.file.{Paths, Files}
+import java.nio.charset.StandardCharsets
 
 ThisBuild / scalaVersion := "2.13.3"
 ThisBuild / organization := "com.example"
@@ -10,7 +11,9 @@ ThisBuild / organizationName := "example"
 lazy val generateChangelogFile = taskKey[Unit]("Generates a changelog file from the last version")
 
 generateChangelogFile := {
-  (s"git log ${"git describe --tags --abbrev=0".!!.replace("\n","")}..HEAD --oneline" #> new File(s"${baseDirectory.value}/notes/${version.value}.markdown")).!!
+  val gitLog = s"git log ${"git describe --tags --abbrev=0".!!.replace("\n","")}..HEAD --oneline".!!
+  val fileName = s"${baseDirectory.value}/notes/${version.value}.markdown"
+  Files.write(Paths.get(fileName), gitLog.getBytes(StandardCharsets.UTF_8))
 }
 
 lazy val root = (project in file("."))

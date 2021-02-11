@@ -29,6 +29,8 @@ generateChangelogFile := {
     println(s"file is $isEmpty")
     isEmpty
   }
+  println(s"ls -l $folderName".!!)
+  println(s"pwd".!!)
   if(!file.exists() || (file.exists() && isFileEmpty(file)) ) {
     println("Creating new file")
     new File(fullPath).createNewFile

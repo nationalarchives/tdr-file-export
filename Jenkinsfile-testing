@@ -32,7 +32,7 @@ pipeline {
     }
     stage('Post-build') {
       when {
-        expression { env.BRANCH_NAME == "add-export-version"}
+        expression { env.BRANCH_NAME == "master"}
       }
       stages {
         stage("Release to github") {

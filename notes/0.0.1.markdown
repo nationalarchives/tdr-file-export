@@ -1,0 +1,139 @@
+c56567f Reset version and remove notes
+33988d5 Remove debugging lines and don't bother checking if the file is empty
+712995a Merge pull request #24 from nationalarchives/version-bump-24
+4929281 Setting version to 0.0.6-SNAPSHOT
+e4f3006 Setting version to 0.0.5
+03fd237 Use the right version number
+c0ce36f Add markdown file for version and do git add
+c773bc5 Merge pull request #23 from nationalarchives/version-bump-21
+cc1349a Add more debugging lines to the function
+cee07e7 Setting version to 0.0.5-SNAPSHOT
+e8007ca Setting version to 0.0.4
+65df556 Merge pull request #22 from nationalarchives/version-bump-19
+b292671 Debugging lines and stop releasing on this branch
+e5939e9 Setting version to 0.0.4-SNAPSHOT
+3549fe1 Setting version to 0.0.3
+92b97b3 Merge branch 'add-export-version' of github.com:nationalarchives/tdr-consignment-export into add-export-version
+071e3d3 Add manual notes for next version
+8102299 Merge pull request #21 from nationalarchives/version-bump-18
+9da359d Setting version to 0.0.3-SNAPSHOT
+e719893 Setting version to 0.0.2
+fd912aa Check for existing notes and use those
+eb100a3 Merge pull request #20 from nationalarchives/version-bump-17
+db380e4 Setting version to 0.0.2-SNAPSHOT
+052f629 Setting version to 0.0.1
+5e2a143 Reset version
+ac2d545 Fix Jenkinsfile syntax
+078991b Get the zip file from github
+668ed4e Add call to release and deploy job
+0b1a11b Write to the right file
+83103ef More debugging
+e961dfc Removed extra call to sys.process
+d3bb54d Debug the git messages
+40c26cd Change library
+427ead2 Add mkdir step
+9a5aa71 Revert Jenkinsfile changes
+d31d353 Try to create a new file
+ff7fa1d Debugging statements
+b06a3b9 Use Files.write to create the notes file
+2e5b9a8 Add release job
+55345d1 Add release job
+a2e7d52 Setting version to 0.1.4
+5d1f657 Version bump
+f76c216 Setting version to 0.1.4
+e9e30f3 Version bump
+fa636d2 Setting version to 0.1.4
+295a4f8 Manual version bump
+9b80adc Setting version to 0.1.4
+529ccd6 Remove inquireVersion set
+dbe2ffd More attempts to get the build to work
+8234220 Setting version to 0.1.4-SNAPSHOT
+ba5f812 Setting version to 0.1.3
+6082678 Temporary jenkins changes
+0a7bdec Add Jenkinsfile testing
+75bd654 Replace Path.of call to work with older java
+e807698 Bump generated graphql version
+029a402 Put versionTag in script tag
+3b21b21 Update branch to create pull requests from changes
+5fc8761 Setting version to 0.1.3-SNAPSHOT
+18f095a Setting version to 0.1.2
+6687e07 Change version
+b61d509 Setting version to 0.1.2
+540ac25 Change version
+612dcd3 Setting version to 0.1.2
+db258f6 Delete release notes
+8100720 Change version
+5be5a6b Change git command
+1697c4b Setting version to 0.1.1
+80e9e02 More changes
+e99842a Setting version to 0.1.2
+6e5c036 More changes
+4ebd10d Setting version to 0.1.2
+51e7381 More changes
+7271b71 Setting version to 0.1.2
+d1786bb More changes
+5335556 Setting version to 0.1.2
+84778a8 More changes
+424d64d More changes
+9431f7c Setting version to 0.1.1
+4bbc378 More changes
+2b3df50 Setting version to 0.1.1
+b9e9665 More changes
+64de737 More changes
+1aee5a3 Setting version to 0.1.1-SNAPSHOT
+7115520 Setting version to 0.1.0
+c2e059c Remove things until it works
+bb5fa75 Remove things until it works
+1a2b98f Setting version to 0.1.0
+3d1706d Remove things until it works
+bbb3f8d Setting version to 0.1.0
+3d4c2e5 Remove things until it works
+4e224fe Setting version to 0.1.0
+8022e79 Remove things until it works
+7336eb3 Setting version to 0.1.0
+1927c09 Remove things until it works
+684ef47 Remove things until it works
+6f4d75c Setting version to 0.1.0
+9db354f Remove things until it works
+cb0b152 Setting version to 0.1.0
+6433a37 Remove things until it works
+3438db1 Remove things until it works
+e5bf176 Remove things until it works
+619f883 Remove things until it works
+168df2d Remove things until it works
+4d41236 Setting version to 0.1.0
+3b6df50 Remove things until it works
+a0c4cf2 Remove things until it works
+6d1e20d Remove things until it works
+b6226fe Remove things until it works
+a6d6f37 Setting version to 0.1.0
+18789f6 Remove things until it works
+2508bd5 Remove things until it works
+03b29bc Remove things until it works
+c91a7b1 Remove things until it works
+1c8e040 Remove things until it works
+f7c4f0e Add changes back in
+b816b89 Setting version to 0.1.0
+330a0f0 Update version.sbt
+84a5452 Remove pushChanges
+9dd5786 Remove pushChanges
+509e92a Setting version to 0.1.0
+47b66cc Set snapshot version
+199ac3a Push changes before github release
+c41fc87 Add test notes
+ff398ef Setting version to 0.1.0
+f409c2e Add inquire versions step back in
+f3ae79f Add release plugins
+f8b7632 Refactor to make exporter the only module
+2030a4b Merge branch 'master' into add-file-metadata-csv
+3b393ab Replace the existing grapql queries with the consignment metadata one.
+e9a4295 Couple of missed errors from the merge
+07c1251 Merge branch 'TDR-781-retrieve-and-save-keycloak-info' into add-file-metadata-csv
+4d88aff Write the files to the bag in the Main class
+ecab13f Add wiremock stub for file metadata call
+e10b296 Add method and tests to get the file metadata.
+a04a458 Update existing tests and add new one.
+cac94be Add a method to write the metadata to the bag.
+9739ebc Add additional files class
+1e48e00 Add checksum calculation class and tests
+1bc4f5c Add scalaCsv dependencies

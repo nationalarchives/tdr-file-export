@@ -1,9 +1,12 @@
 import Dependencies._
 import ReleaseTransformations._
+
 import scala.sys.process._
-import java.nio.file.{Paths, Files}
+import java.nio.file.{Files, Paths}
 import java.io.File
 import java.nio.charset.StandardCharsets
+
+import scala.io.Source
 
 ThisBuild / scalaVersion := "2.13.3"
 ThisBuild / organization := "com.example"
@@ -18,8 +21,17 @@ generateChangelogFile := {
   val fileName = s"${version.value}.markdown"
   val fullPath = s"$folderName/$fileName"
   new File(folderName).mkdirs()
-  new File(fullPath).createNewFile
-  Files.write(Paths.get(fullPath), gitLog.getBytes(StandardCharsets.UTF_8))
+  val file = new File(fullPath)
+  def isFileEmpty(file: File): Boolean = {
+    val source = Source.fromFile(file)
+    val isEmpty = source.isEmpty
+    source.close()
+    isEmpty
+  }
+  if(!file.exists() || (file.exists() && isFileEmpty(file)) ) {
+    new File(fullPath).createNewFile
+    Files.write(Paths.get(fullPath), gitLog.getBytes(StandardCharsets.UTF_8))
+  }
 }
 
 lazy val root = (project in file("."))

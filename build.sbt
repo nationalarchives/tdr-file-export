@@ -14,17 +14,12 @@ lazy val generateChangelogFile = taskKey[Unit]("Generates a changelog file from 
 generateChangelogFile := {
   val lastTag = "git describe --tags --abbrev=0".!!.replace("\n","")
   val gitLog = s"git log $lastTag..HEAD --oneline".!!
-  println(lastTag)
-  println(gitLog)
-  println("ls -la".!!)
-  println("pwd".!!)
   val folderName = s"${baseDirectory.value}/notes"
   val fileName = s"${version.value}.markdown"
-  println(folderName)
-  println(fileName)
+  val fullPath = s"$folderName/$fileName"
   new File(folderName).mkdirs()
-  new File(s"$folderName/$fileName").createNewFile
-  Files.write(Paths.get(fileName), gitLog.getBytes(StandardCharsets.UTF_8))
+  new File(fullPath).createNewFile
+  Files.write(Paths.get(fullPath), gitLog.getBytes(StandardCharsets.UTF_8))
 }
 
 lazy val root = (project in file("."))

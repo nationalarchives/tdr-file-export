@@ -16,6 +16,6 @@ class ChecksumCalculatorSpec extends ExportSpec {
     val files = ChecksumCalculator().calculateChecksums(fileOne, fileTwo).unsafeRunSync()
     files.length should equal(2)
     files.head.checksum should equal("cd0aa9856147b6c5b4ff2b7dfee5da20aa38253099ef1b4a64aced233c9afe29")
-    files.last.checksum should equal("aaa9402664f1a41f40ebbc52c9993eb66aeb366602958fdfaa283b71e64db123")
+    files.last.checksum should equal("705ce8819a3dc40a54c45c3cc353413421a29667dd79c240b982a4bea1e2b651")
   }
 }

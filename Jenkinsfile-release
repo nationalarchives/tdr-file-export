@@ -1,4 +1,4 @@
-@Library("tdr-jenkinslib@add-token-to-release-job") _
+library("tdr-jenkinslib")
 
 sbtReleaseDeployJob(
         stage: params.STAGE,

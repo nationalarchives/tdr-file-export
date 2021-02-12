@@ -35,7 +35,7 @@ class BagMetadataSpec extends ExportSpec {
     bagMetadata.get("Consignment-CompletedDate").get(0) should be(fixedDateTime.toFormattedPrecisionString)
     bagMetadata.get("Contact-Name").get(0) should be("FirstName LastName")
     bagMetadata.get("Consignment-ExportDate").get(0) should be(fixedDateTime.toFormattedPrecisionString)
-    bagMetadata.get("Bag-Creator").get(0) should be(version)
+    bagMetadata.get("Bag-Creator").get(0) should be(s"TDRExportv$version")
   }
 
   "the getBagMetadata method" should "throw an exception if a consignment metadata property is missing" in {

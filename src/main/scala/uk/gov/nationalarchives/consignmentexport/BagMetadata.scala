@@ -53,7 +53,7 @@ class BagMetadata(keycloakClient: KeycloakClient)(implicit val logger: SelfAware
       ConsignmentCompletedDateKey -> completedDatetime,
       ConsignmentExportDateKey -> Some(exportDatetime.toFormattedPrecisionString),
       ContactNameKey -> Some(contactName),
-      BagCreator -> Some(version)
+      BagCreator -> Some(s"TDRExportv$version")
     )
   }
 

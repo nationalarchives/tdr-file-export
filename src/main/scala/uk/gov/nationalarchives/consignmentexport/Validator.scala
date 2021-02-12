@@ -7,19 +7,18 @@ import cats.effect.IO
 import graphql.codegen.GetConsignmentExport.getConsignmentForExport.GetConsignment.Files
 import cats.implicits._
 import graphql.codegen.GetConsignmentExport.getConsignmentForExport.GetConsignment
-import graphql.codegen.GetConsignmentExport.getConsignmentForExport.GetConsignment.Files.Metadata
 import uk.gov.nationalarchives.consignmentexport.Validator.ValidatedFileMetadata
 
 class Validator(consignmentId: UUID) {
-  def validateConsignmentHasFiles(consignmentData: GetConsignment): IO[Files] = {
-    IO.fromOption(consignmentData.files.headOption)(new Exception(s"Consignment API returned no files for consignment $consignmentId"))
+  def validateConsignmentHasFiles(consignmentData: GetConsignment): Either[RuntimeException, Files] = {
+    Either.fromOption(consignmentData.files.headOption, new RuntimeException(s"Consignment API returned no files for consignment $consignmentId"))
   }
 
-  def validateConsignmentResult(consignmentResult: Option[GetConsignment]): IO[GetConsignment] = {
-    IO.fromOption(consignmentResult)(new RuntimeException(s"No consignment metadata found for consignment $consignmentId"))
+  def validateConsignmentResult(consignmentResult: Option[GetConsignment]): Either[RuntimeException, GetConsignment] = {
+    Either.fromOption(consignmentResult, new RuntimeException(s"No consignment metadata found for consignment $consignmentId"))
   }
 
-  def validateFileMetadataNotEmpty(filesList: List[Files]): IO[List[ValidatedFileMetadata]] = {
+  def validateFileMetadataNotEmpty(filesList: List[Files]): Either[RuntimeException, List[ValidatedFileMetadata]] = {
     filesList.flatMap(file => {
       file.metadata.productElementNames.zip(file.metadata.productIterator).collect(propertyNameToValue => propertyNameToValue._2 match {
         case x: Option[_] if x.isEmpty => propertyNameToValue._1
@@ -28,7 +27,7 @@ class Validator(consignmentId: UUID) {
         case Nil => none
       }
     }) match {
-      case head :: next => IO.raiseError(new Exception((head :: next).mkString("\n")))
+      case head :: next => Left(new RuntimeException((head :: next).mkString("\n")))
       case Nil =>
         def validatedMetadata(f: Files): ValidatedFileMetadata = ValidatedFileMetadata(f.fileId,
           f.metadata.clientSideFileSize.get,
@@ -40,7 +39,7 @@ class Validator(consignmentId: UUID) {
           f.metadata.legalStatus.get,
           f.metadata.rightsCopyright.get
         )
-        IO(filesList.map(validatedMetadata))
+        Right(filesList.map(validatedMetadata))
     }
   }
 }

@@ -36,16 +36,6 @@ class Bagit(bagInPlace: (Path, util.Collection[SupportedAlgorithm], Boolean, Met
   def writeTagManifestRows(bag: Bag, checksumFiles: List[ChecksumFile]): IO[Unit] = IO {
     val fileToChecksumMap: util.Map[Path, String] = checksumFiles.map(f => f.file.toPath -> f.checksum).toMap.asJava
     bag.getTagManifests.asScala.head.getFileToChecksumMap.putAll(fileToChecksumMap)
-
-    val tagManifests = bag.getTagManifests.asScala.head
-    val tagManifestMap = tagManifests.getFileToChecksumMap
-    tagManifestMap.putAll(fileToChecksumMap)
-    val newSet = new util.HashSet[Manifest]()
-    val newManifest = new Manifest(StandardSupportedAlgorithms.SHA256)
-    newManifest.setFileToChecksumMap(tagManifestMap)
-    newSet.add(newManifest)
-    bag.setTagManifests(newSet)
-
     writeTagManifests.apply(bag.getTagManifests, bag.getRootDir, bag.getRootDir, bag.getFileEncoding)
   }
 }

@@ -20,6 +20,8 @@ class MainSpec extends ExternalServiceSpec {
     val consignmentId = UUID.fromString("50df01e6-2e5e-4269-97e7-531a755b417d")
     putFile(s"$consignmentId/7b19b272-d4d1-4d77-bf25-511dc6489d12")
     Main.run(List("export", "--consignmentId", consignmentId.toString)).unsafeRunSync()
+
+    checkStepFunctionSuccessNotCalled()
     val objects = outputBucketObjects().map(_.key())
 
     objects.size should equal(2)
@@ -34,6 +36,8 @@ class MainSpec extends ExternalServiceSpec {
     putFile(s"$consignmentId/7b19b272-d4d1-4d77-bf25-511dc6489d12")
 
     Main.run(List("export", "--consignmentId", consignmentId.toString)).unsafeRunSync()
+
+    checkStepFunctionSuccessNotCalled()
 
     val downloadDirectory = s"$scratchDirectory/download"
     new File(s"$downloadDirectory").mkdirs()
@@ -58,6 +62,8 @@ class MainSpec extends ExternalServiceSpec {
     val consignmentId = UUID.fromString("50df01e6-2e5e-4269-97e7-531a755b417d")
     putFile(s"$consignmentId/7b19b272-d4d1-4d77-bf25-511dc6489d12")
     Main.run(List("export", "--consignmentId", consignmentId.toString)).unsafeRunSync()
+
+    checkStepFunctionSuccessNotCalled()
 
     val exportLocationEvent: Option[ServeEvent] = wiremockGraphqlServer.getAllServeEvents.asScala
       .find(p => p.getRequest.getBodyAsString.contains("mutation updateExportLocation"))
@@ -140,4 +146,10 @@ class MainSpec extends ExternalServiceSpec {
     keycloakGetUser
     graphqlGetFiles
   }
+
+  private def checkStepFunctionSuccessNotCalled() = {
+    //If no taskToken step function success call should not be called
+    wiremockSfnServer.getAllServeEvents.size() should be(0)
+  }
+
 }

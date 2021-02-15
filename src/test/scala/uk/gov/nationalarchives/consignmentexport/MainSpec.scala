@@ -137,8 +137,7 @@ class MainSpec extends ExternalServiceSpec {
     eventRequestBody.contains(taskTokenValue) should be(true)
 
     //check rest of process was completed successfully
-    val objects = outputBucketObjects().map(_.key())
-    objects.size should equal(2)
+    outputBucketObjects().size should equal(2)
   }
 
   private def setUpValidExternalServices() = {

@@ -1,6 +1,6 @@
 package uk.gov.nationalarchives.consignmentexport
 
-import uk.gov.nationalarchives.consignmentexport.Config.{Api, Auth, Configuration, EFS, S3, SFN}
+import uk.gov.nationalarchives.consignmentexport.Config._
 
 class KeycloakClientSpec extends ExternalServiceSpec {
   private val config = Configuration(
@@ -13,7 +13,6 @@ class KeycloakClientSpec extends ExternalServiceSpec {
 
   "the getUserDetails method" should "return the correct user details" in {
     keycloakGetUser
-    val keycloakAdminClient = keycloakCreateAdminClient
     val keycloakClient = new KeycloakClient(keycloakCreateAdminClient, config)
 
     val userDetails = keycloakClient.getUserDetails(keycloakUserId)

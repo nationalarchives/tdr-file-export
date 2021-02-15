@@ -40,7 +40,7 @@ object Main extends CommandIOApp("tdr-consignment-export", "Exports tdr files in
         consignmentData <- IO.fromEither(validator.validateConsignmentResult(consignmentResult))
         _ <- IO.fromEither(validator.validateConsignmentHasFiles(consignmentData))
         bagMetadata <- BagMetadata(keycloakClient).generateMetadata(consignmentId, consignmentData, exportDatetime)
-        validatedFileMetadata <- IO.fromEither(validator.validateFileMetadataNotEmpty(consignmentData.files))
+        validatedFileMetadata <- IO.fromEither(validator.extractFileMetadata(consignmentData.files))
         _ <- s3Files.downloadFiles(validatedFileMetadata, config.s3.cleanBucket, consignmentId, basePath)
         bag <- bagit.createBag(consignmentId, basePath, bagMetadata)
         fileMetadataCsv <- BagAdditionalFiles(bag.getRootDir).createFileMetadataCsv(validatedFileMetadata)

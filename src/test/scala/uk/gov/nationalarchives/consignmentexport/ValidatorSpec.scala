@@ -64,7 +64,7 @@ class ValidatorSpec extends ExportSpec {
 
   "validateFileMetadataNotEmpty" should "not return an error if all of the fields are set" in {
     val validator = Validator(UUID.randomUUID())
-    val attempt: Either[Throwable, List[ValidatedFileMetadata]] = validator.validateFileMetadataNotEmpty(List(completeFileMetadata))
+    val attempt: Either[Throwable, List[ValidatedFileMetadata]] = validator.extractFileMetadata(List(completeFileMetadata))
     attempt.right.value.length should equal(1)
   }
 
@@ -98,7 +98,7 @@ class ValidatorSpec extends ExportSpec {
         "rightsCopyright".some
       )
     )
-    val file: Either[Throwable, List[ValidatedFileMetadata]] = validator.validateFileMetadataNotEmpty(List(metadata, metadataTwo))
+    val file: Either[Throwable, List[ValidatedFileMetadata]] = validator.extractFileMetadata(List(metadata, metadataTwo))
     file.left.value.getMessage should equal(
       s"$fileId is missing the following properties: clientSideLastModifiedDate, clientSideOriginalFilePath\n$fileIdTwo is missing the following properties: foiExemptionCode, heldBy, language"
     )
@@ -132,7 +132,7 @@ class ValidatorSpec extends ExportSpec {
         "rightsCopyright".some
       )
     )
-    val file: Either[Throwable, List[ValidatedFileMetadata]] = validator.validateFileMetadataNotEmpty(List(metadata, metadataTwo))
+    val file: Either[Throwable, List[ValidatedFileMetadata]] = validator.extractFileMetadata(List(metadata, metadataTwo))
     file.left.value.getMessage should equal(s"$fileId is missing the following properties: language, legalStatus")
   }
 }

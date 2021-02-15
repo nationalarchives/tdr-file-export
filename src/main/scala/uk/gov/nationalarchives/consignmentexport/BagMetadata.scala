@@ -8,7 +8,7 @@ import gov.loc.repository.bagit.domain.Metadata
 import graphql.codegen.GetConsignmentExport.getConsignmentForExport.GetConsignment
 import io.chrisdavenport.log4cats.SelfAwareStructuredLogger
 import org.keycloak.representations.idm.UserRepresentation
-import uk.gov.nationalarchives.consignmentexport.BagMetadata._
+import uk.gov.nationalarchives.consignmentexport.BagMetadata.{BagCreator, _}
 import uk.gov.nationalarchives.consignmentexport.BuildInfo.version
 import uk.gov.nationalarchives.consignmentexport.Utils._
 
@@ -49,9 +49,9 @@ class BagMetadata(keycloakClient: KeycloakClient)(implicit val logger: SelfAware
     Map(
       ConsignmentSeriesKey -> seriesCode,
       SourceOrganisationKey -> bodyCode,
-      ConsignmentStartDateKey -> startDatetime,
-      ConsignmentCompletedDateKey -> completedDatetime,
-      ConsignmentExportDateKey -> Some(exportDatetime.toFormattedPrecisionString),
+      ConsignmentStartDatetimeKey -> startDatetime,
+      ConsignmentCompletedDatetimeKey -> completedDatetime,
+      ConsignmentExportDatetimeKey -> Some(exportDatetime.toFormattedPrecisionString),
       ContactNameKey -> Some(contactName),
       BagCreator -> Some(s"TDRExportv$version")
     )
@@ -70,9 +70,9 @@ class BagMetadata(keycloakClient: KeycloakClient)(implicit val logger: SelfAware
     IO(metadata)
   }
 
-  private def getContactName(userId: UUID): String =  {
-      val userDetails = getUserDetails(userId.toString)
-      s"${userDetails.getFirstName} ${userDetails.getLastName}"
+  private def getContactName(userId: UUID): String = {
+    val userDetails = getUserDetails(userId.toString)
+    s"${userDetails.getFirstName} ${userDetails.getLastName}"
   }
 
   private def getUserDetails(userId: String): UserRepresentation = {
@@ -87,10 +87,10 @@ class BagMetadata(keycloakClient: KeycloakClient)(implicit val logger: SelfAware
 object BagMetadata {
   private val SourceOrganisationKey = "Source-Organization"
   private val ConsignmentSeriesKey = "Consignment-Series"
-  private val ConsignmentStartDateKey = "Consignment-StartDate"
-  private val ConsignmentCompletedDateKey = "Consignment-CompletedDate"
+  private val ConsignmentStartDatetimeKey = "Consignment-Start-Datetime"
+  private val ConsignmentCompletedDatetimeKey = "Consignment-Completed-Datetime"
   private val ContactNameKey = "Contact-Name"
-  private val ConsignmentExportDateKey = "Consignment-ExportDate"
+  private val ConsignmentExportDatetimeKey = "Consignment-Export-Datetime"
   private val BagCreator = "Bag-Creator"
 
   def apply(keycloakClient: KeycloakClient)(implicit logger: SelfAwareStructuredLogger[IO]): BagMetadata = new BagMetadata(keycloakClient)(logger)

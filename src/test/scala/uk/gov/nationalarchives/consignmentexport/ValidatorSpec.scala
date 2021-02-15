@@ -37,34 +37,34 @@ class ValidatorSpec extends ExportSpec {
   "validateConsignmentHasFiles" should "return an error if the consignment has no files" in {
     val consignmentId = UUID.randomUUID()
     val validator = Validator(consignmentId)
-    val attempt: Either[Throwable, Files] = validator.validateConsignmentHasFiles(consignment(consignmentId, List())).attempt.unsafeRunSync()
+    val attempt: Either[Throwable, Files] = validator.validateConsignmentHasFiles(consignment(consignmentId, List()))
     attempt.left.value.getMessage should equal(s"Consignment API returned no files for consignment $consignmentId")
   }
 
   "validateConsignmentHasFiles" should "not return an error if the consignment has files" in {
     val consignmentId = UUID.randomUUID()
     val validator = Validator(consignmentId)
-    val attempt: Either[Throwable, Files] = validator.validateConsignmentHasFiles(consignment(consignmentId)).attempt.unsafeRunSync()
+    val attempt: Either[Throwable, Files] = validator.validateConsignmentHasFiles(consignment(consignmentId))
     attempt.isRight should be(true)
   }
 
   "validateConsignmentResult" should "return an error if the consignment data is not defined" in {
     val consignmentId = UUID.randomUUID()
     val validator = Validator(consignmentId)
-    val attempt = validator.validateConsignmentResult(none).attempt.unsafeRunSync()
+    val attempt = validator.validateConsignmentResult(none)
     attempt.left.value.getMessage should equal(s"No consignment metadata found for consignment $consignmentId")
   }
 
   "validateConsignmentResult" should "not return an error if the consignment data is defined" in {
     val consignmentId = UUID.randomUUID()
     val validator = Validator(consignmentId)
-    val attempt = validator.validateConsignmentResult(consignment(consignmentId).some).attempt.unsafeRunSync()
+    val attempt = validator.validateConsignmentResult(consignment(consignmentId).some)
     attempt.isRight should be(true)
   }
 
   "validateFileMetadataNotEmpty" should "not return an error if all of the fields are set" in {
     val validator = Validator(UUID.randomUUID())
-    val attempt: Either[Throwable, List[ValidatedFileMetadata]] = validator.validateFileMetadataNotEmpty(List(completeFileMetadata)).attempt.unsafeRunSync()
+    val attempt: Either[Throwable, List[ValidatedFileMetadata]] = validator.extractFileMetadata(List(completeFileMetadata))
     attempt.right.value.length should equal(1)
   }
 
@@ -98,7 +98,7 @@ class ValidatorSpec extends ExportSpec {
         "rightsCopyright".some
       )
     )
-    val file: Either[Throwable, List[ValidatedFileMetadata]] = validator.validateFileMetadataNotEmpty(List(metadata, metadataTwo)).attempt.unsafeRunSync()
+    val file: Either[Throwable, List[ValidatedFileMetadata]] = validator.extractFileMetadata(List(metadata, metadataTwo))
     file.left.value.getMessage should equal(
       s"$fileId is missing the following properties: clientSideLastModifiedDate, clientSideOriginalFilePath\n$fileIdTwo is missing the following properties: foiExemptionCode, heldBy, language"
     )
@@ -132,7 +132,7 @@ class ValidatorSpec extends ExportSpec {
         "rightsCopyright".some
       )
     )
-    val file: Either[Throwable, List[ValidatedFileMetadata]] = validator.validateFileMetadataNotEmpty(List(metadata, metadataTwo)).attempt.unsafeRunSync()
+    val file: Either[Throwable, List[ValidatedFileMetadata]] = validator.extractFileMetadata(List(metadata, metadataTwo))
     file.left.value.getMessage should equal(s"$fileId is missing the following properties: language, legalStatus")
   }
 }

@@ -61,7 +61,7 @@ class BagitSpec extends ExportSpec {
 
     when(writeTagManifests.apply(manifests.capture(), outputPath.capture(), bagitRootPath.capture(), charset.capture())).thenReturn(())
 
-    bagit.writeMetadataFilesToBag(bag, List(ChecksumFile(new File("path"), "checksum"))).unsafeRunSync()
+    bagit.writeTagManifestRows(bag, List(ChecksumFile(new File("path"), "checksum"))).unsafeRunSync()
 
     val fileToChecksumMap = manifests.getValue.asScala.head.getFileToChecksumMap
 

@@ -33,7 +33,7 @@ class Bagit(bagInPlace: (Path, util.Collection[SupportedAlgorithm], Boolean, Met
     _ <- logger.info(s"Bagit export complete for consignment $consignmentId")
   } yield bag
 
-  def writeMetadataFilesToBag(bag: Bag, checksumFiles: List[ChecksumFile]): IO[Unit] = IO {
+  def writeTagManifestRows(bag: Bag, checksumFiles: List[ChecksumFile]): IO[Unit] = IO {
     val fileToChecksumMap: util.Map[Path, String] = checksumFiles.map(f => f.file.toPath -> f.checksum).toMap.asJava
     bag.getTagManifests.asScala.head.getFileToChecksumMap.putAll(fileToChecksumMap)
     writeTagManifests.apply(bag.getTagManifests, bag.getRootDir, bag.getRootDir, bag.getFileEncoding)

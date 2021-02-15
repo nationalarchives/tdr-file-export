@@ -9,9 +9,12 @@ import uk.gov.nationalarchives.aws.utils.StepFunctionUtils
 import uk.gov.nationalarchives.consignmentexport.StepFunction.ExportOutput
 
 class StepFunction(stepFunctionUtils: StepFunctionUtils)(implicit val logger: SelfAwareStructuredLogger[IO]) {
-  def publishSuccess(taskToken: String, exportOutput: ExportOutput): IO[SendTaskSuccessResponse] = for {
-    result <- stepFunctionUtils.sendTaskSuccessRequest(taskToken, exportOutput.asJson)
-  } yield result
+
+  //If there is a taskToken value means Step Function requires response as using callback pattern
+  //Temporarily make taskToken option to allow for deployment of code without disruption of service
+  def publishSuccess(taskToken: Option[String], exportOutput: ExportOutput): IO[SendTaskSuccessResponse] =
+    taskToken.map(tt => stepFunctionUtils.sendTaskSuccessRequest(tt, exportOutput.asJson))
+      .getOrElse(IO(SendTaskSuccessResponse.builder.build()))
 }
 
 object StepFunction {
@@ -19,5 +22,5 @@ object StepFunction {
   def apply(stepFunctionUtils: StepFunctionUtils)
            (implicit logger: SelfAwareStructuredLogger[IO]): StepFunction = new StepFunction(stepFunctionUtils)(logger)
 
-  case class ExportOutput(userId: String)
+  case class ExportOutput(userId: String = "", consignmentReference: String = "", transferringBodyCode: String = "")
 }

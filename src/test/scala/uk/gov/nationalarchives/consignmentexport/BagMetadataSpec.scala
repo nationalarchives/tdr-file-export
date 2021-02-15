@@ -1,14 +1,13 @@
 package uk.gov.nationalarchives.consignmentexport
 
 import java.time.ZonedDateTime
-import java.time.temporal.ChronoUnit
 import java.util.UUID
 
 import cats.effect.IO
 import graphql.codegen.GetConsignmentExport.getConsignmentForExport.GetConsignment
 import graphql.codegen.GetConsignmentExport.getConsignmentForExport.GetConsignment.{Series, TransferringBody}
 import org.keycloak.representations.idm.UserRepresentation
-import uk.gov.nationalarchives.consignmentexport.Config.{Api, Auth, Configuration, EFS, S3}
+import uk.gov.nationalarchives.consignmentexport.Config._
 import uk.gov.nationalarchives.consignmentexport.Utils._
 
 class BagMetadataSpec extends ExportSpec {
@@ -21,7 +20,12 @@ class BagMetadataSpec extends ExportSpec {
   private val consignment = GetConsignment(
     userId, Some(fixedDateTime), Some(fixedDateTime), Some(fixedDateTime), Some(series), Some(transferringBody)
   )
-  private val config = Configuration(S3("", "", ""), Api(""), Auth("authUrl", "clientId", "clientSecret", "realm"), EFS(""))
+  private val config = Configuration(
+    S3("", "", ""), Api(""),
+    Auth("authUrl", "clientId", "clientSecret", "realm"),
+    EFS(""),
+    SFN(""))
+
   private val userRepresentation = new UserRepresentation()
   userRepresentation.setFirstName("FirstName")
   userRepresentation.setLastName("LastName")
@@ -64,7 +68,6 @@ class BagMetadataSpec extends ExportSpec {
     val mockKeycloakClient = mock[KeycloakClient]
     val mockGraphQlApi = mock[GraphQlApi]
     val consignmentId = UUID.fromString("50df01e6-2e5e-4269-97e7-531a755b417d")
-    val config = Configuration(S3("", "", ""), Api(""), Auth("authUrl", "clientId", "clientSecret", "realm"), EFS(""))
 
     doAnswer(() => IO.pure(None)).when(mockGraphQlApi).getConsignmentMetadata(config, consignmentId)
 

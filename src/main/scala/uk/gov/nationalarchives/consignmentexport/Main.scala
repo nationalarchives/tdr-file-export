@@ -8,10 +8,11 @@ import com.monovore.decline.Opts
 import com.monovore.decline.effect.CommandIOApp
 import io.chrisdavenport.log4cats.SelfAwareStructuredLogger
 import io.chrisdavenport.log4cats.slf4j.Slf4jLogger
-import uk.gov.nationalarchives.aws.utils.Clients.s3Async
-import uk.gov.nationalarchives.aws.utils.S3Utils
+import uk.gov.nationalarchives.aws.utils.Clients.{s3Async, sfnAsyncClient}
+import uk.gov.nationalarchives.aws.utils.{S3Utils, StepFunctionUtils}
 import uk.gov.nationalarchives.consignmentexport.Arguments._
 import uk.gov.nationalarchives.consignmentexport.Config.config
+import uk.gov.nationalarchives.consignmentexport.StepFunction.ExportOutput
 
 import scala.language.{implicitConversions, postfixOps}
 
@@ -30,6 +31,7 @@ object Main extends CommandIOApp("tdr-consignment-export", "Exports tdr files in
         graphQlApi = GraphQlApi(config.api.url, config.auth.url)
         keycloakClient = KeycloakClient(config)
         s3Files = S3Files(S3Utils(s3Async))
+        stepFunction = StepFunction(StepFunctionUtils(sfnAsyncClient))
         //Export datetime generated as value needed in bag metadata and DB table
         //Cannot use the value from DB table in bag metadata, as bag metadata created before bagging
         //and cannot update DB until bag creation successfully completed
@@ -44,6 +46,7 @@ object Main extends CommandIOApp("tdr-consignment-export", "Exports tdr files in
         _ <- bashCommands.runCommand(s"sha256sum $tarPath > $tarPath.sha256")
         _ <- s3Files.uploadFiles(config.s3.outputBucket, consignmentId, tarPath)
         _ <- graphQlApi.updateExportLocation(config, consignmentId, s"s3://${config.s3.outputBucket}/$consignmentId.tar.gz", exportDatetime)
+        _ <- stepFunction.publishSuccess(taskToken, ExportOutput())
       } yield ExitCode.Success
     }
 }

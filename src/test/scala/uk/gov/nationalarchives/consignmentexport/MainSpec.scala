@@ -2,17 +2,15 @@ package uk.gov.nationalarchives.consignmentexport
 
 import java.io.File
 import java.nio.file.Files
-import java.security.MessageDigest
 import java.util.UUID
 
 import com.github.tomakehurst.wiremock.stubbing.ServeEvent
 import org.apache.commons.codec.digest.DigestUtils
-import org.bouncycastle.util.encoders.Base64Encoder
 import uk.gov.nationalarchives.consignmentexport.Utils.PathUtils
 
 import scala.io.Source
-import scala.sys.process._
 import scala.jdk.CollectionConverters._
+import scala.sys.process._
 
 class MainSpec extends ExternalServiceSpec {
 
@@ -21,7 +19,7 @@ class MainSpec extends ExternalServiceSpec {
 
     val consignmentId = UUID.fromString("50df01e6-2e5e-4269-97e7-531a755b417d")
     putFile(s"$consignmentId/7b19b272-d4d1-4d77-bf25-511dc6489d12")
-    Main.run(List("export", "--consignmentId", consignmentId.toString, "--taskToken", "taskToken")).unsafeRunSync()
+    Main.run(List("export", "--consignmentId", consignmentId.toString)).unsafeRunSync()
     val objects = outputBucketObjects().map(_.key())
 
     objects.size should equal(2)
@@ -35,7 +33,7 @@ class MainSpec extends ExternalServiceSpec {
     val consignmentId = UUID.fromString("50df01e6-2e5e-4269-97e7-531a755b417d")
     putFile(s"$consignmentId/7b19b272-d4d1-4d77-bf25-511dc6489d12")
 
-    Main.run(List("export", "--consignmentId", consignmentId.toString, "--taskToken", "taskToken")).unsafeRunSync()
+    Main.run(List("export", "--consignmentId", consignmentId.toString)).unsafeRunSync()
 
     val downloadDirectory = s"$scratchDirectory/download"
     new File(s"$downloadDirectory").mkdirs()
@@ -59,7 +57,7 @@ class MainSpec extends ExternalServiceSpec {
 
     val consignmentId = UUID.fromString("50df01e6-2e5e-4269-97e7-531a755b417d")
     putFile(s"$consignmentId/7b19b272-d4d1-4d77-bf25-511dc6489d12")
-    Main.run(List("export", "--consignmentId", consignmentId.toString, "--taskToken", "taskToken")).unsafeRunSync()
+    Main.run(List("export", "--consignmentId", consignmentId.toString)).unsafeRunSync()
 
     val exportLocationEvent: Option[ServeEvent] = wiremockGraphqlServer.getAllServeEvents.asScala
       .find(p => p.getRequest.getBodyAsString.contains("mutation updateExportLocation"))
@@ -75,7 +73,7 @@ class MainSpec extends ExternalServiceSpec {
     val consignmentId = "6794231c-39fe-41e0-a498-b6a077563282"
 
     val ex = intercept[Exception] {
-      Main.run(List("export", "--consignmentId", consignmentId, "--taskToken", "taskToken")).unsafeRunSync()
+      Main.run(List("export", "--consignmentId", consignmentId)).unsafeRunSync()
     }
     ex.getMessage should equal(s"Consignment API returned no files for consignment $consignmentId")
   }
@@ -87,7 +85,7 @@ class MainSpec extends ExternalServiceSpec {
     putFile(s"$consignmentId/7b19b272-d4d1-4d77-bf25-511dc6489d12")
 
     val ex = intercept[Exception] {
-      Main.run(List("export", "--consignmentId", consignmentId.toString, "--taskToken", "taskToken")).unsafeRunSync()
+      Main.run(List("export", "--consignmentId", consignmentId.toString)).unsafeRunSync()
     }
 
     ex.getMessage should equal(s"No consignment metadata found for consignment $consignmentId")
@@ -114,10 +112,27 @@ class MainSpec extends ExternalServiceSpec {
     putFile(s"$consignmentId/7b19b272-d4d1-4d77-bf25-511dc6489d12")
 
     val ex = intercept[Exception] {
-      Main.run(List("export", "--consignmentId", consignmentId.toString, "--taskToken", "taskToken")).unsafeRunSync()
+      Main.run(List("export", "--consignmentId", consignmentId.toString)).unsafeRunSync()
     }
 
     ex.getMessage should equal(s"Incomplete details for user $keycloakUserId")
+  }
+
+  "the export job" should "should publish the step function success token if task token argument provided" in {
+    setUpValidExternalServices()
+
+    val consignmentId = UUID.fromString("50df01e6-2e5e-4269-97e7-531a755b417d")
+    val taskTokenValue = "taskToken1234"
+    putFile(s"$consignmentId/7b19b272-d4d1-4d77-bf25-511dc6489d12")
+    Main.run(List("export", "--consignmentId", consignmentId.toString, "--taskToken", taskTokenValue)).unsafeRunSync()
+
+    wiremockSfnServer.getAllServeEvents.size() should be(1)
+    val eventRequestBody = wiremockSfnServer.getAllServeEvents.get(0).getRequest.getBodyAsString
+    eventRequestBody.contains(taskTokenValue) should be(true)
+
+    //check rest of process was completed successfully
+    val objects = outputBucketObjects().map(_.key())
+    objects.size should equal(2)
   }
 
   private def setUpValidExternalServices() = {

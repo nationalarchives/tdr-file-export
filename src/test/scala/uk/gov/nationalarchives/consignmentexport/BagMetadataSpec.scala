@@ -41,14 +41,14 @@ class BagMetadataSpec extends ExportSpec {
     val bagMetadata = BagMetadata(mockGraphQlApi, mockKeycloakClient).getBagMetadata(consignmentId, config, fixedDateTime).unsafeRunSync()
     bagMetadata.get("Consignment-Series").get(0) should be("series-code")
     bagMetadata.get("Source-Organization").get(0) should be("tb-code")
-    bagMetadata.get("Consignment-StartDate").get(0) should be(fixedDateTime.toFormattedPrecisionString)
-    bagMetadata.get("Consignment-CompletedDate").get(0) should be(fixedDateTime.toFormattedPrecisionString)
+    bagMetadata.get("Consignment-Start-Datetime").get(0) should be(fixedDateTime.toFormattedPrecisionString)
+    bagMetadata.get("Consignment-Completed-Datetime").get(0) should be(fixedDateTime.toFormattedPrecisionString)
     bagMetadata.get("Contact-Name").get(0) should be("FirstName LastName")
-    bagMetadata.get("Consignment-ExportDate").get(0) should be(fixedDateTime.toFormattedPrecisionString)
+    bagMetadata.get("Consignment-Export-Datetime").get(0) should be(fixedDateTime.toFormattedPrecisionString)
   }
 
   "the getBagMetadata method" should "throw an exception if a consignment metadata property is missing" in {
-    val missingPropertyKey = "Consignment-StartDate"
+    val missingPropertyKey = "Consignment-Start-Datetime"
     val incompleteConsignment = GetConsignment(
       userId, None, Some(fixedDateTime), Some(fixedDateTime), Some(series), Some(transferringBody)
     )

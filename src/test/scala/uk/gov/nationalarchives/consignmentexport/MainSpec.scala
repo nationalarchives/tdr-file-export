@@ -137,6 +137,7 @@ class MainSpec extends ExternalServiceSpec {
 
   "the export job" should "should publish the step function success token if task token argument provided" in {
     setUpValidExternalServices()
+    sfnPublishSuccess
 
     val consignmentId = UUID.fromString("50df01e6-2e5e-4269-97e7-531a755b417d")
     val taskTokenValue = "taskToken1234"

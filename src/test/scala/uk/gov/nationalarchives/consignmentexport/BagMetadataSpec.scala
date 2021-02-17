@@ -54,20 +54,6 @@ class BagMetadataSpec extends ExportSpec {
     exception.getMessage should equal(s"Missing consignment metadata property $missingPropertyKey for consignment $consignmentId")
   }
 
-  "the getBagMetadata method" should "throw an exception if no consignment meta data is returned" in {
-    val mockKeycloakClient = mock[KeycloakClient]
-    val mockGraphQlApi = mock[GraphQlApi]
-    val consignmentId = UUID.fromString("50df01e6-2e5e-4269-97e7-531a755b417d")
-    val config = Configuration(S3("", "", ""), Api(""), Auth("authUrl", "clientId", "clientSecret", "realm"), EFS(""))
-
-    doAnswer(() => IO.pure(None)).when(mockGraphQlApi).getConsignmentMetadata(config, consignmentId)
-
-    val exception = intercept[RuntimeException] {
-      BagMetadata(mockGraphQlApi, mockKeycloakClient).getBagMetadata(consignmentId, config, fixedDateTime).unsafeRunSync()
-    }
-    exception.getMessage should equal(s"No consignment metadata found for consignment $consignmentId")
-  }
-
   "the getBagMetadata method" should "throw an exception if incomplete user details are found" in {
     val mockKeycloakClient = mock[KeycloakClient]
     val consignmentId = UUID.randomUUID()

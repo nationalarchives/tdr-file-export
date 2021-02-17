@@ -99,7 +99,6 @@ class ExternalServiceSpec extends AnyFlatSpec with BeforeAndAfterEach with Befor
     .withRequestBody(equalToJson("{\"query\":\"query getConsignmentForExport($consignmentId:UUID!){getConsignment(consignmentid:$consignmentId){userid createdDatetime transferInitiatedDatetime exportDatetime series{code} transferringBody{code} files{fileId metadata{clientSideFileSize clientSideLastModifiedDate clientSideOriginalFilePath foiExemptionCode heldBy language legalStatus rightsCopyright}}}}\",\"variables\":{\"consignmentId\":\"6794231c-39fe-41e0-a498-b6a077563282\"}}"))
     .willReturn(okJson(fromResource(s"json/get_consignment_for_export.json").mkString)))
 
-
   def graphqlUpdateExportLocation: StubMapping = wiremockGraphqlServer.stubFor(post(urlEqualTo(graphQlPath))
     .willReturn(okJson(fromResource(s"json/get_files.json").mkString)))
 

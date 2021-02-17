@@ -25,20 +25,27 @@ object Main extends CommandIOApp("tdr-consignment-export", "Exports tdr files in
         rootLocation = config.efs.rootLocation
         exportId = UUID.randomUUID
         basePath = s"$rootLocation/$exportId"
-        tarPath = s"${basePath}/$consignmentId.tar.gz"
+        tarPath = s"$basePath/$consignmentId.tar.gz"
         bashCommands = BashCommands()
         graphQlApi = GraphQlApi(config.api.url, config.auth.url)
         keycloakClient = KeycloakClient(config)
         s3Files = S3Files(S3Utils(s3Async))
+        bagit = Bagit()
+        validator = Validator(consignmentId)
         //Export datetime generated as value needed in bag metadata and DB table
         //Cannot use the value from DB table in bag metadata, as bag metadata created before bagging
         //and cannot update DB until bag creation successfully completed
         exportDatetime = ZonedDateTime.now(ZoneOffset.UTC)
-        bagMetadata <- BagMetadata(graphQlApi, keycloakClient).getBagMetadata(consignmentId, config, exportDatetime)
-        data <- graphQlApi.getFiles(config, consignmentId)
-        _ <- IO.fromOption(data.headOption)(new Exception(s"Consignment API returned no files for consignment $consignmentId"))
-        _ <- s3Files.downloadFiles(data, config.s3.cleanBucket, consignmentId, basePath)
-        _ <- Bagit().createBag(consignmentId, basePath, bagMetadata)
+        consignmentResult <- graphQlApi.getConsignmentMetadata(config, consignmentId)
+        consignmentData <- IO.fromEither(validator.validateConsignmentResult(consignmentResult))
+        _ <- IO.fromEither(validator.validateConsignmentHasFiles(consignmentData))
+        bagMetadata <- BagMetadata(keycloakClient).generateMetadata(consignmentId, consignmentData, exportDatetime)
+        validatedFileMetadata <- IO.fromEither(validator.extractFileMetadata(consignmentData.files))
+        _ <- s3Files.downloadFiles(validatedFileMetadata, config.s3.cleanBucket, consignmentId, basePath)
+        bag <- bagit.createBag(consignmentId, basePath, bagMetadata)
+        fileMetadataCsv <- BagAdditionalFiles(bag.getRootDir).createFileMetadataCsv(validatedFileMetadata)
+        checksums <- ChecksumCalculator().calculateChecksums(fileMetadataCsv)
+        _ <- bagit.writeTagManifestRows(bag, checksums)
         // The owner and group in the below command have no effect on the file permissions. It just makes tar idempotent
         _ <- bashCommands.runCommand(s"tar --sort=name --owner=root:0 --group=root:0 --mtime ${java.time.LocalDate.now.toString} -C $basePath -c ./$consignmentId | gzip -n > $tarPath")
         _ <- bashCommands.runCommand(s"sha256sum $tarPath > $tarPath.sha256")

@@ -9,10 +9,9 @@ import graphql.codegen.GetConsignmentExport.getConsignmentForExport.GetConsignme
 import io.chrisdavenport.log4cats.SelfAwareStructuredLogger
 import org.keycloak.representations.idm.UserRepresentation
 import uk.gov.nationalarchives.consignmentexport.BagMetadata._
-import uk.gov.nationalarchives.consignmentexport.Config.Configuration
 import uk.gov.nationalarchives.consignmentexport.Utils._
 
-class BagMetadata(graphQlApi: GraphQlApi, keycloakClient: KeycloakClient)(implicit val logger: SelfAwareStructuredLogger[IO]) {
+class BagMetadata(keycloakClient: KeycloakClient)(implicit val logger: SelfAwareStructuredLogger[IO]) {
 
   implicit class UserRepresentationUtils(value: UserRepresentation) {
     private def isStringNullOrEmpty(s: String): Boolean = s == null || s.trim.isEmpty
@@ -22,14 +21,6 @@ class BagMetadata(graphQlApi: GraphQlApi, keycloakClient: KeycloakClient)(implic
     }
   }
 
-  def getBagMetadata(consignmentId: UUID, config: Configuration, exportDatetime: ZonedDateTime): IO[Metadata] = for {
-   consignment <- graphQlApi.getConsignmentMetadata(config, consignmentId)
-   consignmentDetails = consignment match {
-     case Some(consignment) => getConsignmentDetails(consignment, exportDatetime)
-     case None => throw new RuntimeException(s"No consignment metadata found for consignment $consignmentId")
-   }
-
-  } yield generateMetadata(consignmentId, consignmentDetails)
 
   private def getConsignmentDetails(consignment: GetConsignment, exportDatetime: ZonedDateTime): Map[String, Option[String]] = {
     val seriesCode = for {
@@ -64,7 +55,8 @@ class BagMetadata(graphQlApi: GraphQlApi, keycloakClient: KeycloakClient)(implic
     )
   }
 
-  private def generateMetadata(consignmentId: UUID, details: Map[String, Option[String]]): Metadata = {
+  def generateMetadata(consignmentId: UUID, consignment: GetConsignment, exportDatetime: ZonedDateTime): IO[Metadata] = {
+    val details: Map[String, Option[String]] = getConsignmentDetails(consignment, exportDatetime)
     val metadata = new Metadata
 
     details.map(e => {
@@ -73,7 +65,7 @@ class BagMetadata(graphQlApi: GraphQlApi, keycloakClient: KeycloakClient)(implic
         case None => throw new RuntimeException(s"Missing consignment metadata property ${e._1} for consignment $consignmentId")
       }
     })
-    metadata
+    IO(metadata)
   }
 
   private def getContactName(userId: UUID): String =  {
@@ -98,7 +90,5 @@ object BagMetadata {
   private val ContactNameKey = "Contact-Name"
   private val ConsignmentExportDatetimeKey = "Consignment-Export-Datetime"
 
-  def apply(
-             graphQlApi: GraphQlApi,
-             keycloakClient: KeycloakClient)(implicit logger: SelfAwareStructuredLogger[IO]): BagMetadata = new BagMetadata(graphQlApi, keycloakClient)(logger)
+  def apply(keycloakClient: KeycloakClient)(implicit logger: SelfAwareStructuredLogger[IO]): BagMetadata = new BagMetadata(keycloakClient)(logger)
 }

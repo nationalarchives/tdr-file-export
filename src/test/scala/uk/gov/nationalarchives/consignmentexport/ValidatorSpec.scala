@@ -62,13 +62,13 @@ class ValidatorSpec extends ExportSpec {
     attempt.isRight should be(true)
   }
 
-  "validateFileMetadataNotEmpty" should "not return an error if all of the fields are set" in {
+  "extractFileMetadata" should "not return an error if all of the fields are set" in {
     val validator = Validator(UUID.randomUUID())
     val attempt: Either[Throwable, List[ValidatedFileMetadata]] = validator.extractFileMetadata(List(completeFileMetadata))
     attempt.right.value.length should equal(1)
   }
 
-  "validateFileMetadataNotEmpty" should "return an error  if some of the fields are not set" in {
+  "extractFileMetadata" should "return an error  if some of the fields are not set" in {
     val validator = Validator(UUID.randomUUID())
     val fileId = UUID.randomUUID()
     val fileIdTwo = UUID.randomUUID()
@@ -103,7 +103,7 @@ class ValidatorSpec extends ExportSpec {
       s"$fileId is missing the following properties: clientSideLastModifiedDate, clientSideOriginalFilePath\n$fileIdTwo is missing the following properties: foiExemptionCode, heldBy, language"
     )
   }
-  "fileMetadataCsv" should "return an error  if one file has some of the fields unset and one file has all fields set" in {
+  "extractFileMetadata" should "return an error  if one file has some of the fields unset and one file has all fields set" in {
     val validator = Validator(UUID.randomUUID())
     val fileId = UUID.randomUUID()
     val metadata = Files(

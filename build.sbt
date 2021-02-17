@@ -28,6 +28,7 @@ lazy val root = (project in file("."))
       pureConfig,
       pureConfigCatsEffect,
       s3Mock,
+      scalaCsv,
       scalaTest % Test,
       slf4j
     ),

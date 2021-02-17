@@ -1,16 +1,15 @@
 package uk.gov.nationalarchives.consignmentexport
 
-import java.time.ZonedDateTime
+import java.time.{LocalDateTime, ZonedDateTime}
 import java.util.UUID
 
 import cats.effect.{ContextShift, IO}
 import cats.implicits._
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken
 import graphql.codegen.GetConsignmentExport
-import graphql.codegen.GetConsignmentExport.getConsignmentForExport.GetConsignment.{Series, TransferringBody}
+import graphql.codegen.GetConsignmentExport.getConsignmentForExport.GetConsignment.Files.Metadata
+import graphql.codegen.GetConsignmentExport.getConsignmentForExport.GetConsignment.{Files, Series, TransferringBody}
 import graphql.codegen.GetConsignmentExport.{getConsignmentForExport => gce}
-import graphql.codegen.GetFiles.{getFiles => gf}
-import graphql.codegen.GetOriginalPath.{getOriginalPath => gop}
 import graphql.codegen.UpdateExportLocation.{updateExportLocation => uel}
 import sangria.ast.Document
 import sttp.client.{HttpURLConnectionBackend, Identity, NothingT, SttpBackend}
@@ -27,53 +26,13 @@ class GraphQlApiSpec extends ExportSpec {
   implicit val backend: SttpBackend[Identity, Nothing, NothingT] = HttpURLConnectionBackend()
 
   private val fixedDateTime = ZonedDateTime.now()
-  private val config = Configuration(S3("", "", ""), Api(""), Auth("authUrl", "clientId", "clientSecret", "realm"), EFS(""), SFN(""))
-
-  "the getFiles method" should "returns the correct number of files" in {
-    val consignmentClient = mock[GraphQLClient[gce.Data, gce.Variables]]
-    val filesClient = mock[GraphQLClient[gf.Data, gf.Variables]]
-    val updateExportClient = mock[GraphQLClient[uel.Data, uel.Variables]]
-    val getOriginalPathClient = mock[GraphQLClient[gop.Data, gop.Variables]]
-    val keycloak = mock[KeycloakUtils]
-    val api = new GraphQlApi(keycloak, consignmentClient, filesClient, updateExportClient, getOriginalPathClient)
-    val consignmentId = UUID.randomUUID()
-    val dataFiles = List(UUID.randomUUID(), UUID.randomUUID())
-
-    doAnswer(() => Future(new BearerAccessToken("token"))).when(keycloak).serviceAccountToken[Identity](any[String], any[String])(any[SttpBackend[Identity, Nothing, NothingT]], any[ClassTag[Identity[_]]])
-    val data = new GraphQlResponse[gf.Data](gf.Data(gf.GetFiles(dataFiles)).some, List())
-    doAnswer(() => Future(data)).when(filesClient).getResult[Identity](any[BearerAccessToken], any[Document], any[Option[gf.Variables]])(any[SttpBackend[Identity, Nothing, NothingT]], any[ClassTag[Identity[_]]])
-    doAnswer(() => Future(GraphQlResponse(gop.Data(gop.GetClientFileMetadata("originalPath".some)).some, List()))).when(getOriginalPathClient).getResult[Identity](any[BearerAccessToken], any[Document], any[Option[gop.Variables]])(any[SttpBackend[Identity, Nothing, NothingT]], any[ClassTag[Identity[_]]])
-
-    val files = api.getFiles(config, consignmentId).unsafeRunSync()
-    files.map(_.fileId) should equal(dataFiles)
-  }
-
-  "the getFiles method" should "throw an exception if there are no files in the response" in {
-    val consignmentClient = mock[GraphQLClient[gce.Data, gce.Variables]]
-    val filesClient = mock[GraphQLClient[gf.Data, gf.Variables]]
-    val updateExportClient = mock[GraphQLClient[uel.Data, uel.Variables]]
-    val getOriginalPathClient = mock[GraphQLClient[gop.Data, gop.Variables]]
-    val keycloak = mock[KeycloakUtils]
-    val api = new GraphQlApi(keycloak, consignmentClient, filesClient, updateExportClient, getOriginalPathClient)
-    val consignmentId = UUID.randomUUID()
-
-    doAnswer(() => Future(new BearerAccessToken("token"))).when(keycloak).serviceAccountToken[Identity](any[String], any[String])(any[SttpBackend[Identity, Nothing, NothingT]], any[ClassTag[Identity[_]]])
-    val data = new GraphQlResponse[gf.Data](Option.empty[gf.Data], List())
-    doAnswer(() => Future(data)).when(filesClient).getResult[Identity](any[BearerAccessToken], any[Document], any[Option[gf.Variables]])(any[SttpBackend[Identity, Nothing, NothingT]], any[ClassTag[Identity[_]]])
-
-    val exception = intercept[RuntimeException] {
-      api.getFiles(config, consignmentId).unsafeRunSync()
-    }
-    exception.getMessage should equal(s"No files found for consignment $consignmentId ")
-  }
 
   "the updateExportLocation method" should "return the correct value" in {
     val consignmentClient = mock[GraphQLClient[gce.Data, gce.Variables]]
-    val filesClient = mock[GraphQLClient[gf.Data, gf.Variables]]
     val updateExportClient = mock[GraphQLClient[uel.Data, uel.Variables]]
-    val getOriginalPathClient = mock[GraphQLClient[gop.Data, gop.Variables]]
     val keycloak = mock[KeycloakUtils]
-    val api = new GraphQlApi(keycloak, consignmentClient, filesClient, updateExportClient, getOriginalPathClient)
+    val api = new GraphQlApi(keycloak, consignmentClient, updateExportClient)
+    val config = Configuration(S3("", "", ""), Api(""), Auth("authUrl", "clientId", "clientSecret", "realm"), EFS(""))
     val consignmentId = UUID.randomUUID()
 
     doAnswer(() => Future(new BearerAccessToken("token"))).when(keycloak).serviceAccountToken[Identity](any[String], any[String])(any[SttpBackend[Identity, Nothing, NothingT]], any[ClassTag[Identity[_]]])
@@ -87,11 +46,10 @@ class GraphQlApiSpec extends ExportSpec {
 
   "the updateExportLocation method" should "throw an exception if no data is returned" in {
     val consignmentClient = mock[GraphQLClient[gce.Data, gce.Variables]]
-    val filesClient = mock[GraphQLClient[gf.Data, gf.Variables]]
     val updateExportClient = mock[GraphQLClient[uel.Data, uel.Variables]]
-    val getOriginalPathClient = mock[GraphQLClient[gop.Data, gop.Variables]]
     val keycloak = mock[KeycloakUtils]
-    val api = new GraphQlApi(keycloak, consignmentClient, filesClient, updateExportClient, getOriginalPathClient)
+    val api = new GraphQlApi(keycloak, consignmentClient, updateExportClient)
+    val config = Configuration(S3("", "", ""), Api(""), Auth("authUrl", "clientId", "clientSecret", "realm"), EFS(""))
     val consignmentId = UUID.randomUUID()
 
     doAnswer(() => Future(new BearerAccessToken("token"))).when(keycloak).serviceAccountToken[Identity](any[String], any[String])(any[SttpBackend[Identity, Nothing, NothingT]], any[ClassTag[Identity[_]]])
@@ -110,14 +68,16 @@ class GraphQlApiSpec extends ExportSpec {
     val series = Series(Some("series-code"))
     val transferringBody = TransferringBody(Some("tb-code"))
     val consignmentClient = mock[GraphQLClient[gce.Data, gce.Variables]]
-    val filesClient = mock[GraphQLClient[gf.Data, gf.Variables]]
     val updateExportClient = mock[GraphQLClient[uel.Data, uel.Variables]]
-    val getOriginalPathClient = mock[GraphQLClient[gop.Data, gop.Variables]]
     val keycloak = mock[KeycloakUtils]
-    val api = new GraphQlApi(keycloak, consignmentClient, filesClient, updateExportClient, getOriginalPathClient)
+    val api = new GraphQlApi(keycloak, consignmentClient, updateExportClient)
+    val config = Configuration(S3("", "", ""), Api(""), Auth("authUrl", "clientId", "clientSecret", "realm"), EFS(""))
     val consignmentId = UUID.randomUUID()
+    val fileId = UUID.randomUUID()
+    val lastModified = LocalDateTime.now().some
+    val fileMetadata = Metadata(1L.some, lastModified, "clientSideOriginalFilePath".some, "foiExemptionCode".some, "heldBy".some, "language".some, "legalStatus".some, "rightsCopyright".some)
     val consignment = GetConsignmentExport.getConsignmentForExport.GetConsignment(
-      userId, Some(fixedDate), Some(fixedDate), Some(fixedDate), Some(series), Some(transferringBody)
+      userId, Some(fixedDate), Some(fixedDate), Some(fixedDate), Some(series), Some(transferringBody), List(Files(fileId, fileMetadata))
     )
 
     doAnswer(() => Future(new BearerAccessToken("token"))).when(keycloak).serviceAccountToken[Identity](any[String], any[String])(any[SttpBackend[Identity, Nothing, NothingT]], any[ClassTag[Identity[_]]])
@@ -135,11 +95,10 @@ class GraphQlApiSpec extends ExportSpec {
 
   "the getConsignmentMetadata method" should "throw an exception if no data is returned" in {
     val consignmentClient = mock[GraphQLClient[gce.Data, gce.Variables]]
-    val filesClient = mock[GraphQLClient[gf.Data, gf.Variables]]
     val updateExportClient = mock[GraphQLClient[uel.Data, uel.Variables]]
-    val getOriginalPathClient = mock[GraphQLClient[gop.Data, gop.Variables]]
     val keycloak = mock[KeycloakUtils]
-    val api = new GraphQlApi(keycloak, consignmentClient, filesClient, updateExportClient, getOriginalPathClient)
+    val api = new GraphQlApi(keycloak, consignmentClient, updateExportClient)
+    val config = Configuration(S3("", "", ""), Api(""), Auth("authUrl", "clientId", "clientSecret", "realm"), EFS(""))
     val consignmentId = UUID.randomUUID()
 
     doAnswer(() => Future(new BearerAccessToken("token"))).when(keycloak).serviceAccountToken[Identity](any[String], any[String])(any[SttpBackend[Identity, Nothing, NothingT]], any[ClassTag[Identity[_]]])

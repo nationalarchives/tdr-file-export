@@ -19,6 +19,7 @@ class MainSpec extends ExternalServiceSpec {
 
     val consignmentId = UUID.fromString("50df01e6-2e5e-4269-97e7-531a755b417d")
     putFile(s"$consignmentId/7b19b272-d4d1-4d77-bf25-511dc6489d12")
+
     Main.run(List("export", "--consignmentId", consignmentId.toString)).unsafeRunSync()
 
     checkStepFunctionSuccessNotCalled()
@@ -73,10 +74,9 @@ class MainSpec extends ExternalServiceSpec {
   }
 
   "the export job" should "throw an error if the api returns no files for the consignment" in {
-    graphQlGetDifferentConsignmentMetadata
+    graphQlGetConsignmentMetadataNoFiles
     keycloakGetUser
-    graphqlGetEmptyFiles
-    val consignmentId = "6794231c-39fe-41e0-a498-b6a077563282"
+    val consignmentId = "069d225e-b0e6-4425-8f8b-c2f6f3263221"
 
     val ex = intercept[Exception] {
       Main.run(List("export", "--consignmentId", consignmentId)).unsafeRunSync()
@@ -84,8 +84,21 @@ class MainSpec extends ExternalServiceSpec {
     ex.getMessage should equal(s"Consignment API returned no files for consignment $consignmentId")
   }
 
+  "the export job" should "throw an error if the file metadata is incomplete" in {
+    graphQlGetConsignmentIncompleteMetadata
+    keycloakGetUser
+    val consignmentId = UUID.fromString("0e634655-1563-4705-be99-abb437f971e0")
+    val fileId = UUID.fromString("7b19b272-d4d1-4d77-bf25-511dc6489d12")
+    putFile(s"$consignmentId/$fileId")
+
+    val ex = intercept[Exception] {
+      Main.run(List("export", "--consignmentId", consignmentId.toString)).unsafeRunSync()
+    }
+
+    ex.getMessage should equal(s"$fileId is missing the following properties: foiExemptionCode, heldBy, language, rightsCopyright")
+  }
+
   "the export job" should "throw an error if no consignment metadata found" in {
-    graphqlGetFiles
     keycloakGetUser
     val consignmentId = UUID.fromString("50df01e6-2e5e-4269-97e7-531a755b417d")
     putFile(s"$consignmentId/7b19b272-d4d1-4d77-bf25-511dc6489d12")
@@ -98,7 +111,6 @@ class MainSpec extends ExternalServiceSpec {
   }
 
   "the export job" should "throw an error if no valid Keycloak user found" in {
-    graphqlGetFiles
     graphQlGetConsignmentMetadata
     val consignmentId = UUID.fromString("50df01e6-2e5e-4269-97e7-531a755b417d")
     putFile(s"$consignmentId/7b19b272-d4d1-4d77-bf25-511dc6489d12")
@@ -111,7 +123,6 @@ class MainSpec extends ExternalServiceSpec {
   }
 
   "the export job" should "throw an error if an incomplete Keycloak user details found" in {
-    graphqlGetFiles
     graphQlGetConsignmentMetadata
     keycloakGetIncompleteUser
     val consignmentId = UUID.fromString("50df01e6-2e5e-4269-97e7-531a755b417d")
@@ -143,7 +154,6 @@ class MainSpec extends ExternalServiceSpec {
   private def setUpValidExternalServices() = {
     graphQlGetConsignmentMetadata
     keycloakGetUser
-    graphqlGetFiles
   }
 
   private def checkStepFunctionSuccessNotCalled() = {

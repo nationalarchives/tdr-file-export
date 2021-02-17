@@ -1,13 +1,14 @@
 package uk.gov.nationalarchives.consignmentexport
 
 import java.nio.file.Path
+import java.time.LocalDateTime
 import java.util.UUID
 
 import cats.effect.IO
 import org.mockito.ArgumentCaptor
 import software.amazon.awssdk.services.s3.model.{GetObjectResponse, PutObjectResponse}
 import uk.gov.nationalarchives.aws.utils.S3Utils
-import uk.gov.nationalarchives.consignmentexport.GraphQlApi.FileIdWithPath
+import uk.gov.nationalarchives.consignmentexport.Validator.ValidatedFileMetadata
 
 class S3FilesSpec extends ExportSpec {
 
@@ -21,8 +22,20 @@ class S3FilesSpec extends ExportSpec {
 
     val consignmentId = UUID.randomUUID()
     val fileId = UUID.randomUUID()
+    val metadata = ValidatedFileMetadata(
+      fileId,
+      1L,
+      LocalDateTime.now(),
+      "originalPath",
+      "foiExemption",
+      "heldBy",
+      "language",
+      "legalStatus",
+      "rightsCopyright"
+    )
+    val validatedMetadata = List(metadata)
 
-    S3Files(s3Utils).downloadFiles(List(FileIdWithPath(fileId, "originalPath")), "testbucket", consignmentId, "root").unsafeRunSync()
+    S3Files(s3Utils).downloadFiles(validatedMetadata, "testbucket", consignmentId, "root").unsafeRunSync()
 
     bucketCaptor.getValue should equal("testbucket")
     keyCaptor.getValue should equal(s"$consignmentId/$fileId")
@@ -38,8 +51,20 @@ class S3FilesSpec extends ExportSpec {
 
     val consignmentId = UUID.randomUUID()
     val fileId = UUID.randomUUID()
+    val metadata = ValidatedFileMetadata(
+      fileId,
+      1L,
+      LocalDateTime.now(),
+      """a/path'with/quotes"""",
+      "foiExemption",
+      "heldBy",
+      "language",
+      "legalStatus",
+      "rightsCopyright"
+    )
+    val validatedMetadata = List(metadata)
 
-    S3Files(s3Utils).downloadFiles(List(FileIdWithPath(fileId, """a/path'with/quotes"""")), "testbucket", consignmentId, "root").unsafeRunSync()
+    S3Files(s3Utils).downloadFiles(validatedMetadata, "testbucket", consignmentId, "root").unsafeRunSync()
 
     pathCaptor.getValue.isDefined should equal(true)
     pathCaptor.getValue.get.toString should equal(s"""root/$consignmentId/a/path'with/quotes"""")

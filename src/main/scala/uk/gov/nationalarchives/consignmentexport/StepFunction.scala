@@ -1,5 +1,7 @@
 package uk.gov.nationalarchives.consignmentexport
 
+import java.util.UUID
+
 import cats.effect.IO
 import io.chrisdavenport.log4cats.SelfAwareStructuredLogger
 import io.circe.generic.auto._
@@ -22,5 +24,5 @@ object StepFunction {
   def apply(stepFunctionUtils: StepFunctionUtils)
            (implicit logger: SelfAwareStructuredLogger[IO]): StepFunction = new StepFunction(stepFunctionUtils)(logger)
 
-  case class ExportOutput(userId: String = "", consignmentReference: String = "", transferringBodyCode: String = "")
+  case class ExportOutput(userId: UUID, consignmentReference: String = "", transferringBodyCode: String = "")
 }

@@ -1,5 +1,7 @@
 package uk.gov.nationalarchives.consignmentexport
 
+import java.util.UUID
+
 import cats.effect.IO
 import io.circe.Encoder.AsObject.importedAsObjectEncoder
 import io.circe.Json
@@ -21,7 +23,7 @@ class StepFunctionSpec extends ExportSpec {
     doAnswer(() => mockResponse).when(sfnUtils).sendTaskSuccessRequest(taskTokenCaptor.capture(), exportOutputCaptor.capture())
 
     val taskToken = "taskToken1234"
-    val exportOutput = ExportOutput("userId", "consignmentReference", "tb-code")
+    val exportOutput = ExportOutput(UUID.randomUUID(), "consignmentReference", "tb-code")
 
     StepFunction(sfnUtils).publishSuccess(Some(taskToken), exportOutput).unsafeRunSync()
     taskTokenCaptor.getValue should equal(taskToken)

@@ -53,7 +53,7 @@ object Main extends CommandIOApp("tdr-consignment-export", "Exports tdr files in
         _ <- bashCommands.runCommand(s"sha256sum $tarPath > $tarPath.sha256")
         _ <- s3Files.uploadFiles(config.s3.outputBucket, consignmentId, tarPath)
         _ <- graphQlApi.updateExportLocation(config, consignmentId, s"s3://${config.s3.outputBucket}/$consignmentId.tar.gz", exportDatetime)
-        _ <- stepFunction.publishSuccess(taskToken, ExportOutput(userId = consignmentData.userid.toString))
+        _ <- stepFunction.publishSuccess(taskToken, ExportOutput(consignmentData.userid))
       } yield ExitCode.Success
     }
 }

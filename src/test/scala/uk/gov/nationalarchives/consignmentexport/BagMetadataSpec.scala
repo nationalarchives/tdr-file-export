@@ -15,8 +15,9 @@ class BagMetadataSpec extends ExportSpec {
   private val userId = UUID.randomUUID()
   private val series = Series(Some("series-code"))
   private val transferringBody = TransferringBody(Some("tb-code"))
+  private val consignmentRef = "consignmentReference-1234"
   private val consignment = GetConsignment(
-    userId, Some(fixedDateTime), Some(fixedDateTime), Some(fixedDateTime), Some(series), Some(transferringBody), List()
+    userId, Some(fixedDateTime), Some(fixedDateTime), Some(fixedDateTime), Some(consignmentRef),Some(series), Some(transferringBody), List()
   )
   private val userRepresentation = new UserRepresentation()
   userRepresentation.setFirstName("FirstName")
@@ -31,6 +32,7 @@ class BagMetadataSpec extends ExportSpec {
 
     bagMetadata.get("Consignment-Series").get(0) should be("series-code")
     bagMetadata.get("Source-Organization").get(0) should be("tb-code")
+    bagMetadata.get("Internal-Sender-Identifier").get(0) should be("consignmentReference-1234")
     bagMetadata.get("Consignment-Start-Datetime").get(0) should be(fixedDateTime.toFormattedPrecisionString)
     bagMetadata.get("Consignment-Completed-Datetime").get(0) should be(fixedDateTime.toFormattedPrecisionString)
     bagMetadata.get("Contact-Name").get(0) should be("FirstName LastName")
@@ -42,7 +44,7 @@ class BagMetadataSpec extends ExportSpec {
     val consignmentId = UUID.randomUUID()
 
     val incompleteConsignment = GetConsignment(
-      userId, None, Some(fixedDateTime), Some(fixedDateTime), Some(series), Some(transferringBody), List()
+      userId, None, Some(fixedDateTime), Some(fixedDateTime), Some(consignmentRef), Some(series), Some(transferringBody), List()
     )
     val mockKeycloakClient = mock[KeycloakClient]
 

@@ -76,21 +76,20 @@ class ExternalServiceSpec extends AnyFlatSpec with BeforeAndAfterEach with Befor
   def graphQlUrl: String = wiremockGraphqlServer.url(graphQlPath)
 
   def graphQlGetConsignmentMetadata: StubMapping = wiremockGraphqlServer.stubFor(post(urlEqualTo(graphQlPath))
-    .withRequestBody(equalToJson("{\"query\":\"query getConsignmentForExport($consignmentId:UUID!){getConsignment(consignmentid:$consignmentId){userid createdDatetime transferInitiatedDatetime exportDatetime series{code} transferringBody{code} files{fileId metadata{clientSideFileSize clientSideLastModifiedDate clientSideOriginalFilePath foiExemptionCode heldBy language legalStatus rightsCopyright}}}}\",\"variables\":{\"consignmentId\":\"50df01e6-2e5e-4269-97e7-531a755b417d\"}}"))
+    .withRequestBody(equalToJson("{\"query\":\"query getConsignmentForExport($consignmentId:UUID!){getConsignment(consignmentid:$consignmentId){userid createdDatetime transferInitiatedDatetime exportDatetime consignmentReference series{code} transferringBody{code} files{fileId metadata{clientSideFileSize clientSideLastModifiedDate clientSideOriginalFilePath foiExemptionCode heldBy language legalStatus rightsCopyright}}}}\",\"variables\":{\"consignmentId\":\"50df01e6-2e5e-4269-97e7-531a755b417d\"}}"))
     .willReturn(okJson(fromResource(s"json/get_consignment_for_export.json").mkString)))
 
   def graphQlGetConsignmentMetadataNoFiles: StubMapping = wiremockGraphqlServer.stubFor(post(urlEqualTo(graphQlPath))
-    .withRequestBody(equalToJson("{\"query\":\"query getConsignmentForExport($consignmentId:UUID!){getConsignment(consignmentid:$consignmentId){userid createdDatetime transferInitiatedDatetime exportDatetime series{code} transferringBody{code} files{fileId metadata{clientSideFileSize clientSideLastModifiedDate clientSideOriginalFilePath foiExemptionCode heldBy language legalStatus rightsCopyright}}}}\",\"variables\":{\"consignmentId\":\"069d225e-b0e6-4425-8f8b-c2f6f3263221\"}}"))
+    .withRequestBody(equalToJson("{\"query\":\"query getConsignmentForExport($consignmentId:UUID!){getConsignment(consignmentid:$consignmentId){userid createdDatetime transferInitiatedDatetime exportDatetime consignmentReference series{code} transferringBody{code} files{fileId metadata{clientSideFileSize clientSideLastModifiedDate clientSideOriginalFilePath foiExemptionCode heldBy language legalStatus rightsCopyright}}}}\",\"variables\":{\"consignmentId\":\"069d225e-b0e6-4425-8f8b-c2f6f3263221\"}}"))
     .willReturn(okJson(fromResource(s"json/get_consignment_no_files.json").mkString)))
 
   def graphQlGetConsignmentIncompleteMetadata: StubMapping = wiremockGraphqlServer.stubFor(post(urlEqualTo(graphQlPath))
-    .withRequestBody(equalToJson("{\"query\":\"query getConsignmentForExport($consignmentId:UUID!){getConsignment(consignmentid:$consignmentId){userid createdDatetime transferInitiatedDatetime exportDatetime series{code} transferringBody{code} files{fileId metadata{clientSideFileSize clientSideLastModifiedDate clientSideOriginalFilePath foiExemptionCode heldBy language legalStatus rightsCopyright}}}}\",\"variables\":{\"consignmentId\":\"0e634655-1563-4705-be99-abb437f971e0\"}}"))
+    .withRequestBody(equalToJson("{\"query\":\"query getConsignmentForExport($consignmentId:UUID!){getConsignment(consignmentid:$consignmentId){userid createdDatetime transferInitiatedDatetime exportDatetime consignmentReference series{code} transferringBody{code} files{fileId metadata{clientSideFileSize clientSideLastModifiedDate clientSideOriginalFilePath foiExemptionCode heldBy language legalStatus rightsCopyright}}}}\",\"variables\":{\"consignmentId\":\"0e634655-1563-4705-be99-abb437f971e0\"}}"))
     .willReturn(okJson(fromResource(s"json/get_consignment_incomplete_metadata.json").mkString)))
 
   def graphQlGetDifferentConsignmentMetadata: StubMapping = wiremockGraphqlServer.stubFor(post(urlEqualTo(graphQlPath))
-    .withRequestBody(equalToJson("{\"query\":\"query getConsignmentForExport($consignmentId:UUID!){getConsignment(consignmentid:$consignmentId){userid createdDatetime transferInitiatedDatetime exportDatetime series{code} transferringBody{code} files{fileId metadata{clientSideFileSize clientSideLastModifiedDate clientSideOriginalFilePath foiExemptionCode heldBy language legalStatus rightsCopyright}}}}\",\"variables\":{\"consignmentId\":\"6794231c-39fe-41e0-a498-b6a077563282\"}}"))
+    .withRequestBody(equalToJson("{\"query\":\"query getConsignmentForExport($consignmentId:UUID!){getConsignment(consignmentid:$consignmentId){userid createdDatetime transferInitiatedDatetime exportDatetime consignmentReference series{code} transferringBody{code} files{fileId metadata{clientSideFileSize clientSideLastModifiedDate clientSideOriginalFilePath foiExemptionCode heldBy language legalStatus rightsCopyright}}}}\",\"variables\":{\"consignmentId\":\"6794231c-39fe-41e0-a498-b6a077563282\"}}"))
     .willReturn(okJson(fromResource(s"json/get_consignment_for_export.json").mkString)))
-
 
   def graphqlUpdateExportLocation: StubMapping = wiremockGraphqlServer.stubFor(post(urlEqualTo(graphQlPath))
     .willReturn(okJson(fromResource(s"json/get_files.json").mkString)))

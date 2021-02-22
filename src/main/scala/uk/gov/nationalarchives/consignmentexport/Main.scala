@@ -13,6 +13,7 @@ import io.chrisdavenport.log4cats.slf4j.Slf4jLogger
 import uk.gov.nationalarchives.aws.utils.Clients.{s3Async, sfnAsyncClient}
 import uk.gov.nationalarchives.aws.utils.{S3Utils, StepFunctionUtils}
 import uk.gov.nationalarchives.consignmentexport.Arguments._
+import uk.gov.nationalarchives.consignmentexport.BagMetadata.{InternalSenderIdentifierKey, SourceOrganisationKey}
 import uk.gov.nationalarchives.consignmentexport.Config.config
 import uk.gov.nationalarchives.consignmentexport.StepFunction.ExportOutput
 
@@ -59,7 +60,10 @@ object Main extends CommandIOApp("tdr-consignment-export", "Exports tdr files in
           _ <- bashCommands.runCommand(s"sha256sum $tarPath > $tarPath.sha256")
           _ <- s3Files.uploadFiles(config.s3.outputBucket, consignmentId, tarPath)
           _ <- graphQlApi.updateExportLocation(config, consignmentId, s"s3://${config.s3.outputBucket}/$consignmentId.tar.gz", exportDatetime)
-          _ <- stepFunction.publishSuccess(taskToken, ExportOutput(consignmentData.userid))
+          _ <- stepFunction.publishSuccess(taskToken,
+            ExportOutput(consignmentData.userid,
+              bagMetadata.get(InternalSenderIdentifierKey).get(0),
+              bagMetadata.get(SourceOrganisationKey).get(0)))
         } yield ExitCode.Success
 
         exitCode.flatMap(ec => {

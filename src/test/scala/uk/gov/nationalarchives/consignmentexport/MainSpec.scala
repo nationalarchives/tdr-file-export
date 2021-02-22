@@ -5,10 +5,12 @@ import java.nio.file.Files
 import java.util.UUID
 
 import com.github.tomakehurst.wiremock.stubbing.ServeEvent
+import io.circe.Json
 import org.apache.commons.codec.digest.DigestUtils
 import uk.gov.nationalarchives.consignmentexport.Utils.PathUtils
 
 import scala.io.Source
+import scala.io.Source.fromResource
 import scala.jdk.CollectionConverters._
 import scala.sys.process._
 
@@ -150,14 +152,15 @@ class MainSpec extends ExternalServiceSpec {
     Main.run(List("export", "--consignmentId", consignmentId.toString, "--taskToken", taskTokenValue)).unsafeRunSync()
 
     wiremockSfnServer.getAllServeEvents.size() should be(1)
+    val expectedRequestBody: String = fromResource(s"json/publish_success_request_body.json").mkString
     val eventRequestBody = wiremockSfnServer.getAllServeEvents.get(0).getRequest.getBodyAsString
-    eventRequestBody.contains(taskTokenValue) should be(true)
+    eventRequestBody should equal(expectedRequestBody)
 
     //check rest of process was completed successfully
     outputBucketObjects().size should equal(2)
   }
 
-  "the export job" should "should publish the step function failure if task token argument provided and an error occurred" in {
+  "the export job" should "should publish the step function failure if task token argument provided and an error occurred with the export" in {
     sfnPublishSuccess
     graphQlGetConsignmentMetadata
     keycloakGetIncompleteUser
@@ -168,10 +171,10 @@ class MainSpec extends ExternalServiceSpec {
     Main.run(List("export", "--consignmentId", consignmentId.toString, "--taskToken", taskTokenValue)).unsafeRunSync()
 
     wiremockSfnServer.getAllServeEvents.size() should be(1)
+    val expectedRequestBody: String = fromResource(s"json/publish_failure_incomplete_user_request_body.json").mkString
     val eventRequestBody = wiremockSfnServer.getAllServeEvents.get(0).getRequest.getBodyAsString
 
-    eventRequestBody.contains(taskTokenValue) should be(true)
-    eventRequestBody.contains(s"Export for consignment $consignmentId failed: Incomplete details for user b2657adf-6e93-424f-b0f1-aadd26762a96") should be(true)
+    eventRequestBody should equal(expectedRequestBody)
 
     //check rest of process failed
     outputBucketObjects().size should equal(0)

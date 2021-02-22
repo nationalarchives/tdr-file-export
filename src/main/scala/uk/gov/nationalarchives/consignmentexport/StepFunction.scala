@@ -6,7 +6,7 @@ import cats.effect.IO
 import io.chrisdavenport.log4cats.SelfAwareStructuredLogger
 import io.circe.generic.auto._
 import io.circe.syntax._
-import software.amazon.awssdk.services.sfn.model.SendTaskSuccessResponse
+import software.amazon.awssdk.services.sfn.model.{SendTaskFailureResponse, SendTaskSuccessResponse}
 import uk.gov.nationalarchives.aws.utils.StepFunctionUtils
 import uk.gov.nationalarchives.consignmentexport.StepFunction.ExportOutput
 
@@ -17,6 +17,10 @@ class StepFunction(stepFunctionUtils: StepFunctionUtils)(implicit val logger: Se
   def publishSuccess(taskToken: Option[String], exportOutput: ExportOutput): IO[SendTaskSuccessResponse] =
     taskToken.map(tt => stepFunctionUtils.sendTaskSuccessRequest(tt, exportOutput.asJson))
       .getOrElse(IO(SendTaskSuccessResponse.builder.build()))
+
+  def publishFailure(taskToken: Option[String], error: String): IO[SendTaskFailureResponse] =
+    taskToken.map(tt => stepFunctionUtils.sendTaskFailureRequest(tt, error))
+      .getOrElse(IO(SendTaskFailureResponse.builder.build()))
 }
 
 object StepFunction {

@@ -3,6 +3,8 @@ package uk.gov.nationalarchives.consignmentexport
 import java.time.{ZoneOffset, ZonedDateTime}
 import java.util.UUID
 
+import cats.effect
+import cats.implicits._
 import cats.effect._
 import com.monovore.decline.Opts
 import com.monovore.decline.effect.CommandIOApp
@@ -21,39 +23,59 @@ object Main extends CommandIOApp("tdr-consignment-export", "Exports tdr files in
 
   override def main: Opts[IO[ExitCode]] =
      exportOps.map {
-      case FileExport(consignmentId, taskToken) => for {
-        config <- config()
-        rootLocation = config.efs.rootLocation
-        exportId = UUID.randomUUID
-        basePath = s"$rootLocation/$exportId"
-        tarPath = s"$basePath/$consignmentId.tar.gz"
-        bashCommands = BashCommands()
-        graphQlApi = GraphQlApi(config.api.url, config.auth.url)
-        keycloakClient = KeycloakClient(config)
-        s3Files = S3Files(S3Utils(s3Async))
-        bagit = Bagit()
-        validator = Validator(consignmentId)
-        stepFunction = StepFunction(StepFunctionUtils(sfnAsyncClient))
-        //Export datetime generated as value needed in bag metadata and DB table
-        //Cannot use the value from DB table in bag metadata, as bag metadata created before bagging
-        //and cannot update DB until bag creation successfully completed
-        exportDatetime = ZonedDateTime.now(ZoneOffset.UTC)
-        consignmentResult <- graphQlApi.getConsignmentMetadata(config, consignmentId)
-        consignmentData <- IO.fromEither(validator.validateConsignmentResult(consignmentResult))
-        _ <- IO.fromEither(validator.validateConsignmentHasFiles(consignmentData))
-        bagMetadata <- BagMetadata(keycloakClient).generateMetadata(consignmentId, consignmentData, exportDatetime)
-        validatedFileMetadata <- IO.fromEither(validator.extractFileMetadata(consignmentData.files))
-        _ <- s3Files.downloadFiles(validatedFileMetadata, config.s3.cleanBucket, consignmentId, basePath)
-        bag <- bagit.createBag(consignmentId, basePath, bagMetadata)
-        fileMetadataCsv <- BagAdditionalFiles(bag.getRootDir).createFileMetadataCsv(validatedFileMetadata)
-        checksums <- ChecksumCalculator().calculateChecksums(fileMetadataCsv)
-        _ <- bagit.writeTagManifestRows(bag, checksums)
-        // The owner and group in the below command have no effect on the file permissions. It just makes tar idempotent
-        _ <- bashCommands.runCommand(s"tar --sort=name --owner=root:0 --group=root:0 --mtime ${java.time.LocalDate.now.toString} -C $basePath -c ./$consignmentId | gzip -n > $tarPath")
-        _ <- bashCommands.runCommand(s"sha256sum $tarPath > $tarPath.sha256")
-        _ <- s3Files.uploadFiles(config.s3.outputBucket, consignmentId, tarPath)
-        _ <- graphQlApi.updateExportLocation(config, consignmentId, s"s3://${config.s3.outputBucket}/$consignmentId.tar.gz", exportDatetime)
-        _ <- stepFunction.publishSuccess(taskToken, ExportOutput(consignmentData.userid))
-      } yield ExitCode.Success
+      case FileExport(consignmentId, taskToken) =>
+        val exportFailedErrorMessage = s"Export for consignment $consignmentId failed"
+        val stepFunction = StepFunction(StepFunctionUtils(sfnAsyncClient))
+        val noTaskToken = !taskToken.isDefined
+
+        val exitCode = for {
+          config <- config()
+          rootLocation = config.efs.rootLocation
+          exportId = UUID.randomUUID
+          basePath = s"$rootLocation/$exportId"
+          tarPath = s"$basePath/$consignmentId.tar.gz"
+          bashCommands = BashCommands()
+          graphQlApi = GraphQlApi(config.api.url, config.auth.url)
+          keycloakClient = KeycloakClient(config)
+          s3Files = S3Files(S3Utils(s3Async))
+          bagit = Bagit()
+          validator = Validator(consignmentId)
+          //Export datetime generated as value needed in bag metadata and DB table
+          //Cannot use the value from DB table in bag metadata, as bag metadata created before bagging
+          //and cannot update DB until bag creation successfully completed
+          exportDatetime = ZonedDateTime.now(ZoneOffset.UTC)
+          consignmentResult <- graphQlApi.getConsignmentMetadata(config, consignmentId)
+          consignmentData <- IO.fromEither(validator.validateConsignmentResult(consignmentResult))
+          _ <- IO.fromEither(validator.validateConsignmentHasFiles(consignmentData))
+          bagMetadata <- BagMetadata(keycloakClient).generateMetadata(consignmentId, consignmentData, exportDatetime)
+          validatedFileMetadata <- IO.fromEither(validator.extractFileMetadata(consignmentData.files))
+          _ <- s3Files.downloadFiles(validatedFileMetadata, config.s3.cleanBucket, consignmentId, basePath)
+          bag <- bagit.createBag(consignmentId, basePath, bagMetadata)
+          fileMetadataCsv <- BagAdditionalFiles(bag.getRootDir).createFileMetadataCsv(validatedFileMetadata)
+          checksums <- ChecksumCalculator().calculateChecksums(fileMetadataCsv)
+          _ <- bagit.writeTagManifestRows(bag, checksums)
+          // The owner and group in the below command have no effect on the file permissions. It just makes tar idempotent
+          _ <- bashCommands.runCommand(s"tar --sort=name --owner=root:0 --group=root:0 --mtime ${java.time.LocalDate.now.toString} -C $basePath -c ./$consignmentId | gzip -n > $tarPath")
+          _ <- bashCommands.runCommand(s"sha256sum $tarPath > $tarPath.sha256")
+          _ <- s3Files.uploadFiles(config.s3.outputBucket, consignmentId, tarPath)
+          _ <- graphQlApi.updateExportLocation(config, consignmentId, s"s3://${config.s3.outputBucket}/$consignmentId.tar.gz", exportDatetime)
+          _ <- stepFunction.publishSuccess(taskToken, ExportOutput(consignmentData.userid))
+        } yield ExitCode.Success
+
+        exitCode.flatMap(ec => {
+          IO(ec)
+        }).recoverWith({
+          case rte: RuntimeException =>
+            //Continue to throw exception until taskToken required
+            if(noTaskToken) throw rte
+            for {
+              _ <- stepFunction.publishFailure(taskToken, exportFailedErrorMessage + s": ${rte.getMessage}")
+            } yield ExitCode.Error
+          case _ =>
+            //Continue to throw exception until taskToken required
+            if(noTaskToken) throw new RuntimeException(exportFailedErrorMessage)
+            for {
+              _ <- stepFunction.publishFailure(taskToken, exportFailedErrorMessage)
+            } yield ExitCode.Error})
     }
 }

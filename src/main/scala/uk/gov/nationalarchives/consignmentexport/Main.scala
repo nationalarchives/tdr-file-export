@@ -66,20 +66,20 @@ object Main extends CommandIOApp("tdr-consignment-export", "Exports tdr files in
               bagMetadata.get(SourceOrganisationKey).get(0)))
         } yield ExitCode.Success
 
-        exitCode.flatMap(ec => {
-          IO(ec)
-        }).recoverWith({
+        exitCode.recoverWith({
           case rte: RuntimeException =>
-            //Continue to throw exception until taskToken required
+            //If there is a taskToken value means Step Function requires response as using callback pattern
+            //Temporarily make taskToken option to allow for deployment of code without disruption of service
             if(noTaskToken) throw rte
             for {
               _ <- stepFunction.publishFailure(taskToken, exportFailedErrorMessage + s": ${rte.getMessage}")
             } yield ExitCode.Error
           case _ =>
-            //Continue to throw exception until taskToken required
+            //If there is a taskToken value means Step Function requires response as using callback pattern
+            //Temporarily make taskToken option to allow for deployment of code without disruption of service
             if(noTaskToken) throw new RuntimeException(exportFailedErrorMessage)
             for {
               _ <- stepFunction.publishFailure(taskToken, exportFailedErrorMessage)
-            } yield ExitCode.Error})
+            } yield ExitCode.Error
     }
 }

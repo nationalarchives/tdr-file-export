@@ -152,7 +152,7 @@ class MainSpec extends ExternalServiceSpec {
     Main.run(List("export", "--consignmentId", consignmentId.toString, "--taskToken", taskTokenValue)).unsafeRunSync()
 
     wiremockSfnServer.getAllServeEvents.size() should be(1)
-    val expectedRequestBody: String = fromResource(s"json/publish_success_request_body.json").mkString
+    val expectedRequestBody: String = getExpectedResponseAsString(s"json/publish_success_request_body.json")
     val eventRequestBody = wiremockSfnServer.getAllServeEvents.get(0).getRequest.getBodyAsString
     eventRequestBody should equal(expectedRequestBody)
 
@@ -171,7 +171,7 @@ class MainSpec extends ExternalServiceSpec {
     Main.run(List("export", "--consignmentId", consignmentId.toString, "--taskToken", taskTokenValue)).unsafeRunSync()
 
     wiremockSfnServer.getAllServeEvents.size() should be(1)
-    val expectedRequestBody: String = fromResource(s"json/publish_failure_incomplete_user_request_body.json").mkString
+    val expectedRequestBody: String = getExpectedResponseAsString(s"json/publish_failure_incomplete_user_request_body.json")
     val eventRequestBody = wiremockSfnServer.getAllServeEvents.get(0).getRequest.getBodyAsString
 
     eventRequestBody should equal(expectedRequestBody)
@@ -190,4 +190,8 @@ class MainSpec extends ExternalServiceSpec {
     wiremockSfnServer.getAllServeEvents.size() should be(0)
   }
 
+  private def getExpectedResponseAsString(filePath: String) = {
+    //Strip new lines from json file
+    fromResource(filePath).mkString.replaceAll("\n", "")
+  }
 }

@@ -45,6 +45,15 @@ pipeline {
                   wait: true)
           }
         }
+        stage('Tag Release') {
+          steps {
+            sh "git tag ${versionTag}"
+            sshagent(['github-jenkins']) {
+              sh("git push origin ${versionTag}")
+            }
+          }
+        }
+
         stage("Push Docker image") {
           steps {
             script {

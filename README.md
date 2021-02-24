@@ -54,6 +54,7 @@ There are multiple steps to the release process. On a merge to master:
 * The new version and the released notes are pushed to a branch and a pull request raised.
 * The docker image is built, using the latest zip file from github
 * The docker image is tagged using the jenkins build version number and pushed to ECR
+* The master branch is tagged with the jenkins build version number  
 * The docker image is tagged with intg and pushed that to ECR
 * The release branch is created.
 

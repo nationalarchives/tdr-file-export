@@ -79,7 +79,7 @@ class ExternalServiceSpec extends AnyFlatSpec with BeforeAndAfterEach with Befor
   val authPath = "/auth/realms/tdr/protocol/openid-connect/token"
   val keycloakGetRealmPath = "/auth/admin/realms/tdr"
   val keycloakGetUserPath: String = "/auth/admin/realms/tdr/users" + s"/$keycloakUserId"
-  val sfnPublishSuccessPath = "/"
+  val stepFunctionPublishPath = "/"
 
   def graphQlUrl: String = wiremockGraphqlServer.url(graphQlPath)
 
@@ -113,7 +113,7 @@ class ExternalServiceSpec extends AnyFlatSpec with BeforeAndAfterEach with Befor
   def keycloakGetIncompleteUser: StubMapping = wiremockAuthServer.stubFor(get(urlEqualTo(keycloakGetUserPath))
     .willReturn(okJson(fromResource(s"json/get_incomplete_keycloak_user.json").mkString)))
 
-  def sfnPublishSuccess: StubMapping = wiremockSfnServer.stubFor(post(urlEqualTo(sfnPublishSuccessPath))
+  def stepFunctionPublish: StubMapping = wiremockSfnServer.stubFor(post(urlEqualTo(stepFunctionPublishPath))
     .willReturn(ok("Ok response body")))
 
   val s3Api: S3Mock = S3Mock(port = 8003, dir = "/tmp/s3")

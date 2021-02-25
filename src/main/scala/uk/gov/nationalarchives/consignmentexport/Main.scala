@@ -3,7 +3,6 @@ package uk.gov.nationalarchives.consignmentexport
 import java.time.{ZoneOffset, ZonedDateTime}
 import java.util.UUID
 
-import cats.effect
 import cats.implicits._
 import cats.effect._
 import com.monovore.decline.Opts
@@ -27,7 +26,6 @@ object Main extends CommandIOApp("tdr-consignment-export", "Exports tdr files in
       case FileExport(consignmentId, taskToken) =>
         val exportFailedErrorMessage = s"Export for consignment $consignmentId failed"
         val stepFunction = StepFunction(StepFunctionUtils(sfnAsyncClient))
-        val noTaskToken = !taskToken.isDefined
 
         val exitCode = for {
           config <- config()
@@ -68,18 +66,13 @@ object Main extends CommandIOApp("tdr-consignment-export", "Exports tdr files in
 
         exitCode.recoverWith({
           case rte: RuntimeException =>
-            //If there is a taskToken value means Step Function requires response as using callback pattern
-            //Temporarily make taskToken option to allow for deployment of code without disruption of service
-            if(noTaskToken) throw rte
             for {
-              _ <- stepFunction.publishFailure(taskToken, exportFailedErrorMessage + s": ${rte.getMessage}")
-            } yield ExitCode.Error
+              _ <- stepFunction.publishFailure(taskToken, s"$exportFailedErrorMessage: ${rte.getMessage}")
+            } yield throw rte
           case _ =>
-            //If there is a taskToken value means Step Function requires response as using callback pattern
-            //Temporarily make taskToken option to allow for deployment of code without disruption of service
-            if(noTaskToken) throw new RuntimeException(exportFailedErrorMessage)
             for {
               _ <- stepFunction.publishFailure(taskToken, exportFailedErrorMessage)
-            } yield ExitCode.Error
+            } yield throw new RuntimeException(exportFailedErrorMessage)
+        })
     }
 }

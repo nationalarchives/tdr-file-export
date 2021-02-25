@@ -60,7 +60,7 @@ There are multiple steps to the release process. On a merge to master:
 
 With this process, there are two versions, the version of the code defined in `version.sbt` and the version of the docker image which is based on the Jenkins build number. This makes sense in that it's technically possible to have a change to the docker image without a change to the code but at the moment the build doesn't allow this and both versions are incremented regardless of what has changed.
 
-To deploy to staging/production, you need to run the [deploy](https://jenkins.tdr-management.nationalarchives.gov.uk/job/Consignment%20Export%20Deploy/) job with the stage and the <em>docker version number</em>, not the code version number. 
+To deploy to staging/production, you need to run the [deploy](https://jenkins.tdr-management.nationalarchives.gov.uk/job/Consignment%20Export%20Deploy/) job with the stage and the <em>docker version number</em>, not the code version number. The docker version will be a git tag on the branch.
 
 ### Tests
 

@@ -1,8 +1,32 @@
 import Dependencies._
+import ReleaseTransformations._
 
-ThisBuild / scalaVersion     := "2.13.3"
-ThisBuild / organization     := "com.example"
+import scala.sys.process._
+import java.nio.file.{Files, Paths}
+import java.io.File
+import java.nio.charset.StandardCharsets
+
+
+ThisBuild / scalaVersion := "2.13.3"
+ThisBuild / organization := "com.example"
 ThisBuild / organizationName := "example"
+
+lazy val generateChangelogFile = taskKey[Unit]("Generates a changelog file from the last version")
+
+generateChangelogFile := {
+  val lastTag = "git describe --tags --abbrev=0".!!.replace("\n","")
+  val gitLog = s"git log $lastTag..HEAD --oneline".!!
+  val folderName = s"${baseDirectory.value}/notes"
+  val fileName = s"${version.value}.markdown"
+  val fullPath = s"$folderName/$fileName"
+  new File(folderName).mkdirs()
+  val file = new File(fullPath)
+  if(!file.exists()) {
+    new File(fullPath).createNewFile
+    Files.write(Paths.get(fullPath), gitLog.getBytes(StandardCharsets.UTF_8))
+  }
+  s"git add $fullPath".!!
+}
 
 lazy val root = (project in file("."))
   .settings(
@@ -34,5 +58,23 @@ lazy val root = (project in file("."))
     ),
     packageName in Universal := "tdr-consignment-export",
     fork in Test := true,
+    javaOptions in Test += s"-Dconfig.file=${sourceDirectory.value}/test/resources/application.conf",
+    ghreleaseRepoOrg := "nationalarchives",
+    ghreleaseAssets := Seq(file(s"${(target in Universal).value}/${(packageName in Universal).value}.tgz")),
+    releaseProcess := Seq[ReleaseStep](
+      inquireVersions,
+      setReleaseVersion,
+      releaseStepTask(generateChangelogFile),
+      commitReleaseVersion,
+      tagRelease,
+      pushChanges,
+      releaseStepTask(packageZipTarball in Universal),
+      releaseStepInputTask(githubRelease),
+      setNextVersion,
+      commitNextVersion,
+      pushChanges
+    ),
+    buildInfoKeys := Seq[BuildInfoKey](version),
+    buildInfoPackage := "uk.gov.nationalarchives.consignmentexport",
     javaOptions in Test += s"-Dconfig.file=${sourceDirectory.value}/test/resources/application.conf"
-  ).enablePlugins(JavaAppPackaging, UniversalPlugin)
+  ).enablePlugins(JavaAppPackaging, UniversalPlugin, BuildInfoPlugin)

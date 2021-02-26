@@ -35,6 +35,16 @@ pipeline {
         expression { env.BRANCH_NAME == "master"}
       }
       stages {
+        stage("Release to github") {
+          steps {
+            build(
+                  job: "ConsignmentExportRelease",
+                  parameters: [
+                    string(name: "STAGE", value: "intg")
+                  ],
+                  wait: true)
+          }
+        }
         stage('Tag Release') {
           steps {
             sh "git tag ${versionTag}"
@@ -43,26 +53,24 @@ pipeline {
             }
           }
         }
-        stage("Build Docker image") {
-          agent {
-            ecs {
-              inheritFrom "transfer-frontend"
-            }
-          }
-          steps {
-            sh 'sbt -no-colors universal:packageZipTarball'
-            stash includes: "Dockerfile", name: "Dockerfile"
-            stash includes: "target/universal/tdr-consignment-export.tgz", name: "tdr-consignment-export"
-          }
-        }
+
         stage("Push Docker image") {
           steps {
-            unstash "tdr-consignment-export"
-            unstash "Dockerfile"
             script {
               tdr.buildAndPushImage("consignment-export", versionTag)
               tdr.postToDaTdrSlackChannel(colour: "good", message: "*Consignment Export* :whale: Pushed version ${versionTag} to AWS ECR")
             }
+          }
+        }
+        stage("Deploy to ECR") {
+          steps {
+            build(
+                  job: "Consignment Export Deploy",
+                  parameters: [
+                    string(name: "STAGE", value: "intg"),
+                    string(name: "TO_DEPLOY", value: versionTag)
+                  ],
+                  wait: false)
           }
         }
       }

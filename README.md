@@ -33,8 +33,34 @@ You can then run the Main object in Intellij as you can with any similar project
 
 You can also run `sbt universal:packageZipTarball` which creates a file `target/universal/tdr-consignment-export.tgz` which, when unzipped, gives you a `bin/tdr-consignment-export` executable which you can run with the same arguments as above. This is how the docker container runs the file so is the closest to running this in production.
 
+### Release notes
+We are now releasing new versions to github and for this we need release notes. 
+
+If no release notes are provided, the release job will generate them by running `git log $(git describe --tags --abbrev=0)..HEAD --oneline`
+
+You can write your own which will be used instead. 
+
+First, check what the next version will be. It will be the version in `version.sbt` withouth `-SNAPSHOT` on the end so version `0.0.1-SNAPSHOT` will become `0.0.1`
+
+Next, create a file in the `notes` directory called `${version}.markdown` and add in your release notes and commit and push these to the branch.
+
 ### Deployment
-Because this is run as an on demand ECS task, deployment is just pushing a new version of the docker image to ECR with the appropriate stage tag. This will be done by Jenkins as part of the deploy job on merge to master so there should be no reason to do this locally.
+There are multiple steps to the release process. On a merge to master:
+* The tests are run as they are for all branches
+* The version in `version.sbt` is incremented to the next non snapshot version
+* The tar.gz file containing the binary is created
+* Release notes are added. See the release notes section for more detail.
+* A release is created in github with the release notes and the zip file is uploaded.
+* The new version and the released notes are pushed to a branch and a pull request raised.
+* The docker image is built, using the latest zip file from github
+* The docker image is tagged using the jenkins build version number and pushed to ECR
+* The master branch is tagged with the jenkins build version number  
+* The docker image is tagged with intg and pushed that to ECR
+* The release branch is created.
+
+With this process, there are two versions, the version of the code defined in `version.sbt` and the version of the docker image which is based on the Jenkins build number. This makes sense in that it's technically possible to have a change to the docker image without a change to the code but at the moment the build doesn't allow this and both versions are incremented regardless of what has changed.
+
+To deploy to staging/production, you need to run the [deploy](https://jenkins.tdr-management.nationalarchives.gov.uk/job/Consignment%20Export%20Deploy/) job with the stage and the <em>docker version number</em>, not the code version number. The docker version will be a git tag on the branch.
 
 ### Tests
 

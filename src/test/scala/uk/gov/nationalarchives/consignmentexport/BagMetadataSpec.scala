@@ -6,6 +6,7 @@ import java.util.UUID
 import graphql.codegen.GetConsignmentExport.getConsignmentForExport.GetConsignment
 import graphql.codegen.GetConsignmentExport.getConsignmentForExport.GetConsignment.{Series, TransferringBody}
 import org.keycloak.representations.idm.UserRepresentation
+import uk.gov.nationalarchives.consignmentexport.BuildInfo.version
 import uk.gov.nationalarchives.consignmentexport.Utils._
 
 class BagMetadataSpec extends ExportSpec {
@@ -36,12 +37,12 @@ class BagMetadataSpec extends ExportSpec {
     bagMetadata.get("Consignment-Completed-Datetime").get(0) should be(fixedDateTime.toFormattedPrecisionString)
     bagMetadata.get("Contact-Name").get(0) should be("FirstName LastName")
     bagMetadata.get("Consignment-Export-Datetime").get(0) should be(fixedDateTime.toFormattedPrecisionString)
+    bagMetadata.get("Bag-Creator").get(0) should be(s"TDRExportv$version")
   }
 
   "the getBagMetadata method" should "throw an exception if a consignment metadata property is missing" in {
-    val missingPropertyKey = "Consignment-Start-Datetime"
     val consignmentId = UUID.randomUUID()
-
+    val missingPropertyKey = "Consignment-Start-Datetime"
     val incompleteConsignment = GetConsignment(
       userId, None, Some(fixedDateTime), Some(fixedDateTime), Some(consignmentRef), Some(series), Some(transferringBody), List()
     )

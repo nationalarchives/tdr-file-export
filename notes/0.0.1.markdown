@@ -1,0 +1,23 @@
+fd97eab Merge pull request #28 from nationalarchives/export-version-to-bag-info
+17239a5 Updated the instructions to deploy staging
+de541ac Add step to tag branch with docker image version
+cf1b755 Merge branch 'master' into export-version-to-bag-info
+252dd80 Update README with description of deploying to other environments
+617d0a5 Merge branch 'master' into export-version-to-bag-info
+7a45f4e Merge branch 'add-file-metadata-csv' into export-version-to-bag-info
+32a2070 Merge branch 'master' into export-version-to-bag-info
+7b3a1ad Change the format of the version written to bag-info
+90dafbb Replace branch jenkinslib
+ca84a47 Update README with deploy and release steps
+e57c5c8 Merge branch 'add-file-metadata-csv' into export-version-to-bag-info
+5a2e150 Add the version into the Bag metadata.
+b4439c6 Add sbt-buildinfo
+67a0449 Don't install jq from the repository
+309956b Add version.sbt
+2584708 Get the latest release from github.
+477b30c Add steps to release to github and deploy.
+a26a0f2 Add a jenkins job to carry out the release
+be1efc8 Set build sbt to release to github.
+d2fde7b Update to latest version of generated graphql
+5114929 Add plugins for sbt release and sbt-github-release
+8da47e5 Replace Path.of with Paths.get

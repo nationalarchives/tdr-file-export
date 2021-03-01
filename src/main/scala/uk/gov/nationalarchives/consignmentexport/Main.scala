@@ -3,10 +3,10 @@ package uk.gov.nationalarchives.consignmentexport
 import java.time.{ZoneOffset, ZonedDateTime}
 import java.util.UUID
 
-import cats.implicits._
 import cats.effect._
 import com.monovore.decline.Opts
 import com.monovore.decline.effect.CommandIOApp
+import com.typesafe.config.ConfigFactory
 import io.chrisdavenport.log4cats.SelfAwareStructuredLogger
 import io.chrisdavenport.log4cats.slf4j.Slf4jLogger
 import uk.gov.nationalarchives.aws.utils.Clients.{s3Async, sfnAsyncClient}
@@ -21,11 +21,14 @@ import scala.language.{implicitConversions, postfixOps}
 object Main extends CommandIOApp("tdr-consignment-export", "Exports tdr files in bagit format", version = "0.0.1") {
   implicit def logger: SelfAwareStructuredLogger[IO] = Slf4jLogger.getLogger[IO]
 
+  private val configuration = ConfigFactory.load()
+  private val stepFunctionPublishEndpoint = configuration.getString("stepFunction.endpoint")
+
   override def main: Opts[IO[ExitCode]] =
      exportOps.map {
       case FileExport(consignmentId, taskToken) =>
         val exportFailedErrorMessage = s"Export for consignment $consignmentId failed"
-        val stepFunction = StepFunction(StepFunctionUtils(sfnAsyncClient))
+        val stepFunction: StepFunction  = StepFunction(StepFunctionUtils(sfnAsyncClient(stepFunctionPublishEndpoint)))
 
         val exitCode = for {
           config <- config()
@@ -64,15 +67,11 @@ object Main extends CommandIOApp("tdr-consignment-export", "Exports tdr files in
               bagMetadata.get(SourceOrganisationKey).get(0)))
         } yield ExitCode.Success
 
-        exitCode.recoverWith({
-          case rte: RuntimeException =>
-            for {
-              _ <- stepFunction.publishFailure(taskToken, s"$exportFailedErrorMessage: ${rte.getMessage}")
-            } yield throw rte
-          case _ =>
-            for {
-              _ <- stepFunction.publishFailure(taskToken, exportFailedErrorMessage)
-            } yield throw new RuntimeException(exportFailedErrorMessage)
+        exitCode.handleErrorWith(e => {
+          for {
+            _ <- stepFunction.publishFailure(taskToken, s"$exportFailedErrorMessage: ${e.getMessage}")
+            _ <- IO.raiseError(e)
+          } yield ExitCode.Error
         })
     }
 }

@@ -8,7 +8,7 @@ class KeycloakClientSpec extends ExternalServiceSpec {
     Api(""),
     Auth("http://localhost:9002/auth", "tdr-backend-checks", "client-secret", "tdr"),
     EFS(""),
-    SFN("")
+    StepFunction("")
   )
 
   "the getUserDetails method" should "return the correct user details" in {

@@ -18,8 +18,8 @@ class StepFunction(stepFunctionUtils: StepFunctionUtils)(implicit val logger: Se
     taskToken.map(tt => stepFunctionUtils.sendTaskSuccessRequest(tt, exportOutput.asJson))
       .getOrElse(IO(SendTaskSuccessResponse.builder.build()))
 
-  def publishFailure(taskToken: Option[String], error: String): IO[SendTaskFailureResponse] =
-    taskToken.map(tt => stepFunctionUtils.sendTaskFailureRequest(tt, error))
+  def publishFailure(taskToken: Option[String], cause: String): IO[SendTaskFailureResponse] =
+    taskToken.map(tt => stepFunctionUtils.sendTaskFailureRequest(tt, cause))
       .getOrElse(IO(SendTaskFailureResponse.builder.build()))
 }
 

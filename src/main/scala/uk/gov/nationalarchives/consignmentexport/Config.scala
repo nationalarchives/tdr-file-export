@@ -12,8 +12,8 @@ object Config {
   case class Api(url: String)
   case class Auth(url: String, clientId: String, clientSecret: String, realm: String)
   case class EFS(rootLocation: String)
-  case class SFN(endpoint: String)
-  case class Configuration(s3: S3, api: Api, auth: Auth, efs: EFS, sfn: SFN)
+  case class StepFunction(endpoint: String)
+  case class Configuration(s3: S3, api: Api, auth: Auth, efs: EFS, stepFunction: StepFunction)
 
   implicit def hint[A]: ProductHint[A] = ProductHint[A](ConfigFieldMapping(CamelCase, CamelCase))
 

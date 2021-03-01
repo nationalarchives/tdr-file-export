@@ -27,17 +27,18 @@ class GraphQlApiSpec extends ExportSpec {
 
   private val fixedDateTime = ZonedDateTime.now()
 
+  val config = Configuration(
+    S3("", "", ""),
+    Api(""),
+    Auth("authUrl", "clientId", "clientSecret", "realm"),
+    EFS(""),
+    StepFunction(""))
+
   "the updateExportLocation method" should "return the correct value" in {
     val consignmentClient = mock[GraphQLClient[gce.Data, gce.Variables]]
     val updateExportClient = mock[GraphQLClient[uel.Data, uel.Variables]]
     val keycloak = mock[KeycloakUtils]
     val api = new GraphQlApi(keycloak, consignmentClient, updateExportClient)
-    val config = Configuration(
-      S3("", "", ""),
-      Api(""),
-      Auth("authUrl", "clientId", "clientSecret", "realm"),
-      EFS(""),
-      SFN(""))
     val consignmentId = UUID.randomUUID()
 
     doAnswer(() => Future(new BearerAccessToken("token"))).when(keycloak).serviceAccountToken[Identity](any[String], any[String])(any[SttpBackend[Identity, Nothing, NothingT]], any[ClassTag[Identity[_]]])
@@ -54,12 +55,6 @@ class GraphQlApiSpec extends ExportSpec {
     val updateExportClient = mock[GraphQLClient[uel.Data, uel.Variables]]
     val keycloak = mock[KeycloakUtils]
     val api = new GraphQlApi(keycloak, consignmentClient, updateExportClient)
-    val config = Configuration(
-      S3("", "", ""),
-      Api(""),
-      Auth("authUrl", "clientId", "clientSecret", "realm"),
-      EFS(""),
-      SFN(""))
     val consignmentId = UUID.randomUUID()
 
     doAnswer(() => Future(new BearerAccessToken("token"))).when(keycloak).serviceAccountToken[Identity](any[String], any[String])(any[SttpBackend[Identity, Nothing, NothingT]], any[ClassTag[Identity[_]]])
@@ -82,12 +77,6 @@ class GraphQlApiSpec extends ExportSpec {
     val updateExportClient = mock[GraphQLClient[uel.Data, uel.Variables]]
     val keycloak = mock[KeycloakUtils]
     val api = new GraphQlApi(keycloak, consignmentClient, updateExportClient)
-    val config = Configuration(
-      S3("", "", ""),
-      Api(""),
-      Auth("authUrl", "clientId", "clientSecret", "realm"),
-      EFS(""),
-      SFN(""))
     val consignmentId = UUID.randomUUID()
     val fileId = UUID.randomUUID()
     val lastModified = LocalDateTime.now().some
@@ -115,12 +104,6 @@ class GraphQlApiSpec extends ExportSpec {
     val updateExportClient = mock[GraphQLClient[uel.Data, uel.Variables]]
     val keycloak = mock[KeycloakUtils]
     val api = new GraphQlApi(keycloak, consignmentClient, updateExportClient)
-    val config = Configuration(
-      S3("", "", ""),
-      Api(""),
-      Auth("authUrl", "clientId", "clientSecret", "realm"),
-      EFS(""),
-      SFN(""))
     val consignmentId = UUID.randomUUID()
 
     doAnswer(() => Future(new BearerAccessToken("token"))).when(keycloak).serviceAccountToken[Identity](any[String], any[String])(any[SttpBackend[Identity, Nothing, NothingT]], any[ClassTag[Identity[_]]])

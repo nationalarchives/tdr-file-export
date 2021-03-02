@@ -86,14 +86,14 @@ class BagMetadata(keycloakClient: KeycloakClient)(implicit val logger: SelfAware
 }
 
 object BagMetadata {
-  private val SourceOrganisationKey = "Source-Organization"
-  private val ConsignmentSeriesKey = "Consignment-Series"
-  private val ConsignmentStartDatetimeKey = "Consignment-Start-Datetime"
-  private val ConsignmentCompletedDatetimeKey = "Consignment-Completed-Datetime"
-  private val ContactNameKey = "Contact-Name"
-  private val ConsignmentExportDatetimeKey = "Consignment-Export-Datetime"
-  private val BagCreator = "Bag-Creator"
-  private val InternalSenderIdentifierKey = "Internal-Sender-Identifier"
+  val SourceOrganisationKey = "Source-Organization"
+  val ConsignmentSeriesKey = "Consignment-Series"
+  val ConsignmentStartDatetimeKey = "Consignment-Start-Datetime"
+  val ConsignmentCompletedDatetimeKey = "Consignment-Completed-Datetime"
+  val ContactNameKey = "Contact-Name"
+  val ConsignmentExportDatetimeKey = "Consignment-Export-Datetime"
+  val BagCreator = "Bag-Creator"
+  val InternalSenderIdentifierKey = "Internal-Sender-Identifier"
 
   def apply(keycloakClient: KeycloakClient)(implicit logger: SelfAwareStructuredLogger[IO]): BagMetadata = new BagMetadata(keycloakClient)(logger)
 }

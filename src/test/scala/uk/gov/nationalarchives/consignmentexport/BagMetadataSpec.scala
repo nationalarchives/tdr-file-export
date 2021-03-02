@@ -56,7 +56,6 @@ class BagMetadataSpec extends ExportSpec {
     exception.getMessage should equal(s"Missing consignment metadata property $missingPropertyKey for consignment $consignmentId")
   }
 
-
   "the getBagMetadata method" should "throw an exception if incomplete user details are found" in {
     val mockKeycloakClient = mock[KeycloakClient]
     val consignmentId = UUID.randomUUID()

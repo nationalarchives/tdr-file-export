@@ -19,6 +19,7 @@ import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.s3.S3Client
 import software.amazon.awssdk.services.s3.model._
+import software.amazon.awssdk.services.sfn.SfnAsyncClient
 
 import scala.concurrent.ExecutionContext
 import scala.io.Source.fromResource
@@ -45,6 +46,11 @@ class ExternalServiceSpec extends AnyFlatSpec with BeforeAndAfterEach with Befor
     .grantType(OAuth2Constants.CLIENT_CREDENTIALS)
     .build()
 
+  val sfnClient = SfnAsyncClient.builder
+    .region(Region.EU_WEST_2)
+    .endpointOverride(URI.create("http://localhost:9003/"))
+    .build
+
   def createBucket(bucket: String): CreateBucketResponse = s3Client.createBucket(CreateBucketRequest.builder.bucket(bucket).build)
 
   def deleteBucket(bucket: String): DeleteBucketResponse = s3Client.deleteBucket(DeleteBucketRequest.builder.bucket(bucket).build)
@@ -63,6 +69,7 @@ class ExternalServiceSpec extends AnyFlatSpec with BeforeAndAfterEach with Befor
 
   val wiremockGraphqlServer = new WireMockServer(9001)
   val wiremockAuthServer = new WireMockServer(9002)
+  val wiremockSfnServer = new WireMockServer(9003)
 
   implicit val ec: ExecutionContext = ExecutionContext.global
 
@@ -72,6 +79,7 @@ class ExternalServiceSpec extends AnyFlatSpec with BeforeAndAfterEach with Befor
   val authPath = "/auth/realms/tdr/protocol/openid-connect/token"
   val keycloakGetRealmPath = "/auth/admin/realms/tdr"
   val keycloakGetUserPath: String = "/auth/admin/realms/tdr/users" + s"/$keycloakUserId"
+  val stepFunctionPublishPath = "/"
 
   def graphQlUrl: String = wiremockGraphqlServer.url(graphQlPath)
 
@@ -105,11 +113,15 @@ class ExternalServiceSpec extends AnyFlatSpec with BeforeAndAfterEach with Befor
   def keycloakGetIncompleteUser: StubMapping = wiremockAuthServer.stubFor(get(urlEqualTo(keycloakGetUserPath))
     .willReturn(okJson(fromResource(s"json/get_incomplete_keycloak_user.json").mkString)))
 
+  def stepFunctionPublish: StubMapping = wiremockSfnServer.stubFor(post(urlEqualTo(stepFunctionPublishPath))
+    .willReturn(ok("Ok response body")))
+
   val s3Api: S3Mock = S3Mock(port = 8003, dir = "/tmp/s3")
 
   override def beforeAll(): Unit = {
     wiremockGraphqlServer.start()
     wiremockAuthServer.start()
+    wiremockSfnServer.start()
     new File(scratchDirectory).mkdirs()
   }
 
@@ -117,6 +129,7 @@ class ExternalServiceSpec extends AnyFlatSpec with BeforeAndAfterEach with Befor
     s3Api.start
     authOk
     wiremockGraphqlServer.resetAll()
+    wiremockSfnServer.resetAll()
     graphqlUpdateExportLocation
     createBucket("test-clean-bucket")
     createBucket("test-output-bucket")
@@ -125,6 +138,7 @@ class ExternalServiceSpec extends AnyFlatSpec with BeforeAndAfterEach with Befor
   override def afterAll(): Unit = {
     wiremockGraphqlServer.stop()
     wiremockAuthServer.stop()
+    wiremockSfnServer.stop()
   }
 
   override def afterEach(): Unit = {
@@ -133,6 +147,7 @@ class ExternalServiceSpec extends AnyFlatSpec with BeforeAndAfterEach with Befor
     deleteBucket("test-output-bucket")
     wiremockAuthServer.resetAll()
     wiremockGraphqlServer.resetAll()
+    wiremockSfnServer.resetAll()
     Seq("sh", "-c", s"rm -r $scratchDirectory/*").!
   }
 }

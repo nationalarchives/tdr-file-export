@@ -1,0 +1,18 @@
+ad3ff67 Merge pull request #29 from nationalarchives/TDR-846-output-additional-data
+bc5caa5 Merge remote-tracking branch 'origin/master' into TDR-846-output-additional-data
+6f4a5d1 Simplify failure path handling
+4b77a73 Prevent taskToken argument being passed if no task token
+1862280 Throw exception and not return exit code on failure
+3cc2047 Remove unnecessary flatmap
+c276f7d Update unit tests
+0338ea5 Remerge changes from master
+4076697 Handle export failure
+328fe90 Merge remote-tracking branch 'origin/master' into TDR-846-output-additional-data
+dba3bcb Set user id as UUID for export output
+1caeee6 Add user id value to export output
+23213cf Merge remote-tracking branch 'origin/master' into TDR-846-output-additional-data
+c0dca96 Merge remote-tracking branch 'origin/master' into TDR-846-output-additional-data
+f6583f0 Tidy up unit tests
+7b4987f Add test check when no taskToken present
+870b010 Make taskToken optional
+8028577 Add new parameter task token to main function

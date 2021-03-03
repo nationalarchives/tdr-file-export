@@ -2,6 +2,7 @@ library("tdr-jenkinslib")
 
 def versionTag = "v${env.BUILD_NUMBER}"
 def repo = "tdr-consignment-export"
+def pullRequestTitlePrefix = "Version Bump from build number"
 
 pipeline {
   agent {
@@ -32,7 +33,10 @@ pipeline {
     }
     stage('Post-build') {
       when {
-        expression { env.BRANCH_NAME == "master"}
+        expression {
+          currentGitCommit = sh(script: "git log -n 1", returnStdout: true).trim()
+          return env.BRANCH_NAME == "master" && !(currentGitCommit =~ /$pullRequestTitlePrefix (\d+)/)
+        }
       }
       stages {
         stage("Release to github") {

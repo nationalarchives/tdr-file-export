@@ -14,8 +14,15 @@ object Arguments {
 
   val exportOps: Opts[FileExport] =
     Opts.subcommand("export", "Creates a bagit package") {
-      (consignmentId, taskToken.orNone) mapN {
-        (ci, tt) => FileExport(ci, tt)
+      (consignmentId, taskToken.withDefault("unset")) mapN {
+        (ci, tt) => {
+          //Temporarily handle the default taskToken value 'unset' so that it passes in None
+          val taskTokenValue = tt match {
+            case "unset" => None
+            case _ => Some(tt)
+          }
+          FileExport(ci, taskTokenValue)
+        }
       }
     }
 }

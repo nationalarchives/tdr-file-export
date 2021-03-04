@@ -1,0 +1,2 @@
+5e0aaf2 Merge pull request #34 from nationalarchives/no-release-on-version-bump-merge
+194b64a Don't release if the merge is for a version bump

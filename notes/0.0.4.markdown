@@ -1,0 +1,6 @@
+e056696 Merge pull request #36 from nationalarchives/fix-handling-of-optional-task-token
+8e684fb Merge branch 'master' into fix-handling-of-optional-task-token
+32129b3 Merge pull request #35 from nationalarchives/version-bump-33
+8c5bbce Add missing line break
+5c4771c Set a default taskToken value
+51567bd Setting version to 0.0.4-SNAPSHOT

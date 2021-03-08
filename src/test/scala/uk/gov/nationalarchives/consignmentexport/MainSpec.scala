@@ -161,7 +161,6 @@ class MainSpec extends ExternalServiceSpec {
   }
 
   private def checkStepFunctionPublishCalled(expectedJsonRequestFilePath: String) = {
-    //If no taskToken step function success call should not be called
     wiremockSfnServer.getAllServeEvents.size() should be(1)
     val expectedRequestBody: String = getExpectedResponseAsString(s"json/${expectedJsonRequestFilePath}.json")
     val eventRequestBody = wiremockSfnServer.getAllServeEvents.get(0).getRequest.getBodyAsString

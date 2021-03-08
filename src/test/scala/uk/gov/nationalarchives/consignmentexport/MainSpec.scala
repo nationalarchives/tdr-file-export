@@ -15,15 +15,17 @@ import scala.sys.process._
 
 class MainSpec extends ExternalServiceSpec {
 
+  private val taskTokenValue = "taskToken1234"
+
   "the export job" should "export the correct tar and checksum file" in {
     setUpValidExternalServices()
 
     val consignmentId = UUID.fromString("50df01e6-2e5e-4269-97e7-531a755b417d")
     putFile(s"$consignmentId/7b19b272-d4d1-4d77-bf25-511dc6489d12")
 
-    Main.run(List("export", "--consignmentId", consignmentId.toString)).unsafeRunSync()
+    Main.run(List("export", "--consignmentId", consignmentId.toString, "--taskToken", taskTokenValue)).unsafeRunSync()
 
-    checkStepFunctionPublishNotCalled()
+    checkStepFunctionPublishCalled("publish_success_request_body")
     val objects = outputBucketObjects().map(_.key())
 
     objects.size should equal(2)
@@ -37,9 +39,9 @@ class MainSpec extends ExternalServiceSpec {
     val consignmentId = UUID.fromString("50df01e6-2e5e-4269-97e7-531a755b417d")
     putFile(s"$consignmentId/7b19b272-d4d1-4d77-bf25-511dc6489d12")
 
-    Main.run(List("export", "--consignmentId", consignmentId.toString)).unsafeRunSync()
+    Main.run(List("export", "--consignmentId", consignmentId.toString, "--taskToken", taskTokenValue)).unsafeRunSync()
 
-    checkStepFunctionPublishNotCalled()
+    checkStepFunctionPublishCalled("publish_success_request_body")
 
     val downloadDirectory = s"$scratchDirectory/download"
     new File(s"$downloadDirectory").mkdirs()
@@ -63,9 +65,9 @@ class MainSpec extends ExternalServiceSpec {
 
     val consignmentId = UUID.fromString("50df01e6-2e5e-4269-97e7-531a755b417d")
     putFile(s"$consignmentId/7b19b272-d4d1-4d77-bf25-511dc6489d12")
-    Main.run(List("export", "--consignmentId", consignmentId.toString)).unsafeRunSync()
+    Main.run(List("export", "--consignmentId", consignmentId.toString, "--taskToken", taskTokenValue)).unsafeRunSync()
 
-    checkStepFunctionPublishNotCalled()
+    checkStepFunctionPublishCalled("publish_success_request_body")
 
     val exportLocationEvent: Option[ServeEvent] = wiremockGraphqlServer.getAllServeEvents.asScala
       .find(p => p.getRequest.getBodyAsString.contains("mutation updateExportLocation"))
@@ -77,110 +79,79 @@ class MainSpec extends ExternalServiceSpec {
   "the export job" should "throw an error if the api returns no files for the consignment" in {
     graphQlGetConsignmentMetadataNoFiles
     keycloakGetUser
+    stepFunctionPublish
+
     val consignmentId = "069d225e-b0e6-4425-8f8b-c2f6f3263221"
 
     val ex = intercept[Exception] {
-      Main.run(List("export", "--consignmentId", consignmentId)).unsafeRunSync()
+      Main.run(List("export", "--consignmentId", consignmentId, "--taskToken", taskTokenValue)).unsafeRunSync()
     }
 
-    checkStepFunctionPublishNotCalled()
+    checkStepFunctionPublishCalled("publish_failure_no_files_for_consignment_request_body")
     ex.getMessage should equal(s"Consignment API returned no files for consignment $consignmentId")
   }
 
   "the export job" should "throw an error if the file metadata is incomplete" in {
     graphQlGetConsignmentIncompleteMetadata
     keycloakGetUser
+    stepFunctionPublish
+
     val consignmentId = UUID.fromString("0e634655-1563-4705-be99-abb437f971e0")
     val fileId = UUID.fromString("7b19b272-d4d1-4d77-bf25-511dc6489d12")
     putFile(s"$consignmentId/$fileId")
 
     val ex = intercept[Exception] {
-      Main.run(List("export", "--consignmentId", consignmentId.toString)).unsafeRunSync()
+      Main.run(List("export", "--consignmentId", consignmentId.toString, "--taskToken", taskTokenValue)).unsafeRunSync()
     }
 
-    checkStepFunctionPublishNotCalled()
+    checkStepFunctionPublishCalled("publish_failure_incomplete_file_properties_request_body")
     ex.getMessage should equal(s"$fileId is missing the following properties: foiExemptionCode, heldBy, language, rightsCopyright")
   }
 
   "the export job" should "throw an error if no consignment metadata found" in {
     keycloakGetUser
-    val consignmentId = UUID.fromString("50df01e6-2e5e-4269-97e7-531a755b417d")
-    putFile(s"$consignmentId/7b19b272-d4d1-4d77-bf25-511dc6489d12")
-
-    val ex = intercept[Exception] {
-      Main.run(List("export", "--consignmentId", consignmentId.toString)).unsafeRunSync()
-    }
-
-    checkStepFunctionPublishNotCalled()
-    ex.getMessage should equal(s"No consignment metadata found for consignment $consignmentId")
-  }
-
-  "the export job" should "throw an error if no valid Keycloak user found" in {
-    graphQlGetConsignmentMetadata
-    val consignmentId = UUID.fromString("50df01e6-2e5e-4269-97e7-531a755b417d")
-    putFile(s"$consignmentId/7b19b272-d4d1-4d77-bf25-511dc6489d12")
-
-    val ex = intercept[Exception] {
-      Main.run(List("export", "--consignmentId", consignmentId.toString)).unsafeRunSync()
-    }
-
-    checkStepFunctionPublishNotCalled()
-    ex.getMessage should equal(s"No valid user found $keycloakUserId: HTTP 404 Not Found")
-  }
-
-  "the export job" should "throw an error if an incomplete Keycloak user details found" in {
-    graphQlGetConsignmentMetadata
-    keycloakGetIncompleteUser
-
-    val consignmentId = UUID.fromString("50df01e6-2e5e-4269-97e7-531a755b417d")
-    putFile(s"$consignmentId/7b19b272-d4d1-4d77-bf25-511dc6489d12")
-
-    val ex = intercept[Exception] {
-      Main.run(List("export", "--consignmentId", consignmentId.toString)).unsafeRunSync()
-    }
-
-    checkStepFunctionPublishNotCalled()
-    ex.getMessage should equal(s"Incomplete details for user $keycloakUserId")
-  }
-
-  "the export job" should "should publish the step function success if task token argument provided" in {
-    setUpValidExternalServices()
-
-    val consignmentId = UUID.fromString("50df01e6-2e5e-4269-97e7-531a755b417d")
-    val taskTokenValue = "taskToken1234"
-    putFile(s"$consignmentId/7b19b272-d4d1-4d77-bf25-511dc6489d12")
-    Main.run(List("export", "--consignmentId", consignmentId.toString, "--taskToken", taskTokenValue)).unsafeRunSync()
-
-    wiremockSfnServer.getAllServeEvents.size() should be(1)
-    val expectedRequestBody: String = getExpectedResponseAsString(s"json/publish_success_request_body.json")
-    val eventRequestBody = wiremockSfnServer.getAllServeEvents.get(0).getRequest.getBodyAsString
-    eventRequestBody should equal(expectedRequestBody)
-
-    //check rest of process was completed successfully
-    outputBucketObjects().size should equal(2)
-  }
-
-  "the export job" should "should publish the step function failure if task token argument provided and an error occurred with the export" in {
     stepFunctionPublish
-    graphQlGetConsignmentMetadata
-    keycloakGetIncompleteUser
 
-    val expectedRequestBody: String = getExpectedResponseAsString(s"json/publish_failure_incomplete_user_request_body.json")
     val consignmentId = UUID.fromString("50df01e6-2e5e-4269-97e7-531a755b417d")
-    val taskTokenValue = "taskToken1234"
     putFile(s"$consignmentId/7b19b272-d4d1-4d77-bf25-511dc6489d12")
 
     val ex = intercept[Exception] {
       Main.run(List("export", "--consignmentId", consignmentId.toString, "--taskToken", taskTokenValue)).unsafeRunSync()
     }
 
-    wiremockSfnServer.getAllServeEvents.size() should be(1)
-    val eventRequestBody = wiremockSfnServer.getAllServeEvents.get(0).getRequest.getBodyAsString
-    eventRequestBody should equal(expectedRequestBody)
-    ex.getMessage should equal(s"Incomplete details for user $keycloakUserId")
+    checkStepFunctionPublishCalled("publish_failure_no_consignment_metadata_request_body")
+    ex.getMessage should equal(s"No consignment metadata found for consignment $consignmentId")
+  }
 
-    //check rest of process failed
-    outputBucketObjects().size should equal(0)
+  "the export job" should "throw an error if no valid Keycloak user found" in {
+    graphQlGetConsignmentMetadata
+    stepFunctionPublish
+
+    val consignmentId = UUID.fromString("50df01e6-2e5e-4269-97e7-531a755b417d")
+    putFile(s"$consignmentId/7b19b272-d4d1-4d77-bf25-511dc6489d12")
+
+    val ex = intercept[Exception] {
+      Main.run(List("export", "--consignmentId", consignmentId.toString, "--taskToken", taskTokenValue)).unsafeRunSync()
+    }
+
+    checkStepFunctionPublishCalled("publish_failure_no_valid_user_request_body")
+    ex.getMessage should equal(s"No valid user found $keycloakUserId: HTTP 404 Not Found")
+  }
+
+  "the export job" should "throw an error if an incomplete Keycloak user details found" in {
+    graphQlGetConsignmentMetadata
+    keycloakGetIncompleteUser
+    stepFunctionPublish
+
+    val consignmentId = UUID.fromString("50df01e6-2e5e-4269-97e7-531a755b417d")
+    putFile(s"$consignmentId/7b19b272-d4d1-4d77-bf25-511dc6489d12")
+
+    val ex = intercept[Exception] {
+      Main.run(List("export", "--consignmentId", consignmentId.toString, "--taskToken", taskTokenValue)).unsafeRunSync()
+    }
+
+    checkStepFunctionPublishCalled("publish_failure_incomplete_user_request_body")
+    ex.getMessage should equal(s"Incomplete details for user $keycloakUserId")
   }
 
   private def setUpValidExternalServices() = {
@@ -189,9 +160,12 @@ class MainSpec extends ExternalServiceSpec {
     stepFunctionPublish
   }
 
-  private def checkStepFunctionPublishNotCalled() = {
+  private def checkStepFunctionPublishCalled(expectedJsonRequestFilePath: String) = {
     //If no taskToken step function success call should not be called
-    wiremockSfnServer.getAllServeEvents.size() should be(0)
+    wiremockSfnServer.getAllServeEvents.size() should be(1)
+    val expectedRequestBody: String = getExpectedResponseAsString(s"json/${expectedJsonRequestFilePath}.json")
+    val eventRequestBody = wiremockSfnServer.getAllServeEvents.get(0).getRequest.getBodyAsString
+    eventRequestBody should equal(expectedRequestBody)
   }
 
   private def getExpectedResponseAsString(filePath: String) = {

@@ -9,5 +9,4 @@ WORKDIR /home/consignment-export
 USER consignment-export
 RUN wget $(curl https://api.github.com/repos/nationalarchives/tdr-consignment-export/releases/latest | jq -r '.assets[0].browser_download_url')
 RUN tar -xzf ./tdr-consignment-export.tgz && mkdir export
-## If task token environment variable not present temporarily default to 'unset' to prevent disruption of export process whilst step function is updated
-CMD bash ./tdr-consignment-export/bin/tdr-consignment-export export --consignmentId $CONSIGNMENT_ID --taskToken ${TASK_TOKEN_ENV_VARIABLE:-unset}
+CMD bash ./tdr-consignment-export/bin/tdr-consignment-export export --consignmentId $CONSIGNMENT_ID --taskToken $TASK_TOKEN_ENV_VARIABLE

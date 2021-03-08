@@ -44,7 +44,7 @@ pipeline {
   post {
     success {
       script {
-        if (params.STAGE == "intg") {
+        if (params.STAGE != "prod") {
           tdr.runEndToEndTests(60, params.STAGE, BUILD_URL)
         }
       }

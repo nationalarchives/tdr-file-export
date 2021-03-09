@@ -1,0 +1,6 @@
+5a99b5f Merge pull request #39 from nationalarchives/TDR-846-make-task-token-required
+b3de5fd Merge branch 'master' into TDR-846-make-task-token-required
+99eac04 Merge pull request #40 from nationalarchives/version-bump-35
+4fa3bf1 Setting version to 0.0.6-SNAPSHOT
+b60c622 Remove stale comment
+9858e72 Make taskToken required

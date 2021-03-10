@@ -31,7 +31,8 @@ class S3FilesSpec extends ExportSpec {
       "heldBy",
       "language",
       "legalStatus",
-      "rightsCopyright"
+      "rightsCopyright",
+      "clientSideChecksumValue"
     )
     val validatedMetadata = List(metadata)
 
@@ -60,7 +61,8 @@ class S3FilesSpec extends ExportSpec {
       "heldBy",
       "language",
       "legalStatus",
-      "rightsCopyright"
+      "rightsCopyright",
+      "clientSideChecksumValue"
     )
     val validatedMetadata = List(metadata)
 

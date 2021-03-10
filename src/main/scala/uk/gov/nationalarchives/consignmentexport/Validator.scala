@@ -3,10 +3,9 @@ package uk.gov.nationalarchives.consignmentexport
 import java.time.LocalDateTime
 import java.util.UUID
 
-import cats.effect.IO
-import graphql.codegen.GetConsignmentExport.getConsignmentForExport.GetConsignment.Files
 import cats.implicits._
 import graphql.codegen.GetConsignmentExport.getConsignmentForExport.GetConsignment
+import graphql.codegen.GetConsignmentExport.getConsignmentForExport.GetConsignment.Files
 import uk.gov.nationalarchives.consignmentexport.Validator.ValidatedFileMetadata
 
 class Validator(consignmentId: UUID) {
@@ -46,13 +45,23 @@ class Validator(consignmentId: UUID) {
     f.metadata.heldBy.get,
     f.metadata.language.get,
     f.metadata.legalStatus.get,
-    f.metadata.rightsCopyright.get
+    f.metadata.rightsCopyright.get,
+    f.metadata.sha256ClientSideChecksum.get
   )
 }
 
 object Validator {
 
-  case class ValidatedFileMetadata(fileId: UUID, clientSideFileSize: Long, clientSideLastModifiedDate: LocalDateTime, clientSideOriginalFilePath: String, foiExemptionCode: String, heldBy: String, language: String, legalStatus: String, rightsCopyright: String)
+  case class ValidatedFileMetadata(fileId: UUID,
+                                   clientSideFileSize: Long,
+                                   clientSideLastModifiedDate: LocalDateTime,
+                                   clientSideOriginalFilePath: String,
+                                   foiExemptionCode: String,
+                                   heldBy: String,
+                                   language: String,
+                                   legalStatus: String,
+                                   rightsCopyright: String,
+                                   clientSideChecksum: String)
 
   def apply(consignmentId: UUID): Validator = new Validator(consignmentId)
 }

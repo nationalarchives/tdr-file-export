@@ -23,7 +23,8 @@
             "rightsCopyright": "Crown Copyright",
             "heldBy": "TNA",
             "foiExemptionCode": "open",
-            "language": "English"
+            "language": "English",
+            "sha256ClientSideChecksum": "checksumValue"
           }
 
         }

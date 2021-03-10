@@ -47,7 +47,7 @@ class BagMetadata(keycloakClient: KeycloakClient)(implicit val logger: SelfAware
     val contactName = getContactName(consignment.userid)
 
     Map(
-      InternalSenderIdentifierKey -> consignment.consignmentReference,
+      InternalSenderIdentifierKey -> Some(consignment.consignmentReference),
       ConsignmentSeriesKey -> seriesCode,
       SourceOrganisationKey -> bodyCode,
       ConsignmentStartDatetimeKey -> startDatetime,

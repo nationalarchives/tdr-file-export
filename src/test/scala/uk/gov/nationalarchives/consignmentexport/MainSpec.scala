@@ -105,7 +105,7 @@ class MainSpec extends ExternalServiceSpec {
     }
 
     checkStepFunctionPublishCalled("publish_failure_incomplete_file_properties_request_body")
-    ex.getMessage should equal(s"$fileId is missing the following properties: foiExemptionCode, heldBy, language, rightsCopyright")
+    ex.getMessage should equal(s"$fileId is missing the following properties: foiExemptionCode, heldBy, language, rightsCopyright, sha256ClientSideChecksum")
   }
 
   "the export job" should "throw an error if no consignment metadata found" in {

@@ -169,7 +169,6 @@ class MainSpec extends ExternalServiceSpec {
 
     checkStepFunctionPublishCalled("publish_failure_checksum_mismatch_request_body")
     ex.getMessage should equal(s"Checksum mismatch for file(s): $fileId")
-
   }
 
   private def setUpValidExternalServices() = {

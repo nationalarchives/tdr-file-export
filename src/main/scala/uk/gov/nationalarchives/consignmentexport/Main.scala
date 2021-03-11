@@ -53,9 +53,9 @@ object Main extends CommandIOApp("tdr-consignment-export", "Exports tdr files in
           validatedFileMetadata <- IO.fromEither(validator.extractFileMetadata(consignmentData.files))
           _ <- s3Files.downloadFiles(validatedFileMetadata, config.s3.cleanBucket, consignmentId, basePath)
           bag <- bagit.createBag(consignmentId, basePath, bagMetadata)
+          _ <- IO.fromEither(ChecksumValidator(consignmentId).validateFileChecksums(bag, validatedFileMetadata))
           fileMetadataCsv <- BagAdditionalFiles(bag.getRootDir).createFileMetadataCsv(validatedFileMetadata)
           checksums <- ChecksumCalculator().calculateChecksums(fileMetadataCsv)
-          _ <- IO.fromEither(ChecksumValidator(consignmentId).validateFilesChecksums(checksums.map(_.checksum), validatedFileMetadata))
           _ <- bagit.writeTagManifestRows(bag, checksums)
           // The owner and group in the below command have no effect on the file permissions. It just makes tar idempotent
           _ <- bashCommands.runCommand(s"tar --sort=name --owner=root:0 --group=root:0 --mtime ${java.time.LocalDate.now.toString} -C $basePath -c ./$consignmentId | gzip -n > $tarPath")

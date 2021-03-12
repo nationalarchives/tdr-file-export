@@ -15,7 +15,6 @@ import scala.util.Random
 
 class ChecksumValidatorSpec extends ExportSpec {
 
-  private val consignmentId = UUID.randomUUID()
   private val fileId1 = UUID.randomUUID()
   private val fileId2 = UUID.randomUUID()
   private val fileId3 = UUID.randomUUID()
@@ -24,29 +23,31 @@ class ChecksumValidatorSpec extends ExportSpec {
   private val metadata2 = createValidatedMetadata(fileId2,"clientSideChecksum2")
   private val metadata3 = createValidatedMetadata(fileId3, "clientSideChecksum3")
 
-  "validateFileChecksums" should "should complete successfully if there are no mismatches between checksum values" in {
+  "validateFileChecksums" should "should return empty list if no checksum mismatches" in {
     val checksums = List(
       "clientSideChecksum1",
       "clientSideChecksum2",
       "clientSideChecksum3"
     )
 
-    val attempt: Either[Throwable, IO[Unit]] = ChecksumValidator(consignmentId).validateFileChecksums(createBag(checksums), List(metadata1, metadata2, metadata3))
-    attempt.isRight should be(true)
+    val checksumMismatches = ChecksumValidator().validateFileChecksums(createBag(checksums), List(metadata1, metadata2, metadata3)).unsafeRunSync()
+    checksumMismatches.isEmpty should be(true)
   }
 
-  "validateFileChecksums" should "return an error if there is a mismatch between checksum values" in {
+  "validateFileChecksums" should "return a list of the file ids where a checksum mismatch was found" in {
     val checksums = List(
       "clientSideChecksum1",
       "someDifferentClientSideChecksum1",
       "someDifferentClientSideChecksum2"
     )
 
-    val attempt: Either[Throwable, IO[Unit]] = ChecksumValidator(consignmentId).validateFileChecksums(createBag(checksums), List(metadata1, metadata2, metadata3))
-    attempt.left.value.getMessage should equal(s"Checksum mismatch for file(s): $fileId2\n$fileId3")
+    val checksumMismatches = ChecksumValidator().validateFileChecksums(createBag(checksums), List(metadata1, metadata2, metadata3)).unsafeRunSync()
+    checksumMismatches.size should be(2)
+    checksumMismatches.contains(fileId2) should be(true)
+    checksumMismatches.contains(fileId3) should be(true)
   }
 
-  private def createValidatedMetadata(fileId: UUID, checksumValue: String): ValidatedFileMetadata = {
+ private def createValidatedMetadata(fileId: UUID, checksumValue: String): ValidatedFileMetadata = {
     ValidatedFileMetadata(
       fileId,
       1L,

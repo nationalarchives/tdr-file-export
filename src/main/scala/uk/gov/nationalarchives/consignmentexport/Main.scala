@@ -1,5 +1,6 @@
 package uk.gov.nationalarchives.consignmentexport
 
+import java.lang.RuntimeException
 import java.time.{ZoneOffset, ZonedDateTime}
 import java.util.UUID
 
@@ -53,7 +54,9 @@ object Main extends CommandIOApp("tdr-consignment-export", "Exports tdr files in
           validatedFileMetadata <- IO.fromEither(validator.extractFileMetadata(consignmentData.files))
           _ <- s3Files.downloadFiles(validatedFileMetadata, config.s3.cleanBucket, consignmentId, basePath)
           bag <- bagit.createBag(consignmentId, basePath, bagMetadata)
-          _ <- IO.fromEither(ChecksumValidator(consignmentId).validateFileChecksums(bag, validatedFileMetadata))
+          _ <- ChecksumValidator().validateFileChecksums(bag, validatedFileMetadata).map(csm =>
+            if(csm.nonEmpty) throw new RuntimeException(s"Checksum mismatch for file(s): ${csm.mkString("\n")}")
+          )
           fileMetadataCsv <- BagAdditionalFiles(bag.getRootDir).createFileMetadataCsv(validatedFileMetadata)
           checksums <- ChecksumCalculator().calculateChecksums(fileMetadataCsv)
           _ <- bagit.writeTagManifestRows(bag, checksums)

@@ -9,24 +9,16 @@ import uk.gov.nationalarchives.consignmentexport.Validator.ValidatedFileMetadata
 
 import scala.jdk.CollectionConverters._
 
-class ChecksumValidator(consignmentId: UUID)(implicit val logger: SelfAwareStructuredLogger[IO]) {
+class ChecksumValidator()(implicit val logger: SelfAwareStructuredLogger[IO]) {
 
-  def validateFileChecksums(bag: Bag,
-                            validatedFileMetadata: List[ValidatedFileMetadata]): Either[RuntimeException, IO[Unit]] = {
+  def validateFileChecksums(bag: Bag, validatedFileMetadata: List[ValidatedFileMetadata]): IO[List[UUID]] = {
+    val bagitGeneratedChecksums = bag.getPayLoadManifests.asScala.head.getFileToChecksumMap.values
 
-    val bagitGeneratedChecksums = bag.getPayLoadManifests.asScala.head.getFileToChecksumMap.values()
-
-    val checkSumMismatches: List[UUID] = validatedFileMetadata.filter(fm =>
-      !bagitGeneratedChecksums.contains(fm.clientSideChecksum)).map(_.fileId)
-
-    checkSumMismatches match {
-      case Nil => Right(logger.info(s"File checksums for consignment $consignmentId validated"))
-      case _ => Left(new RuntimeException(s"Checksum mismatch for file(s): ${checkSumMismatches.mkString("\n")}"))
-    }
+    IO(validatedFileMetadata.filterNot(fm => bagitGeneratedChecksums.contains(fm.clientSideChecksum)).map(_.fileId))
   }
 }
 
 object ChecksumValidator {
 
-  def apply(consignmentId: UUID)(implicit logger: SelfAwareStructuredLogger[IO]): ChecksumValidator = new ChecksumValidator(consignmentId)(logger)
+  def apply()(implicit logger: SelfAwareStructuredLogger[IO]): ChecksumValidator = new ChecksumValidator()(logger)
 }

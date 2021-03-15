@@ -105,7 +105,7 @@ class MainSpec extends ExternalServiceSpec {
     }
 
     checkStepFunctionPublishCalled("publish_failure_incomplete_file_properties_request_body")
-    ex.getMessage should equal(s"$fileId is missing the following properties: foiExemptionCode, heldBy, language, rightsCopyright")
+    ex.getMessage should equal(s"$fileId is missing the following properties: foiExemptionCode, heldBy, language, rightsCopyright, sha256ClientSideChecksum")
   }
 
   "the export job" should "throw an error if no consignment metadata found" in {
@@ -152,6 +152,23 @@ class MainSpec extends ExternalServiceSpec {
 
     checkStepFunctionPublishCalled("publish_failure_incomplete_user_request_body")
     ex.getMessage should equal(s"Incomplete details for user $keycloakUserId")
+  }
+
+  "the export job" should "throw an error if there are checksum mismatches" in {
+    graphQlGetIncorrectCheckSumConsignmentMetadata
+    keycloakGetUser
+    stepFunctionPublish
+
+    val consignmentId = UUID.fromString("50df01e6-2e5e-4269-97e7-531a755b417d")
+    val fileId = "7b19b272-d4d1-4d77-bf25-511dc6489d12"
+    putFile(s"$consignmentId/$fileId")
+
+    val ex = intercept[Exception] {
+      Main.run(List("export", "--consignmentId", consignmentId.toString, "--taskToken", taskTokenValue)).unsafeRunSync()
+    }
+
+    checkStepFunctionPublishCalled("publish_failure_checksum_mismatch_request_body")
+    ex.getMessage should equal(s"Checksum mismatch for file(s): $fileId")
   }
 
   private def setUpValidExternalServices() = {

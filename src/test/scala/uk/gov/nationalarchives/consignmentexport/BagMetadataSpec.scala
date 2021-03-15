@@ -17,7 +17,7 @@ class BagMetadataSpec extends ExportSpec {
   private val transferringBody = TransferringBody(Some("tb-code"))
   private val consignmentRef = "consignmentReference-1234"
   private val consignment = GetConsignment(
-    userId, Some(fixedDateTime), Some(fixedDateTime), Some(fixedDateTime), Some(consignmentRef),Some(series), Some(transferringBody), List()
+    userId, Some(fixedDateTime), Some(fixedDateTime), Some(fixedDateTime), consignmentRef,Some(series), Some(transferringBody), List()
   )
   private val userRepresentation = new UserRepresentation()
   userRepresentation.setFirstName("FirstName")
@@ -44,7 +44,7 @@ class BagMetadataSpec extends ExportSpec {
     val consignmentId = UUID.randomUUID()
     val missingPropertyKey = "Consignment-Start-Datetime"
     val incompleteConsignment = GetConsignment(
-      userId, None, Some(fixedDateTime), Some(fixedDateTime), Some(consignmentRef), Some(series), Some(transferringBody), List()
+      userId, None, Some(fixedDateTime), Some(fixedDateTime), consignmentRef, Some(series), Some(transferringBody), List()
     )
     val mockKeycloakClient = mock[KeycloakClient]
 

@@ -4,7 +4,6 @@ import java.nio.file.Paths
 import java.time.LocalDateTime
 import java.util.UUID
 
-import cats.effect.IO
 import gov.loc.repository.bagit.domain.Version.LATEST_BAGIT_VERSION
 import gov.loc.repository.bagit.domain._
 import gov.loc.repository.bagit.hash.StandardSupportedAlgorithms
@@ -23,25 +22,25 @@ class ChecksumValidatorSpec extends ExportSpec {
   private val metadata2 = createValidatedMetadata(fileId2,"clientSideChecksum2")
   private val metadata3 = createValidatedMetadata(fileId3, "clientSideChecksum3")
 
-  "validateFileChecksums" should "should return empty list if no checksum mismatches" in {
+  "findChecksumMismatches" should "should return empty list if no checksum mismatches" in {
     val checksums = List(
       "clientSideChecksum1",
       "clientSideChecksum2",
       "clientSideChecksum3"
     )
 
-    val checksumMismatches = ChecksumValidator().validateFileChecksums(createBag(checksums), List(metadata1, metadata2, metadata3)).unsafeRunSync()
+    val checksumMismatches = ChecksumValidator().findChecksumMismatches(createBag(checksums), List(metadata1, metadata2, metadata3))
     checksumMismatches.isEmpty should be(true)
   }
 
-  "validateFileChecksums" should "return a list of the file ids where a checksum mismatch was found" in {
+  "findChecksumMismatches" should "return a list of the file ids where a checksum mismatch was found" in {
     val checksums = List(
       "clientSideChecksum1",
       "someDifferentClientSideChecksum1",
       "someDifferentClientSideChecksum2"
     )
 
-    val checksumMismatches = ChecksumValidator().validateFileChecksums(createBag(checksums), List(metadata1, metadata2, metadata3)).unsafeRunSync()
+    val checksumMismatches = ChecksumValidator().findChecksumMismatches(createBag(checksums), List(metadata1, metadata2, metadata3))
     checksumMismatches.size should be(2)
     checksumMismatches.contains(fileId2) should be(true)
     checksumMismatches.contains(fileId3) should be(true)

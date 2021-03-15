@@ -22,7 +22,6 @@ class BagMetadata(keycloakClient: KeycloakClient)(implicit val logger: SelfAware
     }
   }
 
-
   private def getConsignmentDetails(consignment: GetConsignment, exportDatetime: ZonedDateTime): Map[String, Option[String]] = {
     val seriesCode = for {
       series <- consignment.series

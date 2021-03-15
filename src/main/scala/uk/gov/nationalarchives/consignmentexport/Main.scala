@@ -54,9 +54,8 @@ object Main extends CommandIOApp("tdr-consignment-export", "Exports tdr files in
           validatedFileMetadata <- IO.fromEither(validator.extractFileMetadata(consignmentData.files))
           _ <- s3Files.downloadFiles(validatedFileMetadata, config.s3.cleanBucket, consignmentId, basePath)
           bag <- bagit.createBag(consignmentId, basePath, bagMetadata)
-          _ <- ChecksumValidator().validateFileChecksums(bag, validatedFileMetadata).map(csm =>
-            if(csm.nonEmpty) throw new RuntimeException(s"Checksum mismatch for file(s): ${csm.mkString("\n")}")
-          )
+          checkSumMismatches = ChecksumValidator().findChecksumMismatches(bag, validatedFileMetadata)
+          _ = if(checkSumMismatches.nonEmpty) throw new RuntimeException(s"Checksum mismatch for file(s): ${checkSumMismatches.mkString("\n")}")
           fileMetadataCsv <- BagAdditionalFiles(bag.getRootDir).createFileMetadataCsv(validatedFileMetadata)
           checksums <- ChecksumCalculator().calculateChecksums(fileMetadataCsv)
           _ <- bagit.writeTagManifestRows(bag, checksums)

@@ -48,11 +48,23 @@ class Validator(consignmentId: UUID) {
     f.metadata.legalStatus.get,
     f.metadata.rightsCopyright.get
   )
+
+  private def validatedFfidMetadata(f: Files): ValidatedFfidMetadata = ValidatedFfidMetadata(f.fileId, // the FFID matches has properties that are Options
+    f.ffidMetadata.software,
+    f.ffidMetadata.softwareVersion,
+    f.ffidMetadata.binarySignatureFileVersion,
+    f.ffidMetadata.containerSignatureFileVersion,
+    f.ffidMetadata.method,
+    f.ffidMetadata.matches, // not sure how to account for the variable number FFIDMetadataInputMatches. Just set an upper limit of matches and leave the rest empty?
+    //I guess in the CSV, we could make the number of "matches" columns vary (using a for loop/map) depending on the number that have been returned?
+    f.ffidMetadata.datetime
+  )
 }
 
 object Validator {
 
   case class ValidatedFileMetadata(fileId: UUID, clientSideFileSize: Long, clientSideLastModifiedDate: LocalDateTime, clientSideOriginalFilePath: String, foiExemptionCode: String, heldBy: String, language: String, legalStatus: String, rightsCopyright: String)
-
+  //I wasn't sure if the FfidMetadata should be a part of the validatedMetadata or if it should be separate
+  case class ValidatedFfidMetadata(fileId: UUID, software: String, softwareVersion: String, binarySignatureFileVersion: String, containerSignatureFileVersion: String, method: String, matches: List[FFIDMetadataInputMatches], datetime: Long) // the matches list will have a variable number of FFIDMetadataInputMatches
   def apply(consignmentId: UUID): Validator = new Validator(consignmentId)
 }

@@ -22,7 +22,8 @@ class BagAdditionalFilesSpec extends ExportSpec {
       "heldBy",
       "language",
       "legalStatus",
-      "rightsCopyright"
+      "rightsCopyright",
+      "clientSideChecksumValue"
     )
     val file = bagAdditionalFiles.createFileMetadataCsv(List(metadata)).unsafeRunSync()
 

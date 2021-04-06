@@ -2,12 +2,10 @@ package uk.gov.nationalarchives.consignmentexport
 
 import java.time.LocalDateTime
 import java.util.UUID
-
-import cats.effect.IO
-import graphql.codegen.GetConsignmentExport.getConsignmentForExport.GetConsignment.Files
 import cats.implicits._
 import graphql.codegen.GetConsignmentExport.getConsignmentForExport.GetConsignment
-import uk.gov.nationalarchives.consignmentexport.Validator.ValidatedFileMetadata
+import graphql.codegen.GetConsignmentExport.getConsignmentForExport.GetConsignment.Files
+import uk.gov.nationalarchives.consignmentexport.Validator.{ValidatedFfidMetadata, ValidatedFileMetadata}
 
 class Validator(consignmentId: UUID) {
   def validateConsignmentHasFiles(consignmentData: GetConsignment): Either[RuntimeException, Files] = {
@@ -46,7 +44,8 @@ class Validator(consignmentId: UUID) {
     f.metadata.heldBy.get,
     f.metadata.language.get,
     f.metadata.legalStatus.get,
-    f.metadata.rightsCopyright.get
+    f.metadata.rightsCopyright.get,
+    f.metadata.sha256ClientSideChecksum.get
   )
 
   private def validatedFfidMetadata(f: Files): ValidatedFfidMetadata = ValidatedFfidMetadata(f.fileId, // the FFID matches has properties that are Options
@@ -63,8 +62,18 @@ class Validator(consignmentId: UUID) {
 
 object Validator {
 
-  case class ValidatedFileMetadata(fileId: UUID, clientSideFileSize: Long, clientSideLastModifiedDate: LocalDateTime, clientSideOriginalFilePath: String, foiExemptionCode: String, heldBy: String, language: String, legalStatus: String, rightsCopyright: String)
-  //I wasn't sure if the FfidMetadata should be a part of the validatedMetadata or if it should be separate
   case class ValidatedFfidMetadata(fileId: UUID, software: String, softwareVersion: String, binarySignatureFileVersion: String, containerSignatureFileVersion: String, method: String, matches: List[FFIDMetadataInputMatches], datetime: Long) // the matches list will have a variable number of FFIDMetadataInputMatches
+
+  case class ValidatedFileMetadata(fileId: UUID,
+                                   clientSideFileSize: Long,
+                                   clientSideLastModifiedDate: LocalDateTime,
+                                   clientSideOriginalFilePath: String,
+                                   foiExemptionCode: String,
+                                   heldBy: String,
+                                   language: String,
+                                   legalStatus: String,
+                                   rightsCopyright: String,
+                                   clientSideChecksum: String)
+
   def apply(consignmentId: UUID): Validator = new Validator(consignmentId)
 }

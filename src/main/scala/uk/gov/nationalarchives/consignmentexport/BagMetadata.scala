@@ -22,7 +22,6 @@ class BagMetadata(keycloakClient: KeycloakClient)(implicit val logger: SelfAware
     }
   }
 
-
   private def getConsignmentDetails(consignment: GetConsignment, exportDatetime: ZonedDateTime): Map[String, Option[String]] = {
     val seriesCode = for {
       series <- consignment.series
@@ -47,7 +46,7 @@ class BagMetadata(keycloakClient: KeycloakClient)(implicit val logger: SelfAware
     val contactName = getContactName(consignment.userid)
 
     Map(
-      InternalSenderIdentifierKey -> consignment.consignmentReference,
+      InternalSenderIdentifierKey -> Some(consignment.consignmentReference),
       ConsignmentSeriesKey -> seriesCode,
       SourceOrganisationKey -> bodyCode,
       ConsignmentStartDatetimeKey -> startDatetime,

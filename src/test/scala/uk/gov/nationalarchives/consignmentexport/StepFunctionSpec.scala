@@ -25,7 +25,7 @@ class StepFunctionSpec extends ExportSpec {
     val taskToken = "taskToken1234"
     val exportOutput = ExportOutput(UUID.randomUUID(), "consignmentReference", "tb-code")
 
-    StepFunction(sfnUtils).publishSuccess(Some(taskToken), exportOutput).unsafeRunSync()
+    StepFunction(sfnUtils).publishSuccess(taskToken, exportOutput).unsafeRunSync()
     taskTokenCaptor.getValue should equal(taskToken)
     exportOutputCaptor.getValue should equal(exportOutput.asJson)
   }
@@ -41,7 +41,7 @@ class StepFunctionSpec extends ExportSpec {
     val taskToken = "taskToken1234"
     val error = "some error message"
 
-    StepFunction(sfnUtils).publishFailure(Some(taskToken), error).unsafeRunSync()
+    StepFunction(sfnUtils).publishFailure(taskToken, error).unsafeRunSync()
     taskTokenCaptor.getValue should equal(taskToken)
     errorCaptor.getValue should equal(error)
   }

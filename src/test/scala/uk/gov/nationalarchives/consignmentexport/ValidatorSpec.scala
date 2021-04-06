@@ -21,7 +21,8 @@ class ValidatorSpec extends ExportSpec {
       "heldBy".some,
       "language".some,
       "legalStatus".some,
-      "rightsCopyright".some)
+      "rightsCopyright".some,
+      "clientSideChecksum".some)
   )
 
   private def consignment(consignmentId: UUID, metadata: List[Files] = List(completeFileMetadata)): GetConsignment = GetConsignment(
@@ -29,7 +30,7 @@ class ValidatorSpec extends ExportSpec {
     ZonedDateTime.now().some,
     ZonedDateTime.now().some,
     ZonedDateTime.now().some,
-    "consignmentRef".some,
+    "consignmentRef",
     Series("series-code".some).some,
     TransferringBody("tb-code".some).some,
     metadata
@@ -83,7 +84,8 @@ class ValidatorSpec extends ExportSpec {
         "heldBy".some,
         "language".some,
         "legalStatus".some,
-        "rightsCopyright".some
+        "rightsCopyright".some,
+        "clientSideChecksum".some
       )
     )
     val metadataTwo = Files(
@@ -96,7 +98,8 @@ class ValidatorSpec extends ExportSpec {
         Option.empty,
         Option.empty,
         "legalStatus".some,
-        "rightsCopyright".some
+        "rightsCopyright".some,
+        "clientSideChecksum".some
       )
     )
     val file: Either[Throwable, List[ValidatedFileMetadata]] = validator.extractFileMetadata(List(metadata, metadataTwo))
@@ -117,7 +120,8 @@ class ValidatorSpec extends ExportSpec {
         "heldBy".some,
         "language".some,
         "legalStatus".some,
-        "rightsCopyright".some
+        "rightsCopyright".some,
+        "clientSideChecksum".some
       )
     )
     val metadataTwo = Files(
@@ -130,7 +134,8 @@ class ValidatorSpec extends ExportSpec {
         "heldBy".some,
         Option.empty,
         Option.empty,
-        "rightsCopyright".some
+        "rightsCopyright".some,
+        "clientSideChecksum".some
       )
     )
     val file: Either[Throwable, List[ValidatedFileMetadata]] = validator.extractFileMetadata(List(metadata, metadataTwo))

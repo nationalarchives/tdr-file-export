@@ -1,0 +1,8 @@
+e41da0f Merge pull request #44 from nationalarchives/TDR-923-validate-checksums-for-files
+ecc6d49 Rename function to reflect return list of mismatches
+b9e0c64 Simplify checksum validation function
+4e00ff6 Validate uploaded file checksums
+13964d8 Check bagit generated file checksums against client side checksums
+6858097 Update with latest version of graphql schema
+b34dcf6 Merge pull request #43 from nationalarchives/version-bump-37
+fe2d061 Setting version to 0.0.9-SNAPSHOT

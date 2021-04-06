@@ -12,15 +12,11 @@ import uk.gov.nationalarchives.consignmentexport.StepFunction.ExportOutput
 
 class StepFunction(stepFunctionUtils: StepFunctionUtils)(implicit val logger: SelfAwareStructuredLogger[IO]) {
 
-  //If there is a taskToken value means Step Function requires response as using callback pattern
-  //Temporarily make taskToken option to allow for deployment of code without disruption of service
-  def publishSuccess(taskToken: Option[String], exportOutput: ExportOutput): IO[SendTaskSuccessResponse] =
-    taskToken.map(tt => stepFunctionUtils.sendTaskSuccessRequest(tt, exportOutput.asJson))
-      .getOrElse(IO(SendTaskSuccessResponse.builder.build()))
+  def publishSuccess(taskToken: String, exportOutput: ExportOutput): IO[SendTaskSuccessResponse] =
+    stepFunctionUtils.sendTaskSuccessRequest(taskToken, exportOutput.asJson)
 
-  def publishFailure(taskToken: Option[String], cause: String): IO[SendTaskFailureResponse] =
-    taskToken.map(tt => stepFunctionUtils.sendTaskFailureRequest(tt, cause))
-      .getOrElse(IO(SendTaskFailureResponse.builder.build()))
+  def publishFailure(taskToken: String, cause: String): IO[SendTaskFailureResponse] =
+    stepFunctionUtils.sendTaskFailureRequest(taskToken, cause)
 }
 
 object StepFunction {
@@ -28,5 +24,5 @@ object StepFunction {
   def apply(stepFunctionUtils: StepFunctionUtils)
            (implicit logger: SelfAwareStructuredLogger[IO]): StepFunction = new StepFunction(stepFunctionUtils)(logger)
 
-  case class ExportOutput(userId: UUID, consignmentReference: String = "", transferringBodyCode: String = "")
+  case class ExportOutput(userId: UUID, consignmentReference: String, transferringBodyCode: String)
 }

@@ -80,9 +80,9 @@ class GraphQlApiSpec extends ExportSpec {
     val consignmentId = UUID.randomUUID()
     val fileId = UUID.randomUUID()
     val lastModified = LocalDateTime.now().some
-    val fileMetadata = Metadata(1L.some, lastModified, "clientSideOriginalFilePath".some, "foiExemptionCode".some, "heldBy".some, "language".some, "legalStatus".some, "rightsCopyright".some)
+    val fileMetadata = Metadata(1L.some, lastModified, "clientSideOriginalFilePath".some, "foiExemptionCode".some, "heldBy".some, "language".some, "legalStatus".some, "rightsCopyright".some, "clientSideChecksum".some)
     val consignment = GetConsignmentExport.getConsignmentForExport.GetConsignment(
-      userId, Some(fixedDate), Some(fixedDate), Some(fixedDate), Some(consignmentRef), Some(series), Some(transferringBody), List(Files(fileId, fileMetadata))
+      userId, Some(fixedDate), Some(fixedDate), Some(fixedDate), consignmentRef, Some(series), Some(transferringBody), List(Files(fileId, fileMetadata))
     )
 
     doAnswer(() => Future(new BearerAccessToken("token"))).when(keycloak).serviceAccountToken[Identity](any[String], any[String])(any[SttpBackend[Identity, Nothing, NothingT]], any[ClassTag[Identity[_]]])
@@ -96,7 +96,7 @@ class GraphQlApiSpec extends ExportSpec {
     response.get.exportDatetime should be(Some(fixedDate))
     response.get.series should be(Some(series))
     response.get.transferringBody should be(Some(transferringBody))
-    response.get.consignmentReference should be(Some(consignmentRef))
+    response.get.consignmentReference should be(consignmentRef)
   }
 
   "the getConsignmentMetadata method" should "throw an exception if no data is returned" in {

@@ -1,11 +1,12 @@
 package uk.gov.nationalarchives.consignmentexport
 
-import java.time.LocalDateTime
-import java.util.UUID
 import cats.implicits._
 import graphql.codegen.GetConsignmentExport.getConsignmentForExport.GetConsignment
 import graphql.codegen.GetConsignmentExport.getConsignmentForExport.GetConsignment.Files
-import uk.gov.nationalarchives.consignmentexport.Validator.{ValidatedFfidMetadata, ValidatedFileMetadata}
+import uk.gov.nationalarchives.consignmentexport.Validator.{ValidatedFFIDMetadata, ValidatedFileMetadata}
+
+import java.time.LocalDateTime
+import java.util.UUID
 
 class Validator(consignmentId: UUID) {
   def validateConsignmentHasFiles(consignmentData: GetConsignment): Either[RuntimeException, Files] = {
@@ -36,6 +37,19 @@ class Validator(consignmentId: UUID) {
     }
   }
 
+  def extractFFIDMetadata(filesList: List[Files]): Either[RuntimeException, List[ValidatedFFIDMetadata]] = {
+    val fileErrors = filesList.filter(_.ffidMetadata.isEmpty).map(f => s"FFID metadata is missing for file id ${f.fileId}")
+    fileErrors match {
+      case Nil => Right(filesList.flatMap(file => {
+        val metadata = file.ffidMetadata.get
+        metadata.matches.map(mm => {
+          ValidatedFFIDMetadata(file.metadata.clientSideOriginalFilePath.get, mm.extension.getOrElse(""), mm.puid.getOrElse(""), metadata.software, metadata.softwareVersion, metadata.binarySignatureFileVersion, metadata.containerSignatureFileVersion)
+        })
+      }))
+      case _ => Left(new RuntimeException(fileErrors.mkString("\n")))
+    }
+  }
+
   private def validatedMetadata(f: Files): ValidatedFileMetadata = ValidatedFileMetadata(f.fileId,
     f.metadata.clientSideFileSize.get,
     f.metadata.clientSideLastModifiedDate.get,
@@ -48,21 +62,17 @@ class Validator(consignmentId: UUID) {
     f.metadata.sha256ClientSideChecksum.get
   )
 
-  private def validatedFfidMetadata(f: Files): ValidatedFfidMetadata = ValidatedFfidMetadata(f.fileId, // the FFID matches has properties that are Options
-    f.ffidMetadata.software,
-    f.ffidMetadata.softwareVersion,
-    f.ffidMetadata.binarySignatureFileVersion,
-    f.ffidMetadata.containerSignatureFileVersion,
-    f.ffidMetadata.method,
-    f.ffidMetadata.matches, // not sure how to account for the variable number FFIDMetadataInputMatches. Just set an upper limit of matches and leave the rest empty?
-    //I guess in the CSV, we could make the number of "matches" columns vary (using a for loop/map) depending on the number that have been returned?
-    f.ffidMetadata.datetime
-  )
 }
 
 object Validator {
 
-  case class ValidatedFfidMetadata(fileId: UUID, software: String, softwareVersion: String, binarySignatureFileVersion: String, containerSignatureFileVersion: String, method: String, matches: List[FFIDMetadataInputMatches], datetime: Long) // the matches list will have a variable number of FFIDMetadataInputMatches
+  case class ValidatedFFIDMetadata(filePath: String,
+                                   extension: String,
+                                   puid: String,
+                                   software: String,
+                                   softwareVersion: String,
+                                   binarySignatureFileVersion: String,
+                                   containerSignatureFileVersion: String)
 
   case class ValidatedFileMetadata(fileId: UUID,
                                    clientSideFileSize: Long,

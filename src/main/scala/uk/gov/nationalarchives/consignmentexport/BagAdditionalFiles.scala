@@ -2,10 +2,9 @@ package uk.gov.nationalarchives.consignmentexport
 
 import java.io.File
 import java.nio.file.Path
-
 import cats.effect.IO
 import com.github.tototoshi.csv.CSVWriter
-import uk.gov.nationalarchives.consignmentexport.Validator.{ValidatedFileMetadata, ValidatedFfidMetadata}
+import uk.gov.nationalarchives.consignmentexport.Validator.{ValidatedFFIDMetadata, ValidatedFileMetadata}
 
 class BagAdditionalFiles(rootDirectory: Path) {
 
@@ -15,27 +14,18 @@ class BagAdditionalFiles(rootDirectory: Path) {
     writeToCsv("file-metadata.csv", header, fileMetadataRows)
   }
 
-  def createFfidMetadataCsv(ffidMetadataList: List[ValidatedFfidMetadata]): IO[File] = {
-    //I assume for the matches, there's going to be "Extension1", "IdentificationBasis1", "PUID1", "Extension2", "IdentificationBasis2", "PUID2",..."DateTime" maybe?
-    val header = List("Software", "SoftwareVersion", "BinarySignatureFileVersion", "ContainerSignatureFileVersion", "Method", "Extension", "IdentificationBasis", "PUID", "DateTime")
-
-    val ffidMetadataRows = ffidMetadataList.map{
-      f =>
-        val rowFirstPart = List(f.software, f.softwareVersion, f.binarySignatureFileVersion, f.containerSignatureFileVersion, f.method)
-        val rowSecondPart = f.matches // maybe the max number of matches could feed into the header length
-        val rowThirdPart = List(f.datetime)
-
-      rowFirstPart ++ rowSecondPart ++ rowThirdPart
-    }
-
-    writeToCsv("ffid-metadata.csv", header, ffidMetadataRows)
+  def createFfidMetadataCsv(ffidMetadataList: List[ValidatedFFIDMetadata]): IO[File] = {
+    val header = List("Filepath","Extension","PUID","FFID-Software","FFID-SoftwareVersion","FFID-BinarySignatureFileVersion","FFID-ContainerSignatureFileVersion")
+    val metadataRows = ffidMetadataList.map(f => {
+      List(f.filePath, f.extension, f.puid, f.software, f.softwareVersion, f.binarySignatureFileVersion, f.containerSignatureFileVersion)
+    })
+    writeToCsv("ffid-metadata.csv", header, metadataRows)
   }
-
 
   private def writeToCsv(fileName: String, header: List[String], metadataRows: List[List[Any]]): IO[File] = {
     val file = new File(s"$rootDirectory/$fileName")
     val writer = CSVWriter.open(file)
-    writer.writeAll(List(header :: metadataRows))
+    writer.writeAll(header :: metadataRows)
     writer.close()
     IO(file)
   }

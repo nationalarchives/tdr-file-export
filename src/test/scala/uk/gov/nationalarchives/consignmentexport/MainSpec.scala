@@ -108,6 +108,23 @@ class MainSpec extends ExternalServiceSpec {
     ex.getMessage should equal(s"$fileId is missing the following properties: foiExemptionCode, heldBy, language, rightsCopyright, sha256ClientSideChecksum")
   }
 
+  "the export job" should "throw an error if the ffid metadata is missing" in {
+    graphQlGetConsignmentMissingFfidMetadata
+    keycloakGetUser
+    stepFunctionPublish
+
+    val consignmentId = UUID.fromString("2bb446f2-eb15-4b83-9c69-53b559232d84")
+    val fileId = UUID.fromString("3381a880-4e9a-4663-b4c6-97dc4018835e")
+    putFile(s"$consignmentId/$fileId")
+
+    val ex = intercept[Exception] {
+      Main.run(List("export", "--consignmentId", consignmentId.toString, "--taskToken", taskTokenValue)).unsafeRunSync()
+    }
+
+    checkStepFunctionPublishCalled("publish_failure_missing_ffid_metadata_request_body")
+    ex.getMessage should equal(s"FFID metadata is missing for file id $fileId")
+  }
+
   "the export job" should "throw an error if no consignment metadata found" in {
     keycloakGetUser
     stepFunctionPublish

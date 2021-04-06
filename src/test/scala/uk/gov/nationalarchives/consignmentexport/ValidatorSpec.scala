@@ -22,7 +22,8 @@ class ValidatorSpec extends ExportSpec {
       "language".some,
       "legalStatus".some,
       "rightsCopyright".some,
-      "clientSideChecksum".some)
+      "clientSideChecksum".some),
+    Option.empty
   )
 
   private def consignment(consignmentId: UUID, metadata: List[Files] = List(completeFileMetadata)): GetConsignment = GetConsignment(
@@ -86,7 +87,8 @@ class ValidatorSpec extends ExportSpec {
         "legalStatus".some,
         "rightsCopyright".some,
         "clientSideChecksum".some
-      )
+      ),
+      Option.empty
     )
     val metadataTwo = Files(
       fileIdTwo,
@@ -100,7 +102,8 @@ class ValidatorSpec extends ExportSpec {
         "legalStatus".some,
         "rightsCopyright".some,
         "clientSideChecksum".some
-      )
+      ),
+      Option.empty
     )
     val file: Either[Throwable, List[ValidatedFileMetadata]] = validator.extractFileMetadata(List(metadata, metadataTwo))
     file.left.value.getMessage should equal(
@@ -122,7 +125,8 @@ class ValidatorSpec extends ExportSpec {
         "legalStatus".some,
         "rightsCopyright".some,
         "clientSideChecksum".some
-      )
+      ),
+      Option.empty
     )
     val metadataTwo = Files(
       fileId,
@@ -136,7 +140,8 @@ class ValidatorSpec extends ExportSpec {
         Option.empty,
         "rightsCopyright".some,
         "clientSideChecksum".some
-      )
+      ),
+      Option.empty
     )
     val file: Either[Throwable, List[ValidatedFileMetadata]] = validator.extractFileMetadata(List(metadata, metadataTwo))
     file.left.value.getMessage should equal(s"$fileId is missing the following properties: language, legalStatus")

@@ -25,8 +25,22 @@
             "foiExemptionCode": "open",
             "language": "English",
             "sha256ClientSideChecksum": "cd0aa9856147b6c5b4ff2b7dfee5da20aa38253099ef1b4a64aced233c9afe29"
+          },
+          "ffidMetadata": {
+            "method": "pronom",
+            "softwareVersion": "6.5",
+            "datetime": 1617704135359,
+            "software": "Droid",
+            "matches": [
+              {
+                "extension": null,
+                "identificationBasis": "",
+                "puid": null
+              }
+            ],
+            "containerSignatureFileVersion": "DROID_SignatureFile_V96.xml",
+            "binarySignatureFileVersion": "container-signature-20200121.xml"
           }
-
         }
       ]
     }

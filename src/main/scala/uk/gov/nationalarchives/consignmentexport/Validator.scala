@@ -1,12 +1,12 @@
 package uk.gov.nationalarchives.consignmentexport
 
-import java.time.LocalDateTime
-import java.util.UUID
-
 import cats.implicits._
 import graphql.codegen.GetConsignmentExport.getConsignmentForExport.GetConsignment
 import graphql.codegen.GetConsignmentExport.getConsignmentForExport.GetConsignment.Files
-import uk.gov.nationalarchives.consignmentexport.Validator.ValidatedFileMetadata
+import uk.gov.nationalarchives.consignmentexport.Validator.{ValidatedFFIDMetadata, ValidatedFileMetadata}
+
+import java.time.LocalDateTime
+import java.util.UUID
 
 class Validator(consignmentId: UUID) {
   def validateConsignmentHasFiles(consignmentData: GetConsignment): Either[RuntimeException, Files] = {
@@ -37,6 +37,19 @@ class Validator(consignmentId: UUID) {
     }
   }
 
+  def extractFFIDMetadata(filesList: List[Files]): Either[RuntimeException, List[ValidatedFFIDMetadata]] = {
+    val fileErrors = filesList.filter(_.ffidMetadata.isEmpty).map(f => s"FFID metadata is missing for file id ${f.fileId}")
+    fileErrors match {
+      case Nil => Right(filesList.flatMap(file => {
+        val metadata = file.ffidMetadata.get
+        metadata.matches.map(mm => {
+          ValidatedFFIDMetadata(file.metadata.clientSideOriginalFilePath.get, mm.extension.getOrElse(""), mm.puid.getOrElse(""), metadata.software, metadata.softwareVersion, metadata.binarySignatureFileVersion, metadata.containerSignatureFileVersion)
+        })
+      }))
+      case _ => Left(new RuntimeException(fileErrors.mkString("\n")))
+    }
+  }
+
   private def validatedMetadata(f: Files): ValidatedFileMetadata = ValidatedFileMetadata(f.fileId,
     f.metadata.clientSideFileSize.get,
     f.metadata.clientSideLastModifiedDate.get,
@@ -48,9 +61,18 @@ class Validator(consignmentId: UUID) {
     f.metadata.rightsCopyright.get,
     f.metadata.sha256ClientSideChecksum.get
   )
+
 }
 
 object Validator {
+
+  case class ValidatedFFIDMetadata(filePath: String,
+                                   extension: String,
+                                   puid: String,
+                                   software: String,
+                                   softwareVersion: String,
+                                   binarySignatureFileVersion: String,
+                                   containerSignatureFileVersion: String)
 
   case class ValidatedFileMetadata(fileId: UUID,
                                    clientSideFileSize: Long,

@@ -14,7 +14,7 @@
       },
       "files": [
         {
-          "fileId": "7b19b272-d4d1-4d77-bf25-511dc6489d12",
+          "fileId": "3381a880-4e9a-4663-b4c6-97dc4018835e",
           "metadata": {
             "clientSideOriginalFilePath": "originalPath",
             "legalStatus": "Public Record",
@@ -24,22 +24,7 @@
             "heldBy": "TNA",
             "foiExemptionCode": "open",
             "language": "English",
-            "sha256ClientSideChecksum": "differentChecksum"
-          },
-          "ffidMetadata": {
-            "method": "pronom",
-            "softwareVersion": "6.5",
-            "datetime": 1617704135359,
-            "software": "Droid",
-            "matches": [
-              {
-                "extension": null,
-                "identificationBasis": "",
-                "puid": null
-              }
-            ],
-            "containerSignatureFileVersion": "DROID_SignatureFile_V96.xml",
-            "binarySignatureFileVersion": "container-signature-20200121.xml"
+            "sha256ClientSideChecksum": "cd0aa9856147b6c5b4ff2b7dfee5da20aa38253099ef1b4a64aced233c9afe29"
           }
         }
       ]

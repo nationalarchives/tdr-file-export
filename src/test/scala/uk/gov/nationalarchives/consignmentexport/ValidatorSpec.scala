@@ -2,12 +2,12 @@ package uk.gov.nationalarchives.consignmentexport
 
 import java.time.{LocalDateTime, ZonedDateTime}
 import java.util.UUID
-
 import cats.implicits._
 import graphql.codegen.GetConsignmentExport.getConsignmentForExport.GetConsignment
-import graphql.codegen.GetConsignmentExport.getConsignmentForExport.GetConsignment.Files.Metadata
+import graphql.codegen.GetConsignmentExport.getConsignmentForExport.GetConsignment.Files.FfidMetadata.Matches
+import graphql.codegen.GetConsignmentExport.getConsignmentForExport.GetConsignment.Files.{FfidMetadata, Metadata}
 import graphql.codegen.GetConsignmentExport.getConsignmentForExport.GetConsignment.{Files, Series, TransferringBody}
-import uk.gov.nationalarchives.consignmentexport.Validator.ValidatedFileMetadata
+import uk.gov.nationalarchives.consignmentexport.Validator.{ValidatedFFIDMetadata, ValidatedFileMetadata}
 
 class ValidatorSpec extends ExportSpec {
 
@@ -22,7 +22,8 @@ class ValidatorSpec extends ExportSpec {
       "language".some,
       "legalStatus".some,
       "rightsCopyright".some,
-      "clientSideChecksum".some)
+      "clientSideChecksum".some),
+    Option.empty
   )
 
   private def consignment(consignmentId: UUID, metadata: List[Files] = List(completeFileMetadata)): GetConsignment = GetConsignment(
@@ -86,7 +87,8 @@ class ValidatorSpec extends ExportSpec {
         "legalStatus".some,
         "rightsCopyright".some,
         "clientSideChecksum".some
-      )
+      ),
+      Option.empty
     )
     val metadataTwo = Files(
       fileIdTwo,
@@ -100,7 +102,8 @@ class ValidatorSpec extends ExportSpec {
         "legalStatus".some,
         "rightsCopyright".some,
         "clientSideChecksum".some
-      )
+      ),
+      Option.empty
     )
     val file: Either[Throwable, List[ValidatedFileMetadata]] = validator.extractFileMetadata(List(metadata, metadataTwo))
     file.left.value.getMessage should equal(
@@ -122,7 +125,8 @@ class ValidatorSpec extends ExportSpec {
         "legalStatus".some,
         "rightsCopyright".some,
         "clientSideChecksum".some
-      )
+      ),
+      Option.empty
     )
     val metadataTwo = Files(
       fileId,
@@ -136,9 +140,39 @@ class ValidatorSpec extends ExportSpec {
         Option.empty,
         "rightsCopyright".some,
         "clientSideChecksum".some
-      )
+      ),
+      Option.empty
     )
     val file: Either[Throwable, List[ValidatedFileMetadata]] = validator.extractFileMetadata(List(metadata, metadataTwo))
     file.left.value.getMessage should equal(s"$fileId is missing the following properties: language, legalStatus")
+  }
+
+  "extractFFIDMetadata" should "return an error if the ffid metadata is missing" in {
+    val validator = Validator(UUID.randomUUID())
+    val fileId = UUID.randomUUID()
+    val files = List(Files(fileId, Metadata(None, None, None, None, None, None, None, None, None), Option.empty))
+    val result = validator.extractFFIDMetadata(files)
+    result.left.value.getMessage should equal(s"FFID metadata is missing for file id $fileId")
+  }
+
+  "extractFFIDMetadata" should "return an error if the ffid metadata is missing for one file and provided for another" in {
+    val validator = Validator(UUID.randomUUID())
+    val fileIdOne = UUID.randomUUID()
+    val fileIdTwo = UUID.randomUUID()
+    val metadata = Metadata(None, None, None, None, None, None, None, None, None)
+    val files = List(Files(fileIdOne, metadata, Option.empty), Files(fileIdTwo, metadata, FfidMetadata("", "", "", "", "", List()).some))
+    val result = validator.extractFFIDMetadata(files)
+    result.left.value.getMessage should equal(s"FFID metadata is missing for file id $fileIdOne")
+  }
+
+  "extractFFIDMetadata" should "return success if the ffid metadata is present" in {
+    val validator = Validator(UUID.randomUUID())
+    val fileId = UUID.randomUUID()
+    val metadata = Metadata(None, None, "filePath".some, None, None, None, None, None, None)
+    val ffidMetadata = FfidMetadata("software", "softwareVersion", "binaryVersion", "containerVersion", "method", List(Matches("ext".some, "id", "puid".some)))
+    val files = List(Files(fileId, metadata, ffidMetadata.some))
+    val result = validator.extractFFIDMetadata(files)
+    val expectedResult = ValidatedFFIDMetadata("filePath", "ext", "puid", "software", "softwareVersion", "binaryVersion", "containerVersion")
+    result.right.value.head should equal(expectedResult)
   }
 }

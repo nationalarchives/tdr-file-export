@@ -1,0 +1,8 @@
+21bc5fa Merge pull request #46 from nationalarchives/addFFIDMetadataExportCapability
+e0af038 Add tests for the new validator method
+0b02752 Update graphql dependency and remove datetime from wiremock queries
+076c36e Add dependency for generated graphql
+cd896a7 Update tests and add a new one.
+c1fb070 Add ffid metadata validation and write to csv.
+c0ce119 Merge branch 'master' into addFFIDMetadataExportCapability
+ec1b4d2 WiP to add FFID Metadata

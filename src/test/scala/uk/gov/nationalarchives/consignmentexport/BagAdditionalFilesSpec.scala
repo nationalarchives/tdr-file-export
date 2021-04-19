@@ -6,7 +6,7 @@ import java.util.UUID
 import uk.gov.nationalarchives.consignmentexport.Utils.PathUtils
 
 import scala.io.Source
-import uk.gov.nationalarchives.consignmentexport.Validator.{ValidatedFFIDMetadata, ValidatedFileMetadata}
+import uk.gov.nationalarchives.consignmentexport.Validator.{ValidatedAntivirusMetadata, ValidatedFFIDMetadata, ValidatedFileMetadata}
 
 class BagAdditionalFilesSpec extends ExportSpec {
   "fileMetadataCsv" should "produce a file with the correct rows" in {
@@ -52,5 +52,22 @@ class BagAdditionalFilesSpec extends ExportSpec {
     rest.head should equal("path,extension,puid,software,softwareVersion,binarySignatureFileVersion,containerSignatureFileVersion")
     source.close()
     new File("exporter/src/test/resources/file-metadata.csv").delete()
+  }
+
+  "createAntivirusMetadataCsv" should "produce a file with the correct rows" in {
+    val bagAdditionalFiles = BagAdditionalFiles(getClass.getResource(".").getPath.toPath)
+    val validatedAvMetadata = ValidatedAntivirusMetadata("filePath", "software", "softwareVersion")
+    val file = bagAdditionalFiles.createAntivirusMetadataCsv(List(validatedAvMetadata)).unsafeRunSync()
+
+    val source = Source.fromFile(file)
+    val csvLines = source.getLines().toList
+    val header = csvLines.head
+    val rest = csvLines.tail
+
+    header should equal("Filepath,AV-Software,AV-SoftwareVersion")
+    rest.length should equal(1)
+    rest.head should equal("filePath,software,softwareVersion")
+    source.close()
+    new File(file.getAbsolutePath).delete()
   }
 }

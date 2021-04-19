@@ -14,7 +14,7 @@
       },
       "files": [
         {
-          "fileId": "7b19b272-d4d1-4d77-bf25-511dc6489d12",
+          "fileId": "5e271e33-ae7e-4471-9f89-005c5d15c5a1",
           "metadata": {
             "clientSideOriginalFilePath": "originalPath",
             "legalStatus": "Public Record",
@@ -40,10 +40,6 @@
             ],
             "containerSignatureFileVersion": "DROID_SignatureFile_V96.xml",
             "binarySignatureFileVersion": "container-signature-20200121.xml"
-          },
-          "antivirusMetadata": {
-            "software": "software",
-            "softwareVersion": "version"
           }
         }
       ]

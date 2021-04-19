@@ -125,6 +125,23 @@ class MainSpec extends ExternalServiceSpec {
     ex.getMessage should equal(s"FFID metadata is missing for file id $fileId")
   }
 
+  "the export job" should "throw an error if the antivirus metadata is missing" in {
+    graphQlGetConsignmentMissingAntivirusMetadata
+    keycloakGetUser
+    stepFunctionPublish
+
+    val consignmentId = UUID.fromString("fbb543d0-7690-4d58-837c-464d431713fc")
+    val fileId = UUID.fromString("5e271e33-ae7e-4471-9f89-005c5d15c5a1")
+    putFile(s"$consignmentId/$fileId")
+
+    val ex = intercept[Exception] {
+      Main.run(List("export", "--consignmentId", consignmentId.toString, "--taskToken", taskTokenValue)).unsafeRunSync()
+    }
+
+    checkStepFunctionPublishCalled("publish_failure_missing_antivirus_metadata_request_body")
+    ex.getMessage should equal(s"Antivirus metadata is missing for file id $fileId")
+  }
+
   "the export job" should "throw an error if no consignment metadata found" in {
     keycloakGetUser
     stepFunctionPublish

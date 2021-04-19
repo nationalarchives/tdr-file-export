@@ -3,7 +3,8 @@ package uk.gov.nationalarchives.consignmentexport
 import cats.implicits._
 import graphql.codegen.GetConsignmentExport.getConsignmentForExport.GetConsignment
 import graphql.codegen.GetConsignmentExport.getConsignmentForExport.GetConsignment.Files
-import uk.gov.nationalarchives.consignmentexport.Validator.{ValidatedFFIDMetadata, ValidatedFileMetadata}
+import graphql.codegen.GetConsignmentExport.getConsignmentForExport.GetConsignment.Files.AntivirusMetadata
+import uk.gov.nationalarchives.consignmentexport.Validator.{ValidatedAntivirusMetadata, ValidatedFFIDMetadata, ValidatedFileMetadata}
 
 import java.time.LocalDateTime
 import java.util.UUID
@@ -50,6 +51,19 @@ class Validator(consignmentId: UUID) {
     }
   }
 
+  def extractAntivirusMetadata(filesList: List[Files]): Either[RuntimeException, List[ValidatedAntivirusMetadata]] = {
+    val fileErrors = filesList.filter(_.antivirusMetadata.isEmpty).map(f => s"Antivirus metadata is missing for file id ${f.fileId}")
+    fileErrors match {
+      case Nil => Right(
+        filesList.map(f => {
+          val antivirus = f.antivirusMetadata.get
+          ValidatedAntivirusMetadata(f.metadata.clientSideOriginalFilePath.get, antivirus.software, antivirus.softwareVersion)
+        })
+      )
+      case _ => Left(new RuntimeException(fileErrors.mkString("\n")))
+    }
+  }
+
   private def validatedMetadata(f: Files): ValidatedFileMetadata = ValidatedFileMetadata(f.fileId,
     f.metadata.clientSideFileSize.get,
     f.metadata.clientSideLastModifiedDate.get,
@@ -84,6 +98,10 @@ object Validator {
                                    legalStatus: String,
                                    rightsCopyright: String,
                                    clientSideChecksum: String)
+
+  case class ValidatedAntivirusMetadata(filePath: String,
+                                        software: String,
+                                        softwareVersion: String)
 
   def apply(consignmentId: UUID): Validator = new Validator(consignmentId)
 }

@@ -30,8 +30,6 @@ class BagAdditionalFiles(rootDirectory: Path) {
     writeToCsv("ffid-metadata.csv", header, metadataRows)
   }
 
-
-
   private def writeToCsv(fileName: String, header: List[String], metadataRows: List[List[Any]]): IO[File] = {
     val file = new File(s"$rootDirectory/$fileName")
     val writer = CSVWriter.open(file)

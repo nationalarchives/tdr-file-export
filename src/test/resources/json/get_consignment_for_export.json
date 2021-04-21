@@ -43,7 +43,7 @@
           },
           "antivirusMetadata": {
             "software": "software",
-            "softwareVersion": "version"
+            "softwareVersion": "softwareVersion"
           }
         }
       ]

@@ -1,6 +1,5 @@
 package uk.gov.nationalarchives.consignmentexport
 
-import java.lang.RuntimeException
 import java.time.{ZoneOffset, ZonedDateTime}
 import java.util.UUID
 

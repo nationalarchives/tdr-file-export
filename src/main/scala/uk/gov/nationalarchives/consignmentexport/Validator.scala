@@ -3,7 +3,6 @@ package uk.gov.nationalarchives.consignmentexport
 import cats.implicits._
 import graphql.codegen.GetConsignmentExport.getConsignmentForExport.GetConsignment
 import graphql.codegen.GetConsignmentExport.getConsignmentForExport.GetConsignment.Files
-import graphql.codegen.GetConsignmentExport.getConsignmentForExport.GetConsignment.Files.AntivirusMetadata
 import uk.gov.nationalarchives.consignmentexport.Validator.{ValidatedAntivirusMetadata, ValidatedFFIDMetadata, ValidatedFileMetadata}
 
 import java.time.LocalDateTime

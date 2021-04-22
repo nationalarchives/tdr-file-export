@@ -4,9 +4,15 @@ import java.io.File
 import java.nio.file.Path
 import cats.effect.IO
 import com.github.tototoshi.csv.CSVWriter
-import uk.gov.nationalarchives.consignmentexport.Validator.{ValidatedFFIDMetadata, ValidatedFileMetadata}
+import uk.gov.nationalarchives.consignmentexport.Validator.{ValidatedAntivirusMetadata, ValidatedFFIDMetadata, ValidatedFileMetadata}
 
 class BagAdditionalFiles(rootDirectory: Path) {
+
+  def createAntivirusMetadataCsv(validatedAntivirusMetadata: List[ValidatedAntivirusMetadata]): IO[File] = {
+    val header = List("Filepath", "AV-Software", "AV-SoftwareVersion")
+    val avMetadataRows = validatedAntivirusMetadata.map(av => List(av.filePath, av.software, av.softwareVersion))
+    writeToCsv("file-av.csv", header, avMetadataRows)
+  }
 
   def createFileMetadataCsv(fileMetadataList: List[ValidatedFileMetadata]): IO[File] = {
     val header = List("Filepath", "Filesize", "RightsCopyright", "LegalStatus", "HeldBy", "Language", "FoiExemptionCode", "LastModified")

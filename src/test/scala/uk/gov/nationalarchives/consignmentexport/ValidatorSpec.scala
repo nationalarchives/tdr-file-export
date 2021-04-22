@@ -5,9 +5,9 @@ import java.util.UUID
 import cats.implicits._
 import graphql.codegen.GetConsignmentExport.getConsignmentForExport.GetConsignment
 import graphql.codegen.GetConsignmentExport.getConsignmentForExport.GetConsignment.Files.FfidMetadata.Matches
-import graphql.codegen.GetConsignmentExport.getConsignmentForExport.GetConsignment.Files.{FfidMetadata, Metadata}
+import graphql.codegen.GetConsignmentExport.getConsignmentForExport.GetConsignment.Files.{AntivirusMetadata, FfidMetadata, Metadata}
 import graphql.codegen.GetConsignmentExport.getConsignmentForExport.GetConsignment.{Files, Series, TransferringBody}
-import uk.gov.nationalarchives.consignmentexport.Validator.{ValidatedFFIDMetadata, ValidatedFileMetadata}
+import uk.gov.nationalarchives.consignmentexport.Validator.{ValidatedAntivirusMetadata, ValidatedFFIDMetadata, ValidatedFileMetadata}
 
 class ValidatorSpec extends ExportSpec {
 
@@ -23,6 +23,7 @@ class ValidatorSpec extends ExportSpec {
       "legalStatus".some,
       "rightsCopyright".some,
       "clientSideChecksum".some),
+    Option.empty,
     Option.empty
   )
 
@@ -88,6 +89,7 @@ class ValidatorSpec extends ExportSpec {
         "rightsCopyright".some,
         "clientSideChecksum".some
       ),
+      Option.empty,
       Option.empty
     )
     val metadataTwo = Files(
@@ -103,6 +105,7 @@ class ValidatorSpec extends ExportSpec {
         "rightsCopyright".some,
         "clientSideChecksum".some
       ),
+      Option.empty,
       Option.empty
     )
     val file: Either[Throwable, List[ValidatedFileMetadata]] = validator.extractFileMetadata(List(metadata, metadataTwo))
@@ -126,6 +129,7 @@ class ValidatorSpec extends ExportSpec {
         "rightsCopyright".some,
         "clientSideChecksum".some
       ),
+      Option.empty,
       Option.empty
     )
     val metadataTwo = Files(
@@ -141,6 +145,7 @@ class ValidatorSpec extends ExportSpec {
         "rightsCopyright".some,
         "clientSideChecksum".some
       ),
+      Option.empty,
       Option.empty
     )
     val file: Either[Throwable, List[ValidatedFileMetadata]] = validator.extractFileMetadata(List(metadata, metadataTwo))
@@ -150,7 +155,7 @@ class ValidatorSpec extends ExportSpec {
   "extractFFIDMetadata" should "return an error if the ffid metadata is missing" in {
     val validator = Validator(UUID.randomUUID())
     val fileId = UUID.randomUUID()
-    val files = List(Files(fileId, Metadata(None, None, None, None, None, None, None, None, None), Option.empty))
+    val files = List(Files(fileId, Metadata(None, None, None, None, None, None, None, None, None), Option.empty, Option.empty))
     val result = validator.extractFFIDMetadata(files)
     result.left.value.getMessage should equal(s"FFID metadata is missing for file id $fileId")
   }
@@ -160,7 +165,7 @@ class ValidatorSpec extends ExportSpec {
     val fileIdOne = UUID.randomUUID()
     val fileIdTwo = UUID.randomUUID()
     val metadata = Metadata(None, None, None, None, None, None, None, None, None)
-    val files = List(Files(fileIdOne, metadata, Option.empty), Files(fileIdTwo, metadata, FfidMetadata("", "", "", "", "", List()).some))
+    val files = List(Files(fileIdOne, metadata, Option.empty, Option.empty), Files(fileIdTwo, metadata, FfidMetadata("", "", "", "", "", List()).some, Option.empty))
     val result = validator.extractFFIDMetadata(files)
     result.left.value.getMessage should equal(s"FFID metadata is missing for file id $fileIdOne")
   }
@@ -170,9 +175,29 @@ class ValidatorSpec extends ExportSpec {
     val fileId = UUID.randomUUID()
     val metadata = Metadata(None, None, "filePath".some, None, None, None, None, None, None)
     val ffidMetadata = FfidMetadata("software", "softwareVersion", "binaryVersion", "containerVersion", "method", List(Matches("ext".some, "id", "puid".some)))
-    val files = List(Files(fileId, metadata, ffidMetadata.some))
+    val files = List(Files(fileId, metadata, ffidMetadata.some, Option.empty))
     val result = validator.extractFFIDMetadata(files)
     val expectedResult = ValidatedFFIDMetadata("filePath", "ext", "puid", "software", "softwareVersion", "binaryVersion", "containerVersion")
     result.right.value.head should equal(expectedResult)
+  }
+
+  "extractAntivirusMetadata" should "return success if the antivirus metadata is present" in {
+    val validator = Validator(UUID.randomUUID())
+    val fileId = UUID.randomUUID()
+    val metadata = Metadata(None, None, "filePath".some, None, None, None, None, None, None)
+    val antivirusMetadata = AntivirusMetadata("software", "softwareVersion")
+    val files = List(Files(fileId, metadata, Option.empty, antivirusMetadata.some))
+    val result = validator.extractAntivirusMetadata(files)
+    val expectedResult = ValidatedAntivirusMetadata("filePath", "software", "softwareVersion")
+    result.right.value.head should equal(expectedResult)
+  }
+
+  "extractAntivirusMetadata" should "return an error if the antivirus metadata is missing" in {
+    val validator = Validator(UUID.randomUUID())
+    val fileId = UUID.randomUUID()
+    val metadata = Metadata(None, None, "filePath".some, None, None, None, None, None, None)
+    val files = List(Files(fileId, metadata, Option.empty, Option.empty))
+    val result = validator.extractAntivirusMetadata(files)
+    result.left.value.getMessage should equal(s"Antivirus metadata is missing for file id $fileId")
   }
 }

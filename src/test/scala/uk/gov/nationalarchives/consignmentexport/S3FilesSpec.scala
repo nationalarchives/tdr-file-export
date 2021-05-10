@@ -80,13 +80,13 @@ class S3FilesSpec extends ExportSpec {
     val mockResponse = IO.pure(PutObjectResponse.builder.build())
     doAnswer(() => mockResponse).when(s3Utils).upload(bucketCaptor.capture(), keyCaptor.capture(), pathCaptor.capture())
 
-    val consignmentId = UUID.randomUUID()
-    S3Files(s3Utils).uploadFiles("testbucket", consignmentId, "fakepath").unsafeRunSync()
+    val consignmentReference = "TDR-2021-C57B"
+    S3Files(s3Utils).uploadFiles("testbucket", consignmentReference, "fakepath").unsafeRunSync()
 
     bucketCaptor.getAllValues.forEach(b => b should equal("testbucket"))
     val keyValues = keyCaptor.getAllValues
-    keyValues.get(0)  should equal(s"$consignmentId.tar.gz")
-    keyValues.get(1)  should equal(s"$consignmentId.tar.gz.sha256")
+    keyValues.get(0)  should equal(s"$consignmentReference.tar.gz")
+    keyValues.get(1)  should equal(s"$consignmentReference.tar.gz.sha256")
     val pathValues = pathCaptor.getAllValues
     pathValues.get(0).toString  should equal("fakepath")
     pathValues.get(1).toString  should equal("fakepath.sha256")

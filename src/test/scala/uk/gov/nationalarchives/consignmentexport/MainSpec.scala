@@ -16,11 +16,13 @@ import scala.sys.process._
 class MainSpec extends ExternalServiceSpec {
 
   private val taskTokenValue = "taskToken1234"
+  private val consignmentReference = "consignmentReference-1234"
 
   "the export job" should "export the correct tar and checksum file" in {
     setUpValidExternalServices()
 
     val consignmentId = UUID.fromString("50df01e6-2e5e-4269-97e7-531a755b417d")
+
     putFile(s"$consignmentId/7b19b272-d4d1-4d77-bf25-511dc6489d12")
 
     Main.run(List("export", "--consignmentId", consignmentId.toString, "--taskToken", taskTokenValue)).unsafeRunSync()
@@ -29,8 +31,8 @@ class MainSpec extends ExternalServiceSpec {
     val objects = outputBucketObjects().map(_.key())
 
     objects.size should equal(2)
-    objects.head should equal(s"$consignmentId.tar.gz")
-    objects.last should equal(s"$consignmentId.tar.gz.sha256")
+    objects.head should equal(s"$consignmentReference.tar.gz")
+    objects.last should equal(s"$consignmentReference.tar.gz.sha256")
   }
 
   "the export job" should "export a valid tar and checksum file" in {
@@ -45,8 +47,8 @@ class MainSpec extends ExternalServiceSpec {
 
     val downloadDirectory = s"$scratchDirectory/download"
     new File(s"$downloadDirectory").mkdirs()
-    getObject(s"$consignmentId.tar.gz", s"$downloadDirectory/result.tar.gz".toPath)
-    getObject(s"$consignmentId.tar.gz.sha256", s"$downloadDirectory/result.tar.gz.sha256".toPath)
+    getObject(s"$consignmentReference.tar.gz", s"$downloadDirectory/result.tar.gz".toPath)
+    getObject(s"$consignmentReference.tar.gz.sha256", s"$downloadDirectory/result.tar.gz.sha256".toPath)
 
     val exitCode = Seq("sh", "-c", s"tar -tf $downloadDirectory/result.tar.gz > /dev/null").!
     exitCode should equal(0)

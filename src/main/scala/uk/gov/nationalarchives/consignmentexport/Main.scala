@@ -35,7 +35,6 @@ object Main extends CommandIOApp("tdr-consignment-export", "Exports tdr files in
           rootLocation = config.efs.rootLocation
           exportId = UUID.randomUUID
           basePath = s"$rootLocation/$exportId"
-          tarPath = s"$basePath/$consignmentId.tar.gz"
           bashCommands = BashCommands()
           graphQlApi = GraphQlApi(config.api.url, config.auth.url)
           keycloakClient = KeycloakClient(config)
@@ -54,6 +53,8 @@ object Main extends CommandIOApp("tdr-consignment-export", "Exports tdr files in
           validatedFfidMetadata <- IO.fromEither(validator.extractFFIDMetadata(consignmentData.files))
           validatedAntivirusMetadata <- IO.fromEither(validator.extractAntivirusMetadata(consignmentData.files))
           _ <- s3Files.downloadFiles(validatedFileMetadata, config.s3.cleanBucket, consignmentId, basePath)
+          consignmentReference = consignmentData.consignmentReference
+          tarPath = s"$basePath/$consignmentReference.tar.gz"
           bag <- bagit.createBag(consignmentId, basePath, bagMetadata)
           checkSumMismatches = ChecksumValidator().findChecksumMismatches(bag, validatedFileMetadata)
           _ = if(checkSumMismatches.nonEmpty) throw new RuntimeException(s"Checksum mismatch for file(s): ${checkSumMismatches.mkString("\n")}")
@@ -66,8 +67,8 @@ object Main extends CommandIOApp("tdr-consignment-export", "Exports tdr files in
           // The owner and group in the below command have no effect on the file permissions. It just makes tar idempotent
           _ <- bashCommands.runCommand(s"tar --sort=name --owner=root:0 --group=root:0 --mtime ${java.time.LocalDate.now.toString} -C $basePath -c ./$consignmentId | gzip -n > $tarPath")
           _ <- bashCommands.runCommand(s"sha256sum $tarPath > $tarPath.sha256")
-          _ <- s3Files.uploadFiles(config.s3.outputBucket, consignmentId, tarPath)
-          _ <- graphQlApi.updateExportLocation(config, consignmentId, s"s3://${config.s3.outputBucket}/$consignmentId.tar.gz", exportDatetime)
+          _ <- s3Files.uploadFiles(config.s3.outputBucket, consignmentReference, tarPath)
+          _ <- graphQlApi.updateExportLocation(config, consignmentId, s"s3://${config.s3.outputBucket}/$consignmentReference.tar.gz", exportDatetime)
           _ <- stepFunction.publishSuccess(taskToken,
             ExportOutput(consignmentData.userid,
               bagMetadata.get(InternalSenderIdentifierKey).get(0),

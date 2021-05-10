@@ -25,7 +25,7 @@ class BagAdditionalFiles(rootDirectory: Path) {
     val metadataRows = ffidMetadataList.map(f => {
       List(f.filePath, f.extension, f.puid, f.software, f.softwareVersion, f.binarySignatureFileVersion, f.containerSignatureFileVersion)
     })
-    writeToCsv("ffid-metadata.csv", header, metadataRows)
+    writeToCsv("file-ffid.csv", header, metadataRows)
   }
 
   private def writeToCsv(fileName: String, header: List[String], metadataRows: List[List[Any]]): IO[File] = {

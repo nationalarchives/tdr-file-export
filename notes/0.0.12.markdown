@@ -1,0 +1,4 @@
+6bbac6f Merge pull request #50 from nationalarchives/TDR-1080-rename-ffid-csv
+f4ef5e0 Change FFID csv file to 'file-ffid.csv'
+e1585e3 Merge pull request #49 from nationalarchives/version-bump-41
+f5843cf Setting version to 0.0.12-SNAPSHOT

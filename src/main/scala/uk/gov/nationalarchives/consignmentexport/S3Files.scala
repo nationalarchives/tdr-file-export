@@ -23,10 +23,10 @@ class S3Files(s3Utils: S3Utils)(implicit val logger: SelfAwareStructuredLogger[I
     _ <- logger.info(s"Files downloaded from S3 for consignment $consignmentId")
   } yield ()
 
-  def uploadFiles(bucket: String, consignmentId: UUID, tarPath: String): IO[Unit] = for {
-    _ <- s3Utils.upload(bucket, s"$consignmentId.tar.gz", tarPath.toPath)
-    _ <- s3Utils.upload(bucket, s"$consignmentId.tar.gz.sha256", s"$tarPath.sha256".toPath)
-    _ <- logger.info(s"Files uploaded to S3 for consignment $consignmentId")
+  def uploadFiles(bucket: String, consignmentId: UUID, consignmentReference: String, tarPath: String): IO[Unit] = for {
+    _ <- s3Utils.upload(bucket, s"$consignmentReference.tar.gz", tarPath.toPath)
+    _ <- s3Utils.upload(bucket, s"$consignmentReference.tar.gz.sha256", s"$tarPath.sha256".toPath)
+    _ <- logger.info(s"Files uploaded to S3 for consignment $consignmentId, consignment reference: $consignmentReference")
   } yield ()
 }
 

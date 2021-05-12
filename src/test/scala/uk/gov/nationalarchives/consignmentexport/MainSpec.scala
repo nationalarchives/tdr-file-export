@@ -66,6 +66,8 @@ class MainSpec extends ExternalServiceSpec {
     setUpValidExternalServices()
 
     val consignmentId = UUID.fromString("50df01e6-2e5e-4269-97e7-531a755b417d")
+    val consignmentRef = "consignmentReference-1234"
+
     putFile(s"$consignmentId/7b19b272-d4d1-4d77-bf25-511dc6489d12")
     Main.run(List("export", "--consignmentId", consignmentId.toString, "--taskToken", taskTokenValue)).unsafeRunSync()
 
@@ -75,7 +77,9 @@ class MainSpec extends ExternalServiceSpec {
       .find(p => p.getRequest.getBodyAsString.contains("mutation updateExportLocation"))
 
     exportLocationEvent.isDefined should be(true)
+
     exportLocationEvent.get.getRequest.getBodyAsString.contains("\"consignmentId\":\"50df01e6-2e5e-4269-97e7-531a755b417d\"") should be(true)
+    exportLocationEvent.get.getRequest.getBodyAsString.contains(s""""exportLocation":"s3://test-output-bucket/$consignmentRef-1234.tar.gz"""") should be(true)
   }
 
   "the export job" should "throw an error if the api returns no files for the consignment" in {

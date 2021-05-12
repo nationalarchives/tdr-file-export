@@ -22,7 +22,9 @@ class MainSpec extends ExternalServiceSpec {
 
     val consignmentId = UUID.fromString("50df01e6-2e5e-4269-97e7-531a755b417d")
     val consignmentRef = "consignmentReference-1234"
-    putFile(s"$consignmentId/7b19b272-d4d1-4d77-bf25-511dc6489d12")
+    val fileId = "7b19b272-d4d1-4d77-bf25-511dc6489d12"
+
+    putFile(s"$consignmentId/$fileId")
 
     Main.run(List("export", "--consignmentId", consignmentId.toString, "--taskToken", taskTokenValue)).unsafeRunSync()
 
@@ -39,7 +41,9 @@ class MainSpec extends ExternalServiceSpec {
 
     val consignmentId = UUID.fromString("50df01e6-2e5e-4269-97e7-531a755b417d")
     val consignmentRef = "consignmentReference-1234"
-    putFile(s"$consignmentId/7b19b272-d4d1-4d77-bf25-511dc6489d12")
+    val fileId = "7b19b272-d4d1-4d77-bf25-511dc6489d12"
+
+    putFile(s"$consignmentId/$fileId")
 
     Main.run(List("export", "--consignmentId", consignmentId.toString, "--taskToken", taskTokenValue)).unsafeRunSync()
 
@@ -67,8 +71,9 @@ class MainSpec extends ExternalServiceSpec {
 
     val consignmentId = UUID.fromString("50df01e6-2e5e-4269-97e7-531a755b417d")
     val consignmentRef = "consignmentReference-1234"
+    val fileId = "7b19b272-d4d1-4d77-bf25-511dc6489d12"
 
-    putFile(s"$consignmentId/7b19b272-d4d1-4d77-bf25-511dc6489d12")
+    putFile(s"$consignmentId/$fileId")
     Main.run(List("export", "--consignmentId", consignmentId.toString, "--taskToken", taskTokenValue)).unsafeRunSync()
 
     checkStepFunctionPublishCalled("publish_success_request_body")
@@ -78,8 +83,8 @@ class MainSpec extends ExternalServiceSpec {
 
     exportLocationEvent.isDefined should be(true)
 
-    exportLocationEvent.get.getRequest.getBodyAsString.contains("\"consignmentId\":\"50df01e6-2e5e-4269-97e7-531a755b417d\"") should be(true)
-    exportLocationEvent.get.getRequest.getBodyAsString.contains(s""""exportLocation":"s3://test-output-bucket/$consignmentRef-1234.tar.gz"""") should be(true)
+    exportLocationEvent.get.getRequest.getBodyAsString.contains(s""""consignmentId":"$consignmentId"""") should be(true)
+    exportLocationEvent.get.getRequest.getBodyAsString.contains(s""""exportLocation":"s3://test-output-bucket/$consignmentRef.tar.gz"""") should be(true)
   }
 
   "the export job" should "throw an error if the api returns no files for the consignment" in {
@@ -104,6 +109,7 @@ class MainSpec extends ExternalServiceSpec {
 
     val consignmentId = UUID.fromString("0e634655-1563-4705-be99-abb437f971e0")
     val fileId = UUID.fromString("7b19b272-d4d1-4d77-bf25-511dc6489d12")
+
     putFile(s"$consignmentId/$fileId")
 
     val ex = intercept[Exception] {
@@ -121,6 +127,7 @@ class MainSpec extends ExternalServiceSpec {
 
     val consignmentId = UUID.fromString("2bb446f2-eb15-4b83-9c69-53b559232d84")
     val fileId = UUID.fromString("3381a880-4e9a-4663-b4c6-97dc4018835e")
+
     putFile(s"$consignmentId/$fileId")
 
     val ex = intercept[Exception] {
@@ -138,6 +145,7 @@ class MainSpec extends ExternalServiceSpec {
 
     val consignmentId = UUID.fromString("fbb543d0-7690-4d58-837c-464d431713fc")
     val fileId = UUID.fromString("5e271e33-ae7e-4471-9f89-005c5d15c5a1")
+
     putFile(s"$consignmentId/$fileId")
 
     val ex = intercept[Exception] {
@@ -168,7 +176,9 @@ class MainSpec extends ExternalServiceSpec {
     stepFunctionPublish
 
     val consignmentId = UUID.fromString("50df01e6-2e5e-4269-97e7-531a755b417d")
-    putFile(s"$consignmentId/7b19b272-d4d1-4d77-bf25-511dc6489d12")
+    val fileId = "7b19b272-d4d1-4d77-bf25-511dc6489d12"
+
+    putFile(s"$consignmentId/$fileId")
 
     val ex = intercept[Exception] {
       Main.run(List("export", "--consignmentId", consignmentId.toString, "--taskToken", taskTokenValue)).unsafeRunSync()
@@ -184,7 +194,9 @@ class MainSpec extends ExternalServiceSpec {
     stepFunctionPublish
 
     val consignmentId = UUID.fromString("50df01e6-2e5e-4269-97e7-531a755b417d")
-    putFile(s"$consignmentId/7b19b272-d4d1-4d77-bf25-511dc6489d12")
+    val fileId = "7b19b272-d4d1-4d77-bf25-511dc6489d12"
+
+    putFile(s"$consignmentId/$fileId")
 
     val ex = intercept[Exception] {
       Main.run(List("export", "--consignmentId", consignmentId.toString, "--taskToken", taskTokenValue)).unsafeRunSync()
@@ -201,6 +213,7 @@ class MainSpec extends ExternalServiceSpec {
 
     val consignmentId = UUID.fromString("50df01e6-2e5e-4269-97e7-531a755b417d")
     val fileId = "7b19b272-d4d1-4d77-bf25-511dc6489d12"
+
     putFile(s"$consignmentId/$fileId")
 
     val ex = intercept[Exception] {

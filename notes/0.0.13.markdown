@@ -1,0 +1,7 @@
+a26a1fa Merge pull request #52 from nationalarchives/nameExportPackageUsingConsignmentReference
+530a998 Refactoring for consistency & clarity and to remove a little redundancy
+6a8722d Update s3 upload test's tar file names with consignment reference
+ae32703 Add check for export location in API location update test
+7740bbf Change the consignmentId in the export package name to the consignmentReference
+81d3a40 Merge pull request #51 from nationalarchives/version-bump-42
+71236ad Setting version to 0.0.13-SNAPSHOT

@@ -28,9 +28,9 @@ class BagMetadata(keycloakClient: KeycloakClient)(implicit val logger: SelfAware
       sc <- series.code
     } yield sc
 
-    val bodyCode = for {
+    val bodyName = for {
       body <- consignment.transferringBody
-      bc <- body.code
+      bc <- body.name
     } yield bc
 
     val startDatetime = for {
@@ -48,7 +48,7 @@ class BagMetadata(keycloakClient: KeycloakClient)(implicit val logger: SelfAware
     Map(
       InternalSenderIdentifierKey -> Some(consignment.consignmentReference),
       ConsignmentSeriesKey -> seriesCode,
-      SourceOrganisationKey -> bodyCode,
+      SourceOrganisationKey -> bodyName,
       ConsignmentStartDatetimeKey -> startDatetime,
       ConsignmentCompletedDatetimeKey -> completedDatetime,
       ConsignmentExportDatetimeKey -> Some(exportDatetime.toFormattedPrecisionString),

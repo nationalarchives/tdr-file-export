@@ -32,7 +32,7 @@ class BagAdditionalFilesSpec extends ExportSpec {
     val rest = csvLines.tail
     header should equal("Filepath,Filesize,RightsCopyright,LegalStatus,HeldBy,Language,FoiExemptionCode,LastModified")
     rest.length should equal(1)
-    rest.head should equal(s"originalPath,1,rightsCopyright,legalStatus,heldBy,language,foiExemption,2021-02-03T10:33:30.414")
+    rest.head should equal(s"data/originalPath,1,rightsCopyright,legalStatus,heldBy,language,foiExemption,2021-02-03T10:33:30.414")
     source.close()
     new File("exporter/src/test/resources/file-metadata.csv").delete()
   }
@@ -49,7 +49,7 @@ class BagAdditionalFilesSpec extends ExportSpec {
     val rest = csvLines.tail
     header should equal("Filepath,Extension,PUID,FFID-Software,FFID-SoftwareVersion,FFID-BinarySignatureFileVersion,FFID-ContainerSignatureFileVersion")
     rest.length should equal(1)
-    rest.head should equal("path,extension,puid,software,softwareVersion,binarySignatureFileVersion,containerSignatureFileVersion")
+    rest.head should equal("data/path,extension,puid,software,softwareVersion,binarySignatureFileVersion,containerSignatureFileVersion")
     source.close()
     new File("exporter/src/test/resources/file-metadata.csv").delete()
   }
@@ -66,7 +66,7 @@ class BagAdditionalFilesSpec extends ExportSpec {
 
     header should equal("Filepath,AV-Software,AV-SoftwareVersion")
     rest.length should equal(1)
-    rest.head should equal("filePath,software,softwareVersion")
+    rest.head should equal("data/filePath,software,softwareVersion")
     source.close()
     new File(file.getAbsolutePath).delete()
   }

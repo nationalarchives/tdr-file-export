@@ -28,14 +28,14 @@ class BagitSpec extends ExportSpec {
 
     val bag = new Bag(Version.LATEST_BAGIT_VERSION())
     val bagit = new Bagit(createMock, verifyMock, mock[(util.Set[Manifest], Path, Path, Charset) => Unit])
-    val consignmentId = UUID.randomUUID()
+    val consignmentReference = "Consignment-Reference"
 
     doAnswer(() => bag).when(createMock).apply(createPath.capture(), createAlgorithms.capture(), createIncludeHidden.capture(), createMetadata.capture())
     doAnswer(() => ()).when(verifyMock).apply(verfiyBag.capture(), verifyIncludeHidden.capture())
 
-    bagit.createBag(consignmentId, "root", metadataMock).unsafeRunSync()
+    bagit.createBag(consignmentReference, "root", metadataMock).unsafeRunSync()
 
-    createPath.getValue.toString should equal(s"root/$consignmentId")
+    createPath.getValue.toString should equal(s"root/$consignmentReference")
     createAlgorithms.getValue.toArray()(0) should equal(StandardSupportedAlgorithms.SHA256)
     createIncludeHidden.getValue should equal(true)
     createMetadata.getValue should equal(metadataMock)

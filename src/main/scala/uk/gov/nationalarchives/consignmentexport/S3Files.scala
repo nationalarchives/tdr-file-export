@@ -14,11 +14,11 @@ import scala.language.postfixOps
 
 class S3Files(s3Utils: S3Utils)(implicit val logger: SelfAwareStructuredLogger[IO]) {
 
-  def downloadFiles(files: List[ValidatedFileMetadata], bucket: String, consignmentId: UUID, rootLocation: String): IO[Unit] = for {
+  def downloadFiles(files: List[ValidatedFileMetadata], bucket: String, consignmentId: UUID, consignmentReference: String, rootLocation: String): IO[Unit] = for {
     _ <- files.map(file => {
       val writeDirectory = file.clientSideOriginalFilePath.split("/").init.mkString("/")
-      new File(s"$rootLocation/$consignmentId/$writeDirectory").mkdirs()
-      s3Utils.downloadFiles(bucket, s"$consignmentId/${file.fileId}", s"$rootLocation/$consignmentId/${file.clientSideOriginalFilePath}".toPath.some)
+      new File(s"$rootLocation/$consignmentReference/$writeDirectory").mkdirs()
+      s3Utils.downloadFiles(bucket, s"$consignmentId/${file.fileId}", s"$rootLocation/$consignmentReference/${file.clientSideOriginalFilePath}".toPath.some)
     }).sequence
     _ <- logger.info(s"Files downloaded from S3 for consignment $consignmentId")
   } yield ()

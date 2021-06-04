@@ -21,6 +21,7 @@ class S3FilesSpec extends ExportSpec {
     doAnswer(() => mockResponse).when(s3Utils).downloadFiles(bucketCaptor.capture(), keyCaptor.capture(), pathCaptor.capture())
 
     val consignmentId = UUID.randomUUID()
+    val consignmentReference = "Consignment-Reference"
     val fileId = UUID.randomUUID()
     val metadata = ValidatedFileMetadata(
       fileId,
@@ -36,12 +37,12 @@ class S3FilesSpec extends ExportSpec {
     )
     val validatedMetadata = List(metadata)
 
-    S3Files(s3Utils).downloadFiles(validatedMetadata, "testbucket", consignmentId, "root").unsafeRunSync()
+    S3Files(s3Utils).downloadFiles(validatedMetadata, "testbucket", consignmentId, consignmentReference, "root").unsafeRunSync()
 
     bucketCaptor.getValue should equal("testbucket")
     keyCaptor.getValue should equal(s"$consignmentId/$fileId")
     pathCaptor.getValue.isDefined should equal(true)
-    pathCaptor.getValue.get.toString should equal(s"root/$consignmentId/originalPath")
+    pathCaptor.getValue.get.toString should equal(s"root/$consignmentReference/originalPath")
   }
 
   "the downloadFiles method" should "call the library method with the correct arguments if there are quotes in the path" in {
@@ -51,6 +52,7 @@ class S3FilesSpec extends ExportSpec {
     doAnswer(() => mockResponse).when(s3Utils).downloadFiles(any[String], any[String], pathCaptor.capture())
 
     val consignmentId = UUID.randomUUID()
+    val consignmentReference = "Consignment-Reference"
     val fileId = UUID.randomUUID()
     val metadata = ValidatedFileMetadata(
       fileId,
@@ -66,10 +68,10 @@ class S3FilesSpec extends ExportSpec {
     )
     val validatedMetadata = List(metadata)
 
-    S3Files(s3Utils).downloadFiles(validatedMetadata, "testbucket", consignmentId, "root").unsafeRunSync()
+    S3Files(s3Utils).downloadFiles(validatedMetadata, "testbucket", consignmentId, consignmentReference, "root").unsafeRunSync()
 
     pathCaptor.getValue.isDefined should equal(true)
-    pathCaptor.getValue.get.toString should equal(s"""root/$consignmentId/a/path'with/quotes"""")
+    pathCaptor.getValue.get.toString should equal(s"""root/$consignmentReference/a/path'with/quotes"""")
   }
 
   "the uploadFiles method" should "call the library method with the correct arguments" in {
